@@ -43,6 +43,7 @@ export function rendererToChannel(renderer) {
     href: renderer.navigationEndpoint?.browseEndpoint?.canonicalBaseUrl ?? `/channel/${renderer.channelId}`,
     name: renderer.title?.simpleText ?? renderer.title?.runs?.[0]?.text,
     avatar: largestThumbnail(renderer.thumbnail),
+    ucid: renderer.channelId,
   });
 }
 

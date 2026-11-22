@@ -1,6 +1,7 @@
 import { t } from '../i18n/i18n.js';
 import { CATEGORY_CONTROL, renderChannelGrid } from './components/channelGrid.js';
 import { renderChips } from './components/chips.js';
+import { renderFeed } from './components/feedView.js';
 import { renderBulkBar, renderEmptyState } from './components/feedback.js';
 import { renderHeader } from './components/header.js';
 import { renderImportReview } from './components/importReview.js';
@@ -13,8 +14,14 @@ import { buildChips, FILTER_ALL, FILTER_NONE, formatUploadAge, SORT_RECENT, visi
 export const SLOTS = ['header', 'review', 'chips', 'heading', 'results', 'bulkBar'];
 
 // env agrupa o que não é estado nem ação: o relógio (injetável nos testes) e o cache de cartões.
-export function renderPage(state, view, actions, { now, cardCache }) {
+export function renderPage(state, view, actions, { now, cardCache, feed }) {
   const channels = visibleChannels(state, view);
+  // Dentro de uma categoria, nas abas Vídeos e Shorts, os resultados são o feed.
+  if (feed) return { ...managementParts(state, view, actions, now, channels), results: renderFeed(feed, actions), bulkBar: null };
+  return managementParts(state, view, actions, now, channels, cardCache);
+}
+
+function managementParts(state, view, actions, now, channels, cardCache) {
   return {
     header: renderHeader({ state, view, actions, now }),
     review: view.pendingImport ? renderPendingImport(state, view.pendingImport, actions) : null,

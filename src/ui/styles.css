@@ -101,7 +101,7 @@ html[dark] {
 }
 
 /* Destaca o item enquanto a página está aberta, como o YouTube faz com a página atual. */
-html.tstb-page-open .tstb-sidebar-button,
+html.tstb-page-open:not(.tstb-category-open) .tstb-sidebar-button,
 html.tstb-page-open .tstb-mini-button {
   background: var(--tstb-hover);
   font-weight: 500;
@@ -917,5 +917,314 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   .tstb-header-actions,
   .tstb-search {
     width: 100%;
+  }
+}
+
+/* ---------- Categorias no menu lateral ---------- */
+
+/* Título de seção, como "Inscrições ›" do YouTube: texto maior em destaque e
+   seta, sem ícone à esquerda. */
+.tstb-sidebar-header {
+  gap: 4px;
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+
+.tstb-sidebar-header svg {
+  width: 20px;
+  height: 20px;
+}
+
+
+/* Mesmas medidas dos itens nativos do menu (40px, ícone 24px, cantos 10px),
+   para a lista parecer parte do YouTube. */
+.tstb-sidebar-categories {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tstb-sidebar-category {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--tstb-text);
+  font: 400 1.4rem Roboto, Arial, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tstb-sidebar-category svg {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+/* Nomes longos são cortados com reticências, nunca quebram linha (Material). */
+.tstb-sidebar-category .tstb-sidebar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tstb-sidebar-category:hover,
+.tstb-sidebar-category:focus-visible {
+  background: var(--tstb-hover);
+}
+
+.tstb-sidebar-category-active,
+.tstb-sidebar-category-active:hover {
+  background: var(--tstb-hover);
+  font-weight: 500;
+}
+
+/* ---------- Abas da categoria ---------- */
+
+.tstb-view-header {
+  margin: 12px 0 24px;
+}
+
+.tstb-view-header .tstb-view-heading {
+  margin: 0 0 4px;
+}
+
+/* Sublinhado na aba ativa, como as abas da página de um canal. */
+.tstb-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--tstb-border);
+}
+
+.tstb-tab {
+  position: relative;
+  height: 48px;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--tstb-muted);
+  font: 500 1.6rem Roboto, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.tstb-tab:hover,
+.tstb-tab-active {
+  color: var(--tstb-text);
+}
+
+.tstb-tab-active::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--tstb-text);
+  content: '';
+}
+
+/* ---------- Feed: vídeos ---------- */
+
+.tstb-video-grid,
+.tstb-shorts-grid {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tstb-video-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 40px 16px;
+}
+
+.tstb-video {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  /* Pula layout e pintura dos cartões fora da tela (centenas de vídeos). */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+
+.tstb-video-thumb {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  background: var(--tstb-control);
+}
+
+.tstb-video-thumb img,
+.tstb-short-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tstb-duration {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font: 500 1.2rem/1.8rem Roboto, Arial, sans-serif;
+}
+
+.tstb-video-details {
+  display: flex;
+  gap: 12px;
+}
+
+.tstb-video-avatar {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.tstb-video-text {
+  min-width: 0;
+}
+
+/* Duas linhas no máximo, como no YouTube: a grade não desalinha com títulos longos. */
+.tstb-video-title,
+.tstb-short-title {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 0 4px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font: 500 1.6rem/2.2rem Roboto, Arial, sans-serif;
+}
+
+.tstb-video-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tstb-video-channel,
+.tstb-video-meta,
+.tstb-short-meta {
+  display: block;
+  margin: 0;
+  color: var(--tstb-muted);
+  font-size: 1.4rem;
+  line-height: 2rem;
+  text-decoration: none;
+}
+
+.tstb-video-channel:hover {
+  color: var(--tstb-text);
+}
+
+/* ---------- Feed: Shorts ---------- */
+
+/* Capas verticais 9:16, nunca encaixadas em espaços 16:9. */
+.tstb-shorts-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 24px 8px;
+}
+
+.tstb-short {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
+}
+
+.tstb-short-link {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tstb-short-thumb {
+  overflow: hidden;
+  aspect-ratio: 9 / 16;
+  border-radius: 12px;
+  background: var(--tstb-control);
+}
+
+.tstb-short-title {
+  margin: 0;
+}
+
+/* ---------- Feed: carregamento, rodapé ---------- */
+
+.tstb-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tstb-skeleton-media {
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+}
+
+.tstb-skeleton-short .tstb-skeleton-media {
+  aspect-ratio: 9 / 16;
+}
+
+.tstb-skeleton-line {
+  width: 90%;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.tstb-skeleton-line-short {
+  width: 60%;
+}
+
+.tstb-skeleton-media,
+.tstb-skeleton-line {
+  background: var(--tstb-control);
+  animation: tstb-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes tstb-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.tstb-feed-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 32px 0 8px;
+}
+
+.tstb-feed-error {
+  margin: 0;
+  color: var(--tstb-danger);
+}
+
+.tstb-feed-end {
+  margin: 0;
+  color: var(--tstb-muted);
+}
+
+.tstb-load-more {
+  padding: 0 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tstb-skeleton-media,
+  .tstb-skeleton-line {
+    animation: none;
   }
 }

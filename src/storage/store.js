@@ -1,6 +1,10 @@
 import { mergeChannels } from '../core/channels.js';
 
-const KEYS = ['channels', 'categories', 'lastSyncedAt', 'latestUploads', 'uploadsSyncedAt', 'preferences'];
+const KEYS = ['channels', 'categories', 'lastSyncedAt', 'latestUploads', 'uploadsSyncedAt', 'preferences', 'feedItems', 'feedSyncedAt'];
+// Os vídeos mais recentes do feed de Inscrições (~150 bytes cada): o bastante
+// para várias semanas de feed por categoria sem pesar no storage.
+export const MAX_FEED_ITEMS = 800;
+const CHANNEL_TAB_CACHE_KEY = 'channelTabCache';
 
 // storage.local em vez de storage.sync: o sync limita cada item a 8 KB, o que
 // estoura rápido com centenas de inscrições.
@@ -13,6 +17,9 @@ export function createStore(area) {
     replaceChannels: (channels, now = Date.now()) => saveFullSync(area, channels, now),
     saveUploads: (uploads, now = Date.now()) => saveMergedUploads(area, uploads, now),
     savePreferences: (changes) => saveMergedPreferences(area, changes),
+    saveFeed: (items, now = Date.now()) => area.set({ feedItems: items.slice(0, MAX_FEED_ITEMS), feedSyncedAt: now }),
+    loadChannelTabCache: async () => (await area.get([CHANNEL_TAB_CACHE_KEY]))[CHANNEL_TAB_CACHE_KEY] ?? {},
+    saveChannelTabCache: (cache) => area.set({ [CHANNEL_TAB_CACHE_KEY]: cache }),
   };
 }
 
@@ -26,6 +33,8 @@ async function loadState(area) {
     latestUploads: data.latestUploads ?? {},
     uploadsSyncedAt: data.uploadsSyncedAt ?? null,
     preferences: data.preferences ?? {},
+    feedItems: data.feedItems ?? [],
+    feedSyncedAt: data.feedSyncedAt ?? null,
   };
 }
 

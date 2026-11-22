@@ -2,6 +2,10 @@ import { assignChannel, assignChannels, createCategory, removeCategory, renameCa
 import { SELECTORS } from '../dom/selectors.js';
 import { closeCategoryMenu, closeCategoryMenuIfDetached } from './components/categoryMenu.js';
 import { createCardCache } from './components/channelGrid.js';
+import { createFeedCardCache } from './components/feedView.js';
+import { FEED_TAB } from '../feed/categoryFeed.js';
+import { createFeedController, modelOf } from '../feed/feedController.js';
+import { markActiveSidebarCategory } from '../dom/sidebar.js';
 import { csvFileName, subscriptionsCsv } from '../export/subscriptionsCsv.js';
 import { parseCsv } from '../import/csvParse.js';
 import { cachedPlanImport, MAX_IMPORT_BYTES, readImport } from '../import/categorizationImport.js';
@@ -29,6 +33,9 @@ const AUTO_SYNC_AFTER_MS = 60 * 60 * 1000;
 export async function openCategoriesPage(options) {
   const context = createContext(options);
   const page = mountPage();
+  if (options.feedSource) {
+    context.feed = createFeedController({ source: options.feedSource, onChange: () => scheduleRender(page, context) });
+  }
   // A página anterior fica só oculta (não destruída), então um vídeo continuaria tocando.
   document.querySelector('video')?.pause();
   await reload(page, context);
@@ -40,14 +47,16 @@ export async function openCategoriesPage(options) {
 
 export function closeCategoriesPage() {
   closeCategoryMenu();
+  markActiveSidebarCategory(null);
   document.getElementById(PAGE_ID)?.remove();
   document.documentElement.classList.remove(OPEN_CLASS);
 }
 
 function needsSync(state, now) {
-  // uploadsSyncedAt nulo: quem já usava a extensão ainda não tem as datas dos
-  // vídeos, então sincroniza na hora em vez de esperar a próxima hora cheia.
-  return isStale(state.lastSyncedAt, now) || state.uploadsSyncedAt == null;
+  // Campos nulos: quem já usava a extensão ainda não tem as datas ou o feed
+  // (nem o ucid dos canais), então sincroniza na hora em vez de esperar a
+  // próxima hora cheia.
+  return isStale(state.lastSyncedAt, now) || state.uploadsSyncedAt == null || state.feedSyncedAt == null;
 }
 
 function syncCooldownLeft(context) {
@@ -68,10 +77,24 @@ function createContext(options) {
     ...options,
     state: null,
     cardCache: createCardCache(),
+    feedCardCache: createFeedCardCache(),
+    feed: null,
+    feedSession: null,
+    renderQueued: false,
     searchTimer: null,
     cooldownTimer: null,
     // Estado só de tela (filtro, busca, seleção): não é salvo, como a busca do próprio YouTube.
-    view: { filter: FILTER_ALL, query: '', sort: null, selected: new Set(), syncing: false, syncError: '', pendingImport: null },
+    view: {
+      filter: options.initialFilter ?? FILTER_ALL,
+      // Assistir vem antes de organizar: categorias abrem nos vídeos.
+      tab: options.initialTab ?? FEED_TAB.VIDEOS,
+      query: '',
+      sort: null,
+      selected: new Set(),
+      syncing: false,
+      syncError: '',
+      pendingImport: null,
+    },
   };
 }
 
@@ -101,14 +124,38 @@ function render(page, context) {
   context.view.selected = pruneSelection(context.view.selected, visibleChannels(context.state, context.view));
   context.view.syncCoolingDown = syncCooldownLeft(context) > 0;
   scheduleCooldownEnd(page, context);
-  const env = { now: context.now(), cardCache: context.cardCache };
+  const now = context.now();
+  const env = { now, cardCache: context.cardCache, feed: feedEnvFor(context, now) };
   const parts = renderPage(context.state, context.view, createActions(page, context), env);
+  markActiveSidebarCategory(context.state.categories.some((category) => category.id === context.view.filter) ? context.view.filter : null);
   preserveFocus(page, () => fillSlots(page, parts));
   closeCategoryMenuIfDetached();
 }
 
 function fillSlots(page, parts) {
   for (const slot of page.children) syncChildren(slot, parts[slot.dataset.slot] ? [parts[slot.dataset.slot]] : []);
+}
+
+function feedEnvFor(context, now) {
+  const { state, view } = context;
+  const category = state.categories.find((item) => item.id === view.filter);
+  if (!context.feed || !category || view.tab === FEED_TAB.CHANNELS) {
+    context.feedSession = null;
+    return null;
+  }
+  const channels = category.channelIds.map((id) => state.channels[id]).filter(Boolean);
+  context.feedSession = context.feed.sessionFor(category, view.tab, channels, state.latestUploads);
+  return { tab: view.tab, model: modelOf(context.feedSession, state.feedItems), channelsById: state.channels, now, cache: context.feedCardCache, query: view.query };
+}
+
+function scheduleRender(page, context) {
+  // Vários canais de um lote terminam quase juntos: um redesenho só para todos.
+  if (context.renderQueued) return;
+  context.renderQueued = true;
+  queueMicrotask(() => {
+    context.renderQueued = false;
+    render(page, context);
+  });
 }
 
 function scheduleCooldownEnd(page, context) {
@@ -135,6 +182,8 @@ function createActions(page, context) {
     ...viewActions(page, context),
     ...dataActions(page, context),
     sync: () => runSync(page, context),
+    hasFeed: Boolean(context.feed),
+    loadMore: () => context.feedSession && context.feed.loadMore(context.feedSession),
     canSync: Boolean(context.sync),
     exportCsv: () => exportSubscriptions(context),
     importCsv: () => startImport(page, context),
@@ -162,6 +211,8 @@ function viewActions(page, context) {
     clearSelection: () => update({ selected: new Set() }),
     rerender: () => update({}),
     cancelImport: () => update({ pendingImport: null }),
+    // Trocar de aba limpa a seleção: ela só existe na lista de canais.
+    setTab: (tab) => update({ tab, selected: new Set() }),
   };
 }
 
