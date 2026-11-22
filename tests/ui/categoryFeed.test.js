@@ -159,6 +159,36 @@ describe('aba Shorts', () => {
   });
 });
 
+// Regressão: no YouTube, clicar em "Carregar mais" levava a página de volta ao
+// topo. O painel do feed era recriado a cada render e a lista de cartões saía
+// dele por um instante, deixando a página curta; o botão focado era removido e,
+// ao perder o foco, o YouTube media o layout nesse momento: o navegador
+// ajustava a rolagem para caber, no topo. O foco também caía no <body>.
+describe('"Carregar mais" mantém o lugar na página', () => {
+  const manyShorts = async (channel) => Array.from({ length: 30 }, (_, n) => ({ videoId: fakeId(channel, `s${String(n).padStart(2, '0')}`), channelId: channel.id, title: `Short ${n}`, viewCount: 10 }));
+
+  it('a lista de cartões nunca sai da página e o foco continua no botão', async () => {
+    source.load = vi.fn(manyShorts);
+    await open({ initialFilter: 'prog', initialTab: 'shorts' });
+    await flush();
+    const grid = $('.tstb-shorts-grid');
+    const removed = [];
+    const observer = new MutationObserver((records) => records.forEach((record) => removed.push(...record.removedNodes)));
+    observer.observe(page(), { childList: true, subtree: true });
+
+    const loadMore = button('Carregar mais Shorts');
+    loadMore.focus();
+    loadMore.click();
+    await flush();
+    observer.disconnect();
+
+    expect($$('.tstb-short')).toHaveLength(48);
+    expect(removed).not.toContain(grid);
+    expect(removed.some((node) => node.contains?.(grid))).toBe(false);
+    expect(document.activeElement).toBe(button('Carregar mais Shorts'));
+  });
+});
+
 describe('estados vazios do feed', () => {
   it('categoria sem canais convida a organizar e leva à aba Canais', async () => {
     await open({ initialFilter: 'vazia' });

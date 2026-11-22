@@ -9,22 +9,35 @@ import { TABPANEL_ID } from './categoryTabs.js';
 // YouTube: miniatura primeiro, título em até duas linhas, canal e
 // "visualizações • há quanto tempo".
 
+// Painel, lista, rodapé e botão são os mesmos entre renders (um de cada por
+// tipo). No YouTube, recriá-los tirava a lista da página por um instante e
+// removia o botão focado: ao perder o foco o YouTube media o layout com a
+// página curta e a rolagem voltava ao topo a cada "Carregar mais".
 export function createFeedCardCache() {
-  return { cards: new Map(), lists: {} };
+  return { cards: new Map(), lists: {}, panels: {}, footers: {}, buttons: {}, actions: {} };
 }
 
 export function renderFeed({ tab, model, channelsById, now, cache, query }, actions) {
   const kind = tab === FEED_TAB.SHORTS ? 'short' : 'video';
   const items = filterByQuery(model.items, channelsById, query);
-  const panel = el('div', { className: 'tstb-feed', id: TABPANEL_ID, role: 'tabpanel', 'aria-labelledby': `tstb-tab-${tab}`, 'aria-busy': String(model.loading > 0) });
+  const panel = cachedPanel(cache, kind);
+  panel.setAttribute('aria-labelledby', `tstb-tab-${tab}`);
+  panel.setAttribute('aria-busy', String(model.loading > 0));
+  // O botão estável chama sempre as ações do render mais recente.
+  cache.actions[kind] = actions;
   if (!items.length && !model.loading) {
-    panel.append(renderEmptyState(emptyStateFor(kind, model, actions, query)));
+    syncChildren(panel, [renderEmptyState(emptyStateFor(kind, model, actions, query))]);
     return panel;
   }
   const list = cachedList(cache, kind);
   syncChildren(list, [...items.map((item) => cachedCard(cache, item, kind, channelsById, now)), ...skeletons(kind, model, items.length)]);
-  panel.append(list, renderFooter(kind, model, actions, items.length));
+  syncChildren(panel, [list, renderFooter(cache, kind, model, items.length)]);
   return panel;
+}
+
+function cachedPanel(cache, kind) {
+  cache.panels[kind] ??= el('div', { className: 'tstb-feed', id: TABPANEL_ID, role: 'tabpanel' });
+  return cache.panels[kind];
 }
 
 function filterByQuery(items, channelsById, query) {
@@ -107,20 +120,25 @@ function skeletons(kind, model, shown) {
   ]));
 }
 
-function renderFooter(kind, model, actions, shown) {
+function renderFooter(cache, kind, model, shown) {
   const children = [];
   if (model.errorKey) children.push(el('p', { className: 'tstb-feed-error', role: 'alert' }, capitalize(t(model.errorKey))));
   if (model.missingIds) children.push(el('p', { className: 'tstb-hint' }, t('feed.missingIds')));
   // "Carregar mais" explícito (não rolagem infinita): cada clique é um lote
   // limitado de consultas e o rodapé continua alcançável (NN/g, Baymard).
-  if (model.hasMore && !model.loading) children.push(loadMoreButton(kind, actions));
+  if (model.hasMore && !model.loading) children.push(loadMoreButton(cache, kind));
   else if (!model.hasMore && !model.loading && shown) children.push(el('p', { className: 'tstb-feed-end' }, t('feed.end')));
-  return el('div', { className: 'tstb-feed-footer' }, children);
+  cache.footers[kind] ??= el('div', { className: 'tstb-feed-footer' });
+  syncChildren(cache.footers[kind], children);
+  return cache.footers[kind];
 }
 
-function loadMoreButton(kind, actions) {
+function loadMoreButton(cache, kind) {
+  cache.buttons[kind] ??= el('button', { type: 'button', className: 'tstb-button tstb-load-more', onClick: () => cache.actions[kind].loadMore() });
+  // O texto acompanha o idioma, que pode mudar entre renders.
   const label = kind === 'short' ? t('feed.loadMoreShorts') : t('feed.loadOlder');
-  return el('button', { type: 'button', className: 'tstb-button tstb-load-more', onClick: actions.loadMore }, label);
+  if (cache.buttons[kind].textContent !== label) cache.buttons[kind].textContent = label;
+  return cache.buttons[kind];
 }
 
 function emptyStateFor(kind, model, actions, query) {
