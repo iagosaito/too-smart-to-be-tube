@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Too Smart To Be Tube",
+  "version": "0.1.0",
+  "description": "Organize suas inscrições do YouTube em categorias.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["dist/content.js"],
+      "css": ["src/ui/styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

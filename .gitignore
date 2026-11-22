@@ -1,0 +1,31 @@
+# Dependências (recriadas com `npm install`)
+node_modules/
+
+# Build: dist/content.js é gerado por `npm run build` a partir de src/
+dist/
+
+# Extensão empacotada para publicação (.zip para a Chrome Web Store, .crx/.pem do Chrome)
+*.zip
+*.crx
+*.pem
+
+# Relatórios de teste/cobertura
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Variáveis de ambiente e segredos
+.env
+.env.*
+
+# Exportações de inscrições: contêm dados pessoais e não fazem parte do código
+inscricoes-youtube-*.csv
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

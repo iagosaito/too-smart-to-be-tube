@@ -1,0 +1,738 @@
+/* Prefixo tstb- evita colisão com as classes do YouTube. */
+
+/* Paleta própria em vez das variáveis --yt-spec-*: elas não chegam de forma
+   confiável aos nós injetados e o fallback (tema claro) deixava o texto
+   invisível no tema escuro. O atributo html[dark] é o sinal estável que o
+   YouTube usa para o tema escuro. Os valores copiam a paleta do YouTube. */
+:root {
+  --tstb-bg: #ffffff;
+  --tstb-text: #0f0f0f;
+  --tstb-muted: #606060;
+  --tstb-surface: #ffffff;
+  --tstb-control: rgba(0, 0, 0, 0.05);
+  --tstb-control-hover: rgba(0, 0, 0, 0.1);
+  --tstb-hover: rgba(0, 0, 0, 0.05);
+  --tstb-border: rgba(0, 0, 0, 0.1);
+  --tstb-strong: #0f0f0f;
+  --tstb-on-strong: #ffffff;
+  --tstb-accent: #065fd4;
+  --tstb-accent-soft: rgba(6, 95, 212, 0.1);
+  --tstb-danger: #cc0000;
+  /* O aviso tem cores invertidas, então seu destaque usa o azul do tema oposto. */
+  --tstb-toast-accent: #3ea6ff;
+}
+
+html[dark] {
+  --tstb-bg: #0f0f0f;
+  --tstb-text: #f1f1f1;
+  --tstb-muted: #aaaaaa;
+  --tstb-surface: #212121;
+  --tstb-control: rgba(255, 255, 255, 0.1);
+  --tstb-control-hover: rgba(255, 255, 255, 0.2);
+  --tstb-hover: rgba(255, 255, 255, 0.1);
+  --tstb-border: rgba(255, 255, 255, 0.2);
+  --tstb-strong: #f1f1f1;
+  --tstb-on-strong: #0f0f0f;
+  --tstb-accent: #3ea6ff;
+  --tstb-accent-soft: rgba(62, 166, 255, 0.15);
+  --tstb-danger: #ff4e45;
+  --tstb-toast-accent: #065fd4;
+}
+
+/* ---------- Item no menu lateral ---------- */
+
+.tstb-sidebar-entry {
+  padding: 12px;
+  border-bottom: 1px solid var(--tstb-border);
+}
+
+.tstb-sidebar-button {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--tstb-text);
+  font: 400 1.4rem Roboto, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.tstb-sidebar-button:hover,
+.tstb-sidebar-button:focus-visible {
+  background: var(--tstb-hover);
+}
+
+/* Tamanho explícito: sem ele o SVG ocupava o botão inteiro. */
+.tstb-sidebar-button svg,
+.tstb-mini-button svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  fill: currentColor;
+}
+
+/* Menu recolhido: ícone em cima e rótulo pequeno embaixo, medidas copiadas
+   dos itens nativos (Início, Shorts...). */
+/* Ocupa a mesma largura dos itens nativos da lista em vez de uma medida fixa,
+   assim acompanha o espaçamento que o YouTube definir. */
+.tstb-mini-button {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 16px 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--tstb-text);
+  font: 400 1rem Roboto, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.tstb-mini-button:hover,
+.tstb-mini-button:focus-visible {
+  background: var(--tstb-hover);
+}
+
+/* Destaca o item enquanto a página está aberta, como o YouTube faz com a página atual. */
+html.tstb-page-open .tstb-sidebar-button,
+html.tstb-page-open .tstb-mini-button {
+  background: var(--tstb-hover);
+  font-weight: 500;
+}
+
+/* ---------- Estrutura da página ---------- */
+
+/* As regiões existem só para o JavaScript; display: contents as remove do
+   layout, mantendo o chip sticky relativo à página e não à região. */
+.tstb-slot {
+  display: contents;
+}
+
+/* A página anterior só é ocultada (não removida) porque o YouTube controla o
+   ciclo de vida dela; destruí-la quebraria a navegação de volta. */
+html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
+  display: none !important;
+}
+
+.tstb-page {
+  box-sizing: border-box;
+  max-width: 1284px;
+  margin: 0 auto;
+  /* Espaço extra no fim para a barra de seleção não cobrir a última linha. */
+  padding: 24px 24px 120px;
+  color: var(--tstb-text);
+  font: 400 1.4rem Roboto, Arial, sans-serif;
+}
+
+.tstb-page svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  fill: currentColor;
+}
+
+.tstb-page h1,
+.tstb-page h2,
+.tstb-page h3,
+.tstb-page p {
+  margin: 0;
+}
+
+.tstb-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tstb-page h1 {
+  font-size: 3.6rem;
+  font-weight: 700;
+  line-height: 4.4rem;
+}
+
+.tstb-subtitle {
+  margin-top: 4px;
+  color: var(--tstb-muted);
+}
+
+.tstb-error {
+  color: var(--tstb-danger);
+}
+
+.tstb-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Controles ---------- */
+
+/* Pílulas com fundo sutil e sem borda, como os botões nativos do YouTube. */
+.tstb-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--tstb-control);
+  color: inherit;
+  font: 500 1.4rem Roboto, Arial, sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tstb-button:has(svg) {
+  padding-left: 12px;
+}
+
+.tstb-button:hover {
+  background: var(--tstb-control-hover);
+}
+
+.tstb-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.tstb-button-primary {
+  background: var(--tstb-strong);
+  color: var(--tstb-on-strong);
+}
+
+.tstb-button-primary:hover {
+  background: var(--tstb-strong);
+  opacity: 0.85;
+}
+
+.tstb-button-danger:hover {
+  color: var(--tstb-danger);
+}
+
+.tstb-button-text {
+  background: transparent;
+}
+
+.tstb-syncing svg {
+  animation: tstb-spin 1s linear infinite;
+}
+
+@keyframes tstb-spin {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.tstb-page :focus-visible,
+.tstb-bulkbar :focus-visible {
+  outline: 2px solid var(--tstb-accent);
+  outline-offset: 2px;
+}
+
+.tstb-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 280px;
+  height: 40px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  border: 1px solid var(--tstb-border);
+  border-radius: 20px;
+  color: var(--tstb-muted);
+}
+
+.tstb-search:focus-within {
+  border-color: var(--tstb-accent);
+}
+
+.tstb-search svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tstb-search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none !important;
+  background: transparent;
+  color: var(--tstb-text);
+  font: inherit;
+}
+
+/* ---------- Revisão da importação ---------- */
+
+/* Cartão destacado (borda de destaque), não um modal: o usuário pode rolar e
+   conferir as categorias atuais antes de decidir. */
+.tstb-review {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: var(--tstb-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--tstb-accent);
+}
+
+.tstb-review-error {
+  background: var(--tstb-control);
+  box-shadow: inset 0 0 0 1px var(--tstb-danger);
+}
+
+.tstb-review h3 {
+  font-size: 1.8rem;
+  font-weight: 500;
+  outline: none;
+}
+
+.tstb-review-file {
+  color: var(--tstb-muted);
+}
+
+.tstb-review-stats {
+  margin: 4px 0;
+  padding-left: 20px;
+  line-height: 2.2rem;
+}
+
+.tstb-review-unknown summary {
+  cursor: pointer;
+  color: var(--tstb-muted);
+}
+
+.tstb-review-unknown ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: var(--tstb-muted);
+}
+
+.tstb-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ---------- Chips ---------- */
+
+/* Fixa sob o cabeçalho do YouTube para trocar de categoria sem rolar para cima. */
+.tstb-chips {
+  position: sticky;
+  top: var(--ytd-masthead-height, 56px);
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px -24px 0;
+  padding: 12px 24px;
+  background: var(--tstb-bg);
+}
+
+.tstb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--tstb-control);
+  color: var(--tstb-text);
+  font: 500 1.4rem Roboto, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.tstb-chip:hover {
+  background: var(--tstb-control-hover);
+}
+
+.tstb-chip-active,
+.tstb-chip-active:hover {
+  background: var(--tstb-strong);
+  color: var(--tstb-on-strong);
+}
+
+.tstb-chip-count {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.tstb-chip-new {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--tstb-border);
+}
+
+.tstb-chip-new svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tstb-chip-form {
+  padding: 0;
+  cursor: default;
+}
+
+.tstb-chip-input {
+  width: 160px;
+  height: 100%;
+  padding: 0 12px;
+  border: 1px solid var(--tstb-accent);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none !important;
+}
+
+/* ---------- Título da visão atual ---------- */
+
+.tstb-view-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  margin: 12px 0 20px;
+}
+
+.tstb-view-title {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.tstb-count,
+.tstb-hint {
+  color: var(--tstb-muted);
+  font-weight: 400;
+}
+
+.tstb-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.tstb-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--tstb-muted);
+}
+
+.tstb-sort-select {
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--tstb-control);
+  color: var(--tstb-text);
+  font: 500 1.4rem Roboto, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.tstb-sort-select:hover {
+  background: var(--tstb-control-hover);
+}
+
+.tstb-tools,
+.tstb-rename {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tstb-rename-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid var(--tstb-accent);
+  background: transparent;
+  color: inherit;
+  font: 700 2rem Roboto, Arial, sans-serif;
+  outline: none !important;
+}
+
+/* ---------- Grade de canais ---------- */
+
+.tstb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tstb-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 8px 14px;
+  border-radius: 12px;
+  text-align: center;
+  transition: background-color 0.15s;
+  /* O navegador pula layout e pintura dos cartões fora da tela; com centenas
+     de inscrições é a maior economia ao abrir e rolar. A altura estimada
+     mantém a barra de rolagem estável. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 196px;
+}
+
+.tstb-card:hover {
+  background: var(--tstb-hover);
+}
+
+.tstb-card-selected,
+.tstb-card-selected:hover {
+  background: var(--tstb-accent-soft);
+  box-shadow: inset 0 0 0 2px var(--tstb-accent);
+}
+
+.tstb-card-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tstb-selecting .tstb-card-link {
+  cursor: pointer;
+}
+
+.tstb-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.tstb-avatar-empty {
+  display: grid;
+  place-items: center;
+  background: var(--tstb-control);
+  font-size: 3.6rem;
+  font-weight: 500;
+}
+
+/* Linha de apoio discreta, como a data abaixo do título dos vídeos no YouTube. */
+.tstb-card-meta {
+  margin-top: -6px;
+  color: var(--tstb-muted);
+  font-size: 1.2rem;
+  line-height: 1.6rem;
+}
+
+/* Limita a duas linhas para nomes longos não desalinharem a grade. */
+.tstb-card-name {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 2rem;
+}
+
+/* A caixa de seleção só aparece no hover/foco para não poluir a grade, mas
+   fica sempre visível no modo de seleção, quando ela é a ação principal. */
+.tstb-check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid var(--tstb-muted);
+  border-radius: 50%;
+  background: var(--tstb-bg);
+  color: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.tstb-check svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tstb-card:hover .tstb-check,
+.tstb-check:focus-visible,
+.tstb-selecting .tstb-check {
+  opacity: 1;
+}
+
+.tstb-check[aria-checked='true'] {
+  border-color: var(--tstb-accent);
+  background: var(--tstb-accent);
+  color: var(--tstb-on-strong);
+}
+
+.tstb-pill {
+  max-width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--tstb-control);
+  color: var(--tstb-text);
+  font: 500 1.2rem Roboto, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.tstb-pill:hover {
+  background: var(--tstb-control-hover);
+}
+
+.tstb-pill-empty {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--tstb-border);
+  color: var(--tstb-muted);
+}
+
+/* Sem isso as opções do select herdam fundo transparente e ficam ilegíveis. */
+.tstb-page option,
+.tstb-bulkbar option {
+  background: var(--tstb-surface);
+  color: var(--tstb-text);
+}
+
+/* ---------- Estados vazios ---------- */
+
+.tstb-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 64px 16px;
+  text-align: center;
+}
+
+.tstb-empty-state h3 {
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.tstb-empty-state p {
+  margin-bottom: 8px;
+  color: var(--tstb-muted);
+}
+
+/* ---------- Barra de seleção e toast ---------- */
+
+/* Cores invertidas (escuro no tema claro e vice-versa), como o snackbar do YouTube. */
+.tstb-bulkbar,
+.tstb-toast {
+  position: fixed;
+  bottom: 24px;
+  z-index: 2200;
+  background: var(--tstb-strong);
+  color: var(--tstb-on-strong);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  font: 400 1.4rem Roboto, Arial, sans-serif;
+}
+
+.tstb-bulkbar {
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 20px;
+  border-radius: 28px;
+  transform: translateX(-50%);
+}
+
+.tstb-bulk-count {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tstb-bulk-select {
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--tstb-on-strong);
+  color: var(--tstb-strong);
+  font: 500 1.4rem Roboto, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.tstb-bulkbar .tstb-button-text {
+  color: inherit;
+}
+
+.tstb-bulkbar .tstb-button-text:hover {
+  background: rgba(128, 128, 128, 0.25);
+}
+
+.tstb-toast {
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 480px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  animation: tstb-toast-in 0.2s ease-out;
+}
+
+/* Botão de texto na cor de destaque, como o "Desfazer" do snackbar do YouTube. */
+.tstb-toast-action {
+  flex: none;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--tstb-toast-accent);
+  font: 500 1.4rem Roboto, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.tstb-toast-action:hover {
+  background: rgba(128, 128, 128, 0.25);
+}
+
+@keyframes tstb-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tstb-syncing svg,
+  .tstb-toast {
+    animation: none;
+  }
+}
+
+/* Em telas estreitas a busca ocupa a linha toda em vez de espremer o título. */
+@media (max-width: 656px) {
+  .tstb-header-actions,
+  .tstb-search {
+    width: 100%;
+  }
+}

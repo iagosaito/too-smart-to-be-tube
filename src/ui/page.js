@@ -1,0 +1,235 @@
+import { assignChannel, assignChannels, createCategory, removeCategory, renameCategory } from '../core/categories.js';
+import { SELECTORS } from '../dom/selectors.js';
+import { createCardCache } from './components/channelGrid.js';
+import { csvFileName, subscriptionsCsv } from '../export/subscriptionsCsv.js';
+import { parseCsv } from '../import/csvParse.js';
+import { planImport, readImport } from '../import/categorizationImport.js';
+import { showToast } from './components/feedback.js';
+import { downloadTextFile } from './download.js';
+import { pickFile } from './filePicker.js';
+import { el, syncChildren } from './elements.js';
+import { preserveFocus } from './focus.js';
+import { renderPage, SLOTS } from './render.js';
+import { FILTER_ALL, pluralize, resolveFilter, SORT_NAME } from './view.js';
+
+export const PAGE_ID = 'tstb-page';
+export const OPEN_CLASS = 'tstb-page-open';
+// Espera uma pausa na digitação antes de redesenhar: filtrar a cada tecla
+// deixava a digitação travada com muitas inscrições.
+const SEARCH_DELAY_MS = 150;
+// Um CSV de inscrições tem poucos KB; o limite barra arquivos errados (ex.: um vídeo).
+const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
+// Tempo maior que o padrão para dar chance de clicar em "Desfazer".
+const UNDO_TOAST_MS = 10_000;
+// Sincronizar a cada abertura faria dezenas de requisições à toa; uma vez por hora basta.
+const AUTO_SYNC_AFTER_MS = 60 * 60 * 1000;
+
+export async function openCategoriesPage(options) {
+  const context = createContext(options);
+  const page = mountPage();
+  // A página anterior fica só oculta (não destruída), então um vídeo continuaria tocando.
+  document.querySelector('video')?.pause();
+  await reload(page, context);
+  if (context.sync && needsSync(context.state, context.now())) runSync(page, context);
+  return page;
+}
+
+export function closeCategoriesPage() {
+  document.getElementById(PAGE_ID)?.remove();
+  document.documentElement.classList.remove(OPEN_CLASS);
+}
+
+function needsSync(state, now) {
+  // uploadsSyncedAt nulo: quem já usava a extensão ainda não tem as datas dos
+  // vídeos, então sincroniza na hora em vez de esperar a próxima hora cheia.
+  return isStale(state.lastSyncedAt, now) || state.uploadsSyncedAt == null;
+}
+
+export function isStale(lastSyncedAt, now) {
+  return lastSyncedAt == null || now - lastSyncedAt > AUTO_SYNC_AFTER_MS;
+}
+
+function createContext(options) {
+  return {
+    confirm: (message) => window.confirm(message),
+    download: downloadTextFile,
+    pickFile,
+    now: Date.now,
+    searchDelay: SEARCH_DELAY_MS,
+    ...options,
+    state: null,
+    cardCache: createCardCache(),
+    searchTimer: null,
+    // Estado só de tela (filtro, busca, seleção): não é salvo, como a busca do próprio YouTube.
+    view: { filter: FILTER_ALL, query: '', sort: null, selected: new Set(), syncing: false, syncError: '', pendingImport: null },
+  };
+}
+
+function mountPage() {
+  closeCategoriesPage();
+  const slots = SLOTS.map((name) => el('div', { className: 'tstb-slot', 'data-slot': name }));
+  const page = el('div', { id: PAGE_ID, className: 'tstb-page', role: 'main' }, slots);
+  // Dentro do ytd-page-manager herdamos as margens do cabeçalho e do menu
+  // lateral, então a página se encaixa no layout do YouTube sem CSS frágil.
+  (document.querySelector(SELECTORS.pageManager) ?? document.body).append(page);
+  document.documentElement.classList.add(OPEN_CLASS);
+  window.scrollTo?.(0, 0);
+  return page;
+}
+
+async function reload(page, context) {
+  // O storage é a fonte da verdade; recarregar após cada gravação evita estado divergente.
+  context.state = await context.store.load();
+  // A ordem escolhida é lembrada entre visitas; só é lida do storage na primeira carga.
+  context.view.sort ??= context.state.preferences.sortBy ?? SORT_NAME;
+  render(page, context);
+}
+
+function render(page, context) {
+  if (!page.isConnected) return;
+  context.view.filter = resolveFilter(context.view.filter, context.state.categories);
+  const env = { now: context.now(), cardCache: context.cardCache };
+  const parts = renderPage(context.state, context.view, createActions(page, context), env);
+  preserveFocus(page, () => fillSlots(page, parts));
+}
+
+function fillSlots(page, parts) {
+  for (const slot of page.children) syncChildren(slot, parts[slot.dataset.slot] ? [parts[slot.dataset.slot]] : []);
+}
+
+async function runSync(page, context) {
+  Object.assign(context.view, { syncing: true, syncError: '' });
+  render(page, context);
+  try {
+    await context.sync();
+  } catch (error) {
+    context.view.syncError = error.message;
+  }
+  context.view.syncing = false;
+  await reload(page, context);
+}
+
+function createActions(page, context) {
+  return {
+    ...viewActions(page, context),
+    ...dataActions(page, context),
+    sync: () => runSync(page, context),
+    canSync: Boolean(context.sync),
+    exportCsv: () => exportSubscriptions(context),
+    importCsv: () => startImport(page, context),
+    applyImport: () => applyImport(page, context),
+  };
+}
+
+function viewActions(page, context) {
+  const update = (changes) => {
+    Object.assign(context.view, changes);
+    render(page, context);
+  };
+  return {
+    // Trocar de categoria limpa a seleção para não mover canais que o usuário já não vê.
+    setFilter: (filter) => update({ filter, selected: new Set() }),
+    search: (query) => update({ query }),
+    searchAsYouType: (query) => scheduleSearch(page, context, query),
+    isSelecting: () => context.view.selected.size > 0,
+    setSort: (sort) => {
+      update({ sort });
+      // Gravar a preferência não precisa bloquear a tela; uma falha só faz a ordem não ser lembrada.
+      context.store.savePreferences({ sortBy: sort }).catch(() => {});
+    },
+    toggleSelect: (channelId) => update({ selected: toggled(context.view.selected, channelId) }),
+    clearSelection: () => update({ selected: new Set() }),
+    rerender: () => update({}),
+    cancelImport: () => update({ pendingImport: null }),
+  };
+}
+
+function scheduleSearch(page, context, query) {
+  // A consulta é gravada já, e só o redesenho espera: assim um re-render
+  // vindo de outra ação (ex.: fim da sincronização) não apaga o que foi digitado.
+  context.view.query = query;
+  clearTimeout(context.searchTimer);
+  context.searchTimer = setTimeout(() => render(page, context), context.searchDelay);
+}
+
+async function saveCategories(page, context, next, viewChanges = {}) {
+  await context.store.saveCategories(next);
+  Object.assign(context.view, viewChanges);
+  await reload(page, context);
+}
+
+function dataActions(page, context) {
+  const categories = () => context.state.categories;
+  const save = (next, viewChanges) => saveCategories(page, context, next, viewChanges);
+  return {
+    create: (name) => createAndOpen(categories(), name, save),
+    rename: (categoryId, name) => save(renameCategory(categories(), categoryId, name)),
+    remove: (category) => removeWithConfirmation(context, category, save),
+    assign: (channelId, categoryId) => save(assignChannel(categories(), channelId, categoryId)),
+    moveSelected: (categoryId) => moveSelection(context, categoryId, save),
+  };
+}
+
+async function createAndOpen(categories, name, save) {
+  const next = createCategory(categories, name);
+  // Abrir a categoria recém-criada leva o usuário direto ao próximo passo: preenchê-la.
+  const created = next.length > categories.length ? next.at(-1) : null;
+  await save(next, created ? { filter: created.id, selected: new Set() } : {});
+}
+
+async function removeWithConfirmation(context, category, save) {
+  const count = category.channelIds.length;
+  const detail = count ? ` ${pluralize(count, 'canal volta', 'canais voltam')} para "Sem categoria".` : '';
+  // Confirmação porque excluir não tem "desfazer" e desfaz trabalho manual de organização.
+  if (!context.confirm(`Excluir a categoria "${category.name}"?${detail}`)) return;
+  await save(removeCategory(context.state.categories, category.id), { filter: FILTER_ALL });
+  showToast(`Categoria "${category.name}" excluída`);
+}
+
+async function moveSelection(context, categoryId, save) {
+  const ids = [...context.view.selected];
+  const target = context.state.categories.find((category) => category.id === categoryId)?.name ?? 'Sem categoria';
+  await save(assignChannels(context.state.categories, ids, categoryId), { selected: new Set() });
+  showToast(`${pluralize(ids.length, 'canal movido', 'canais movidos')} para "${target}"`);
+}
+
+function exportSubscriptions(context) {
+  // Exporta do estado salvo (não da tela), então filtro e busca não afetam o arquivo.
+  const { state } = context;
+  context.download(csvFileName(context.now()), subscriptionsCsv(state));
+  const count = Object.keys(state.channels).length;
+  showToast(`${pluralize(count, 'inscrição exportada', 'inscrições exportadas')}`);
+}
+
+async function startImport(page, context) {
+  const file = await context.pickFile();
+  if (!file) return;
+  context.view.pendingImport = await readImportFile(file);
+  render(page, context);
+  // Leva foco e leitores de tela direto ao resultado da ação que o usuário acabou de fazer.
+  page.querySelector('.tstb-review h3')?.focus();
+}
+
+async function readImportFile(file) {
+  if (file.size > MAX_IMPORT_BYTES) return { fileName: file.name, error: 'O arquivo é grande demais (máximo de 5 MB).' };
+  const { entries, error } = readImport(parseCsv(await file.text()));
+  return { fileName: file.name, entries: error ? null : entries, error };
+}
+
+async function applyImport(page, context) {
+  const previous = context.state.categories;
+  // Recalcula com o estado atual para aplicar exatamente o que a revisão mostra agora.
+  const { categories, summary } = planImport(context.state, context.view.pendingImport.entries);
+  await saveCategories(page, context, categories, { pendingImport: null, filter: FILTER_ALL, selected: new Set() });
+  const undo = () => saveCategories(page, context, previous);
+  const message = `${pluralize(summary.matched, 'canal organizado', 'canais organizados')} em ${pluralize(summary.categoryCount, 'categoria', 'categorias')}`;
+  showToast(message, { duration: UNDO_TOAST_MS, action: { label: 'Desfazer', onClick: undo } });
+}
+
+function toggled(set, value) {
+  // Novo Set em vez de mutar: o estado de tela é tratado como imutável, como o resto.
+  const next = new Set(set);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  return next;
+}

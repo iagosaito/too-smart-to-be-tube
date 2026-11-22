@@ -1,0 +1,13 @@
+// Imita a API de chrome.storage.local (get/set com Promises) em memória.
+export function createFakeStorageArea(initial = {}) {
+  let data = structuredClone(initial);
+  return {
+    async get(keys) {
+      return Object.fromEntries(keys.filter((key) => key in data).map((key) => [key, structuredClone(data[key])]));
+    },
+    async set(items) {
+      data = { ...data, ...structuredClone(items) };
+    },
+    dump: () => structuredClone(data),
+  };
+}
