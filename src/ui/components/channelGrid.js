@@ -1,3 +1,4 @@
+import { sortCategoriesByName } from '../../core/categories.js';
 import { el, svgIcon, syncChildren } from '../elements.js';
 import { ICONS } from '../icons.js';
 
@@ -11,7 +12,9 @@ export function createCardCache() {
 
 // metaOf devolve a linha de apoio do cartão (ex.: "Vídeo há 2 dias") ou null.
 export function renderChannelGrid(channels, { categories, view, actions, cache = createCardCache(), metaOf = () => null }) {
-  const shared = { categories, actions, metaOf, categoryOf: mapCategoryByChannel(categories), categoriesKey: keyOf(categories) };
+  // As opções do select seguem a mesma ordem A–Z dos chips.
+  const sorted = sortCategoriesByName(categories);
+  const shared = { categories: sorted, actions, metaOf, categoryOf: mapCategoryByChannel(sorted), categoriesKey: keyOf(sorted) };
   const cards = channels.map((channel) => cachedCard(channel, view.selected.has(channel.id), shared, cache.cards));
   // A mesma <ul> é reaproveitada para que só os cartões alterados sejam trocados no DOM.
   cache.list ??= el('ul');

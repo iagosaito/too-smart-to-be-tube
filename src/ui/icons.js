@@ -1,6 +1,9 @@
 // Caminhos SVG no estilo Material, o mesmo traço dos ícones do YouTube, para
 // a página parecer nativa. Ficam como dados porque innerHTML é bloqueado.
 export const ICONS = {
+  grid: 'M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z',
+  chevronLeft: 'M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z',
+  chevronRight: 'M8.59 16.59 10 18l6-6-6-6-1.41 1.41L13.17 12z',
   folder: 'M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z',
   search:
     'M20.87 20.17l-5.59-5.59A6.96 6.96 0 0017 10c0-3.87-3.13-7-7-7s-7 3.13-7 7 3.13 7 7 7c1.75 0 3.35-.65 4.58-1.71l5.59 5.59.7-.71zM10 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z',

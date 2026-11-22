@@ -65,6 +65,13 @@ describe('buildChips', () => {
   });
 });
 
+describe('buildChips (ordem)', () => {
+  it('lista as categorias em ordem alfabética, não de criação', () => {
+    const categories = ['Viagem', 'Comida', 'Música'].map((name, i) => ({ id: String(i), name, channelIds: [] }));
+    expect(buildChips({ channels: {}, categories }).map((chip) => chip.label)).toEqual(['Todas', 'Comida', 'Música', 'Viagem', 'Sem categoria']);
+  });
+});
+
 describe('resolveFilter', () => {
   it('mantém filtros fixos e categorias existentes', () => {
     expect(resolveFilter(FILTER_NONE, state.categories)).toBe(FILTER_NONE);

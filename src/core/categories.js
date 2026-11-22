@@ -40,6 +40,13 @@ export function assignChannels(categories, channelIds, categoryId) {
   return channelIds.reduce((result, channelId) => assignChannel(result, channelId, categoryId), categories);
 }
 
+// Ordem de exibição é sempre alfabética, independente da ordem de criação:
+// posições previsíveis deixam achar a categoria sem ler a lista inteira, e
+// não mudam quando canais são movidos (como aconteceria ordenando por tamanho).
+export function sortCategoriesByName(categories) {
+  return [...categories].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+}
+
 export function findCategoryOf(categories, channelId) {
   return categories.find((category) => category.channelIds.includes(channelId)) ?? null;
 }

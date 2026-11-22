@@ -7,6 +7,7 @@ import {
   groupChannels,
   removeCategory,
   renameCategory,
+  sortCategoriesByName,
 } from '../../src/core/categories.js';
 
 const makeId = () => 'id-1';
@@ -117,5 +118,13 @@ describe('groupChannels', () => {
   it('ignora ids de canais que não existem mais', () => {
     const ghost = { id: 'g', name: 'G', channelIds: ['/@sumiu'] };
     expect(groupChannels([ghost], channels).groups[0].channels).toEqual([]);
+  });
+});
+
+describe('sortCategoriesByName', () => {
+  it('ordena ignorando acentos e maiúsculas, sem mutar a entrada', () => {
+    const input = [{ name: 'viagem' }, { name: 'Ábaco' }, { name: 'Música' }, { name: 'livros' }];
+    expect(sortCategoriesByName(input).map((c) => c.name)).toEqual(['Ábaco', 'livros', 'Música', 'viagem']);
+    expect(input[0].name).toBe('viagem');
   });
 });

@@ -28,7 +28,7 @@ beforeEach(() => {
 const page = () => document.getElementById(PAGE_ID);
 const $ = (selector) => page().querySelector(selector);
 const $$ = (selector) => [...page().querySelectorAll(selector)];
-const chip = (label) => $$('.tstb-chip').find((node) => node.firstChild?.textContent === label);
+const chip = (label) => $$('.tstb-chip').find((node) => node.querySelector('.tstb-chip-label')?.textContent === label);
 const button = (label) => $$('button').find((node) => node.textContent.trim() === label);
 const cardNames = () => $$('.tstb-card-name').map((node) => node.textContent);
 const checkFor = (name) => $$('.tstb-check').find((node) => node.getAttribute('aria-label') === `Selecionar ${name}`);
@@ -94,6 +94,23 @@ describe('visão geral', () => {
     const card = $$('.tstb-card').find((node) => node.textContent.includes('Alura'));
     expect(card.querySelector('a').href).toBe('https://www.youtube.com/@alura');
     expect(card.querySelector('select').value).toBe('tech');
+  });
+});
+
+describe('ordem alfabética das categorias', () => {
+  const unordered = [
+    { id: 'v', name: 'Viagem', channelIds: [] },
+    { id: 't', name: 'Tech', channelIds: ['/@alura'] },
+    { id: 'c', name: 'Comida', channelIds: [] },
+  ];
+  const optionLabels = (select) => [...select.options].map((option) => option.textContent);
+
+  it('chips, pílulas e "Mover para…" usam a mesma ordem A–Z', async () => {
+    await open({ store: createStore(createFakeStorageArea({ channels, categories: unordered, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 })) });
+    expect($$('.tstb-chips-track .tstb-chip-label').map((node) => node.textContent)).toEqual(['Comida', 'Tech', 'Viagem']);
+    expect(optionLabels($('.tstb-pill'))).toEqual(['Sem categoria', 'Comida', 'Tech', 'Viagem']);
+    checkFor('Alura').click();
+    expect(optionLabels($('.tstb-bulk-select'))).toEqual(['Mover para…', 'Comida', 'Tech', 'Viagem', 'Sem categoria']);
   });
 });
 

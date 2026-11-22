@@ -1,4 +1,4 @@
-import { groupChannels } from '../core/categories.js';
+import { groupChannels, sortCategoriesByName } from '../core/categories.js';
 import { sortByName } from '../core/channels.js';
 import { normalizeText } from '../core/text.js';
 
@@ -36,7 +36,7 @@ function channelsForFilter(state, filter) {
 }
 
 export function buildChips(state) {
-  const { groups, uncategorized } = groupChannels(state.categories, state.channels);
+  const { groups, uncategorized } = groupChannels(sortCategoriesByName(state.categories), state.channels);
   // "Sem categoria" fica no fim porque é a fila de trabalho, não um destino.
   return [
     { id: FILTER_ALL, label: 'Todas', count: Object.keys(state.channels).length },

@@ -328,20 +328,94 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
 
 /* ---------- Chips ---------- */
 
-/* Fixa sob o cabeçalho do YouTube para trocar de categoria sem rolar para cima. */
+/* Fixa sob o cabeçalho do YouTube para trocar de categoria sem rolar para cima.
+   Numa linha só: com muitas categorias, quebrar linhas faria a barra fixa
+   ocupar boa parte da tela. */
 .tstb-chips {
   position: sticky;
   top: var(--ytd-masthead-height, 56px);
   z-index: 10;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
   margin: 16px -24px 0;
   padding: 12px 24px;
   background: var(--tstb-bg);
 }
 
+/* Separa a visão geral e a fila de trabalho das categorias, sem competir
+   com o destaque do chip ativo. */
+.tstb-chips-divider {
+  flex: none;
+  width: 1px;
+  height: 24px;
+  background: var(--tstb-border);
+}
+
+.tstb-chips-scroller {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.tstb-chips-track {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tstb-chips-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Setas sobre um degradê que esmaece os chips cortados, como na barra da
+   página inicial do YouTube: indica que há mais conteúdo naquela direção. */
+.tstb-chips-arrow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  width: 56px;
+  padding: 0;
+  border: 0;
+  color: var(--tstb-text);
+  cursor: pointer;
+}
+
+.tstb-chips-arrow[hidden] {
+  display: none;
+}
+
+.tstb-chips-arrow-prev {
+  left: 0;
+  justify-content: flex-start;
+  background: linear-gradient(to right, var(--tstb-bg) 55%, transparent);
+}
+
+.tstb-chips-arrow-next {
+  right: 0;
+  justify-content: flex-end;
+  background: linear-gradient(to left, var(--tstb-bg) 55%, transparent);
+}
+
+.tstb-chips-arrow svg {
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  box-sizing: border-box;
+  border-radius: 50%;
+}
+
+.tstb-chips-arrow:hover svg {
+  background: var(--tstb-control-hover);
+}
+
 .tstb-chip {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -352,6 +426,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   background: var(--tstb-control);
   color: var(--tstb-text);
   font: 500 1.4rem Roboto, Arial, sans-serif;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -359,8 +434,27 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   background: var(--tstb-control-hover);
 }
 
+.tstb-chip svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* "Todas" se destaca pelo ícone e pela posição fixa, não pela cor: o fundo
+   escuro é reservado ao chip ativo, senão pareceria sempre selecionado. */
+.tstb-chip-all {
+  padding-left: 10px;
+}
+
+/* "Sem categoria" é fila de trabalho, não destino: contorno tracejado, no
+   mesmo espírito da pílula "Sem categoria" dos cartões. */
+.tstb-chip-pending {
+  border: 1px dashed var(--tstb-muted);
+  background: transparent;
+}
+
 .tstb-chip-active,
 .tstb-chip-active:hover {
+  border-color: transparent;
   background: var(--tstb-strong);
   color: var(--tstb-on-strong);
 }
@@ -373,11 +467,6 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
 .tstb-chip-new {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--tstb-border);
-}
-
-.tstb-chip-new svg {
-  width: 18px;
-  height: 18px;
 }
 
 .tstb-chip-form {

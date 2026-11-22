@@ -1,3 +1,4 @@
+import { sortCategoriesByName } from '../../core/categories.js';
 import { el } from '../elements.js';
 import { pluralize } from '../view.js';
 
@@ -8,7 +9,7 @@ export const MOVE_TO_NONE = '__none__';
 export function renderBulkBar(categories, count, actions) {
   const options = [
     el('option', { value: '', disabled: true }, 'Mover para…'),
-    ...categories.map((category) => el('option', { value: category.id }, category.name)),
+    ...sortCategoriesByName(categories).map((category) => el('option', { value: category.id }, category.name)),
     el('option', { value: MOVE_TO_NONE }, 'Sem categoria'),
   ];
   const onChange = (event) => actions.moveSelected(event.target.value === MOVE_TO_NONE ? null : event.target.value);
