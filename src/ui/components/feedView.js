@@ -1,6 +1,6 @@
 import { FEED_TAB } from '../../feed/categoryFeed.js';
 import { localeTag, plural, relativeTime, t } from '../../i18n/i18n.js';
-import { thumbnailUrl, videoUrl } from '../../youtube/videoItems.js';
+import { shortThumbnail, thumbnailUrl, videoUrl } from '../../youtube/videoItems.js';
 import { el, syncChildren } from '../elements.js';
 import { renderEmptyState } from './feedback.js';
 import { TABPANEL_ID } from './categoryTabs.js';
@@ -74,7 +74,7 @@ function renderVideoCard(video, channel, meta) {
 function renderShortCard(short, channel, views) {
   return el('li', { className: 'tstb-short' }, [
     el('a', { className: 'tstb-short-link', href: videoUrl(short.videoId, 'short'), title: short.title }, [
-      el('div', { className: 'tstb-short-thumb' }, el('img', { src: thumbnailUrl(short.videoId, 'short'), alt: '', loading: 'lazy', decoding: 'async' })),
+      el('div', { className: 'tstb-short-thumb' }, el('img', { src: shortThumbnail(short), alt: '', loading: 'lazy', decoding: 'async' })),
       el('h3', { className: 'tstb-short-title' }, short.title),
       el('p', { className: 'tstb-short-meta' }, [channel.name, views].filter(Boolean).join(' • ')),
     ]),

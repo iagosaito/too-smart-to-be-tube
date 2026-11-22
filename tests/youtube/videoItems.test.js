@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   parseViewCount,
+  shortFromLockup,
+  shortThumbnail,
   shortsFromPage,
   thumbnailUrl,
   videoFromLockup,
@@ -45,9 +47,22 @@ describe('videosFromPage com dados reais', () => {
 describe('shortsFromPage com dados reais', () => {
   it('lê id, título e visualizações dos Shorts (que não trazem data)', () => {
     expect(shortsFromPage(fixture('channel-short-lockups'), '/@Fireship')).toEqual([
-      { videoId: 'fwBIZRq-vzY', title: '5 life-changing Linux tips', channelId: '/@Fireship', viewCount: 1_700_000 },
-      { videoId: 'oRBvLbdMKM0', title: 'This rubber duck can debug your code', channelId: '/@Fireship', viewCount: 490_000 },
+      { videoId: 'fwBIZRq-vzY', title: '5 life-changing Linux tips', channelId: '/@Fireship', viewCount: 1_700_000, thumbnail: expect.stringMatching(/^https:\/\/i\.ytimg\.com\/vi\/fwBIZRq-vzY\/oardefault\.jpg\?/) },
+      { videoId: 'oRBvLbdMKM0', title: 'This rubber duck can debug your code', channelId: '/@Fireship', viewCount: 490_000, thumbnail: expect.stringMatching(/^https:\/\/i\.ytimg\.com\/vi\/oRBvLbdMKM0\/oar3\.jpg\?/) },
     ]);
+  });
+
+  it('usa a capa vertical 9:16 que o YouTube já dimensionou (405×720), não a de 1080×1920', () => {
+    const [first] = shortsFromPage(fixture('channel-short-lockups'), '/@Fireship');
+    const sources = fixture('channel-short-lockups').items[0].shortsLockupViewModel.thumbnailViewModel.thumbnailViewModel.image.sources;
+    expect(first.thumbnail).toBe(sources.find((source) => source.width === 405 && source.height === 720).url);
+  });
+
+  it('ignora capas fora do i.ytimg.com', () => {
+    const lockup = fixture('channel-short-lockups').items[0].shortsLockupViewModel;
+    const hostile = structuredClone(lockup);
+    for (const source of hostile.thumbnailViewModel.thumbnailViewModel.image.sources) source.url = 'https://evil.example/x.jpg';
+    expect(shortFromLockup(hostile, '/@Fireship').thumbnail).toBeNull();
   });
 });
 
@@ -92,5 +107,10 @@ describe('links e miniaturas', () => {
     expect(videoUrl('abcdefghijk', 'short')).toBe('https://www.youtube.com/shorts/abcdefghijk');
     expect(thumbnailUrl('abcdefghijk')).toBe('https://i.ytimg.com/vi/abcdefghijk/mqdefault.jpg');
     expect(thumbnailUrl('abcdefghijk', 'short')).toBe('https://i.ytimg.com/vi/abcdefghijk/oar2.jpg');
+  });
+
+  it('a capa do Short vem dos dados; sem ela (cache antigo), cai na URL montada pelo id', () => {
+    expect(shortThumbnail({ videoId: 'abcdefghijk', thumbnail: 'https://i.ytimg.com/vi/abcdefghijk/oar3.jpg?sqp=x' })).toBe('https://i.ytimg.com/vi/abcdefghijk/oar3.jpg?sqp=x');
+    expect(shortThumbnail({ videoId: 'abcdefghijk' })).toBe('https://i.ytimg.com/vi/abcdefghijk/oar2.jpg');
   });
 });
