@@ -4,7 +4,7 @@ const defaultMakeId = () => crypto.randomUUID();
 
 // Limite aplicado no núcleo (e não só no campo de texto da interface): nomes
 // também chegam por importação de CSV e precisam respeitar o mesmo tamanho.
-export const CATEGORY_NAME_MAX = 40;
+export const CATEGORY_NAME_MAX = 60;
 
 export function cleanCategoryName(name) {
   return String(name ?? '').trim().slice(0, CATEGORY_NAME_MAX).trim();

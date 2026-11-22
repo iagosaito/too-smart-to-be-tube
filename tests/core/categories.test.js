@@ -130,8 +130,8 @@ describe('sortCategoriesByName', () => {
 });
 
 describe('tamanho do nome da categoria', () => {
-  it('createCategory e renameCategory cortam nomes acima de 40 caracteres', () => {
-    expect(createCategory([], 'y'.repeat(100), makeId)[0].name).toBe('y'.repeat(40));
-    expect(renameCategory([tech], 't', 'z'.repeat(100))[0].name).toBe('z'.repeat(40));
+  it('createCategory e renameCategory cortam nomes acima de 60 caracteres', () => {
+    expect(createCategory([], 'y'.repeat(100), makeId)[0].name).toBe('y'.repeat(60));
+    expect(renameCategory([tech], 't', 'z'.repeat(100))[0].name).toBe('z'.repeat(60));
   });
 });

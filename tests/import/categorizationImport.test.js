@@ -105,9 +105,9 @@ describe('limites da importação', () => {
     expect(result.categories).toEqual([]);
   });
 
-  it('corta nomes de categoria longos no mesmo limite da interface (40 caracteres)', () => {
+  it('corta nomes de categoria longos no mesmo limite da interface (60 caracteres)', () => {
     const { categories } = planImport(state, entriesOf(['', 'x'.repeat(5_000), '', '/@b']));
-    expect(categories[1].name).toBe('x'.repeat(40));
+    expect(categories[1].name).toBe('x'.repeat(60));
   });
 
   it('planeja 20 mil linhas e centenas de categorias em tempo aceitável', () => {
