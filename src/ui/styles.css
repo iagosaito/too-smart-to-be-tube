@@ -1206,6 +1206,11 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   align-items: center;
   gap: 12px;
   margin: 32px 0 8px;
+  /* O rodapé nunca é a âncora de rolagem: se fosse, ao "Carregar mais" o
+     Chrome o manteria no mesmo lugar da tela e a página desceria até o fim
+     dos cartões novos, pulando-os (visto num teste sem o resto deste CSS).
+     A página deve ficar parada, com os cartões novos entrando abaixo. */
+  overflow-anchor: none;
 }
 
 .tstb-feed-error {

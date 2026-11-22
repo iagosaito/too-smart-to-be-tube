@@ -185,7 +185,7 @@ function createActions(page, context) {
     ...dataActions(page, context),
     sync: () => runSync(page, context),
     hasFeed: Boolean(context.feed),
-    loadMore: () => context.feedSession && context.feed.loadMore(context.feedSession),
+    loadMore: () => context.feedSession && context.feed.loadMore(context.feedSession, context.state.feedItems),
     canSync: Boolean(context.sync),
     exportCsv: () => exportSubscriptions(context),
     importCsv: () => startImport(page, context),
