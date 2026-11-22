@@ -227,6 +227,9 @@ async function applyImport(page, context) {
   const previous = context.state.categories;
   // Recalcula com o estado atual para aplicar exatamente o que a revisão mostra agora.
   const { categories, summary } = planImport(context.state, context.view.pendingImport.entries);
+  // A revisão já esconde o botão nesses casos; a checagem aqui garante que nada
+  // fora do limite seja gravado mesmo se a ação for chamada por outro caminho.
+  if (summary.error || !summary.matched) return;
   await saveCategories(page, context, categories, { pendingImport: null, filter: FILTER_ALL, selected: new Set() });
   const undo = () => saveCategories(page, context, previous);
   const message = t('import.summary', { channels: plural('import.organized', summary.matched), categories: plural('import.categories', summary.categoryCount) });

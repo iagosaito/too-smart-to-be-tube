@@ -606,6 +606,16 @@ describe('importar CSV', () => {
     expect($('.tstb-review-error').textContent).toContain('Nenhuma linha do arquivo corresponde');
   });
 
+  it('mostra o erro e não deixa aplicar quando o arquivo criaria categorias demais', async () => {
+    const rows = Array.from({ length: 201 }, (_, i) => `${i === 0 ? '/@alura' : `/@extra${i}`},Nova ${i}`);
+    const many = Object.fromEntries(Array.from({ length: 201 }, (_, i) => [`/@extra${i}`, { id: `/@extra${i}`, name: `Extra ${i}`, url: '', avatar: '' }]));
+    area = createFakeStorageArea({ channels: { ...channels, ...many }, categories, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 });
+    await importFile(fakeFile(`Identifier,Category\r\n${rows.join('\r\n')}`), { store: createStore(area) });
+    expect($('.tstb-review-error').textContent).toContain('mais de 200 categorias novas');
+    expect(button('Aplicar importação')).toBeUndefined();
+    expect(area.dump().categories).toEqual(categories);
+  });
+
   it('recusa arquivos grandes demais sem lê-los', async () => {
     const text = vi.fn();
     await importFile({ name: 'video.mp4', size: 50 * 1024 * 1024, text });

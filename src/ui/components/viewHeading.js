@@ -1,5 +1,6 @@
 import { el, svgIcon } from '../elements.js';
 import { ICONS } from '../icons.js';
+import { CATEGORY_NAME_MAX } from '../../core/categories.js';
 import { plural, t } from '../../i18n/i18n.js';
 import { FILTER_NONE, SORT_NAME, SORT_RECENT } from '../view.js';
 
@@ -83,7 +84,7 @@ function renderSelectionHint() {
 
 function startRename(heading, category, actions) {
   // A edição acontece no lugar do título, onde o nome novo vai aparecer.
-  const input = el('input', { type: 'text', className: 'tstb-rename-input', value: category.name, 'aria-label': t('rename.label'), maxlength: '40' });
+  const input = el('input', { type: 'text', className: 'tstb-rename-input', value: category.name, 'aria-label': t('rename.label'), maxlength: String(CATEGORY_NAME_MAX) });
   const onSubmit = (event) => {
     event.preventDefault();
     actions.rename(category.id, input.value);

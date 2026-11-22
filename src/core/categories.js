@@ -2,17 +2,25 @@ import { sortByName } from './channels.js';
 
 const defaultMakeId = () => crypto.randomUUID();
 
+// Limite aplicado no núcleo (e não só no campo de texto da interface): nomes
+// também chegam por importação de CSV e precisam respeitar o mesmo tamanho.
+export const CATEGORY_NAME_MAX = 60;
+
+export function cleanCategoryName(name) {
+  return String(name ?? '').trim().slice(0, CATEGORY_NAME_MAX).trim();
+}
+
 // Todas as funções devolvem um novo array em vez de mutar: o estado vem do
 // storage e é re-renderizado, então mutações escondidas causariam bugs sutis.
 
 export function createCategory(categories, name, makeId = defaultMakeId) {
-  const cleanName = name?.trim();
+  const cleanName = cleanCategoryName(name);
   if (!cleanName || hasCategoryNamed(categories, cleanName)) return categories;
   return [...categories, { id: makeId(), name: cleanName, channelIds: [] }];
 }
 
 export function renameCategory(categories, categoryId, name) {
-  const cleanName = name?.trim();
+  const cleanName = cleanCategoryName(name);
   if (!cleanName || hasCategoryNamed(categories, cleanName, categoryId)) return categories;
   return categories.map((category) =>
     category.id === categoryId ? { ...category, name: cleanName } : category,
