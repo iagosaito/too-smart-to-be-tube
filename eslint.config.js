@@ -23,6 +23,11 @@ export default [
     },
   },
   {
+    // Site de apresentação: script clássico (sem import) rodando no navegador.
+    files: ['site/**/*.js'],
+    languageOptions: { ecmaVersion: 'latest', sourceType: 'script', globals: globals.browser },
+  },
+  {
     files: ['*.js', '*.mjs'],
     languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.node },
   },
