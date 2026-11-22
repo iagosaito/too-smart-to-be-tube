@@ -1,0 +1,167 @@
+{
+ "_source": "Real YouTube response (Nov 2026), menus stripped",
+ "items": [
+  {
+   "shortsLockupViewModel": {
+    "entityId": "shorts-shelf-item-fwBIZRq-vzY",
+    "accessibilityText": "5 life-changing Linux tips, 1.7 million views - play Short",
+    "onTap": {
+     "innertubeCommand": {
+      "clickTrackingParams": "COsBEIf2BBgAIhMIxI7c6PeamAMVIYyVAh0I4QUHWhhVQ3NCalVSclBvZXp5a0xzOUVxZ2FtT0GaAQMQ8jjKAQTEHgGp",
+      "commandMetadata": {
+       "webCommandMetadata": {
+        "url": "/shorts/fwBIZRq-vzY",
+        "webPageType": "WEB_PAGE_TYPE_SHORTS",
+        "rootVe": 37414
+       }
+      },
+      "reelWatchEndpoint": {
+       "videoId": "fwBIZRq-vzY",
+       "playerParams": "8AEByAMkuAQ0ogYVAQMpuouiUeAPx334chc42kXCs9dWkAcC",
+       "thumbnail": {
+        "thumbnails": [
+         {
+          "url": "https://i.ytimg.com/vi/fwBIZRq-vzY/frame0.jpg",
+          "width": 1080,
+          "height": 1920
+         }
+        ],
+        "isOriginalAspectRatio": true
+       },
+       "overlay": {
+        "reelPlayerOverlayRenderer": {
+         "style": "REEL_PLAYER_OVERLAY_STYLE_SHORTS",
+         "trackingParams": "CO0BELC1BCITCMSO3Oj3mpgDFSGMlQIdCOEFBw==",
+         "reelPlayerNavigationModel": "REEL_PLAYER_NAVIGATION_MODEL_UNSPECIFIED"
+        }
+       },
+       "params": "CDMwAroBGFVDc0JqVVJyUG9lenlrTHM5RXFnYW1PQQ%3D%3D",
+       "sequenceProvider": "REEL_WATCH_SEQUENCE_PROVIDER_RPC",
+       "sequenceParams": "GuwIIAFC5wgIABAjGtEIogfNCArKCEFjVjhWZFd1WEJxUlNMRzlNX2xNZl9HdkplbnpQeEtYN18wdXIxOHNEZFh1eWZXNURSS0YzalBFLWNYbFZWZ1ctTm9hMWVCUGJaVlFjMDlDcE1xbC1MblQ3eFlrT2VtemtzU2dBTC1jQjBRMDFVc3haLTMtRVdvQ1paYkpSalh0MEpJczlndjlCakpWSjNlRjlFMDNwSzFHaFhGODc1cEZZVzlDYmVVckhmWFVPeDd5MEo0MGFYLVRWNE1WUHJnSDFTZG5RdlJDSjdxZndtR3JCUmRVQ01DTlZaRW1qMEdDX1loWjUzV3E0SnlJLWpfZU9kQWdDQkJPTjQwcnl1QmxUNGlFclNYeEI2SjB0ZG9fdVIxaVk5SFJqbnI2NHN3dGNPVmh0VkdaWkpmMWExeFFnaU5XWkZSRWJFWjBLUmQydE1nY3ppNFBDSHpRWFAwU094X3JvalFKNk5BNHVGNzYzS0NGY3JIa3FYZnVScmF2QlFZRV9uemZqTEw3ODVtM0FaNWdiTlNPRDF3TDJMZG5mV1hWeGo5bzYtSE8zcUs0Q3k1ZVA0WGdLc0hCX1JlZlNyN2thXzFpOHhtRFFUWXUtbk95UlA5Zy10LVlZS0RrdUY5c3RfX08wczdlXy0zQk5zYmJTRGFkNm81SHRuSVJrUFp2eGpaQnR0NnZ6WWp1LTB0ekJOVXpuUU9sNDN0Y0lHNGZIXzFiZjQxVWNMbGJwSk1XbEpXUFRsVHRab2ZfYVZZVFBoSElQNk9ya3VHWF9KSF9TdG04clB5X3JIemp3RXhXLU41M2ljcWptMWpCTUVhdEI1WHg1LXhpdHU5dnpNSjF6eWxiNG5LYkhkWXkta2xkaFRTQTRrcWpQeS10LWlYLWtCM3JyeHltblQyMDBzbWhXa05VU3VNTjdPZGpkTDJrZVlHX2pXbXhyQkJyc3d5RjdKVDdHcU1vbEVHMmdGa21CNEtURUFHODdzeHAtNHh2NUg1ZWhnbkNQcjZOSXF4ZjhmekVIblBuS2h1VnlFQjJkbVJsbUtSbGxqam1OQVhQWmpyVkx1eFpna2tJaGp5Y0dJZDVFSWVDQWJETGVtNGZ6MXhlVlFobHBJZzF1RnBkYzNNSTBxaFJYcnlPMUNoQnZIR255OFMyY3R1ek1LbU9tUHBUMmNfZDc4clhiQXRLeXQteTI3ZDFEakE0SW16VDRvOGVwcHB4TUVaazNWX2ZFRkl2d0hRRTBhdVNRcHkwT2hFOUZfSHVQM1JOQ3J5Qmp5a0IzY1RmWEhCYUZzbW5BTldYSzY1dVQ4YVFVdW52LTBvQnVGV05HYnRjWjNWUzJ2WEN5eHN5TDI4dU5VRXFlNHhMNUJyNjQ5enNjNWRBcmJ3aGN5RVVSenRHSTZiVWxSUm5jNlJqdnFFRFREc2FzZ2xZMG9Lb2wyUHVERVhFQ21qNk54TjBJSjhzOXloZnlzVGNpQSoNCgtmd0JJWlJxLXZ6WSoCGDOQAQ0%3D",
+       "loggingContext": {
+        "vssLoggingContext": {
+         "serializedContextData": "CgIIDA%3D%3D"
+        },
+        "qoeLoggingContext": {
+         "serializedContextData": "CgIIDA%3D%3D"
+        }
+       },
+       "ustreamerConfig": "CAw="
+      }
+     }
+    },
+    "indexInCollection": 0,
+    "menuOnTapA11yLabel": "More actions",
+    "overlayMetadata": {
+     "primaryText": {
+      "content": "5 life-changing Linux tips"
+     },
+     "secondaryText": {
+      "content": "1.7M views"
+     }
+    },
+    "thumbnailViewModel": {
+     "thumbnailViewModel": {
+      "image": {
+       "sources": [
+        {
+         "url": "https://i.ytimg.com/vi/fwBIZRq-vzY/oardefault.jpg?sqp=-oaymwEkCJUDENAFSFqQAgHyq4qpAxMIARUAAAAAJQAAyEI9AICiQ3gB&rs=AOn4CLA5FDWckBKoX8oTzAjCFpaGMGz6Wg",
+         "width": 405,
+         "height": 720
+        },
+        {
+         "url": "https://i.ytimg.com/vi/fwBIZRq-vzY/oardefault.jpg?sqp=-oaymwEnCJUDEOAESFqQAgHyq4qpAxYIARUAAAAAJQAAyEI9AICiQ3gByAEB&rs=AOn4CLBcurN-t0rjUwtwqW5KodZN2oFM-g",
+         "width": 405,
+         "height": 608
+        }
+       ]
+      }
+     }
+    },
+    "stackedFrameData": {},
+    "titleTruncationStyle": "SHORTS_LOCKUP_TITLE_TRUNCATION_STYLE_UNKNOWN"
+   }
+  },
+  {
+   "shortsLockupViewModel": {
+    "entityId": "shorts-shelf-item-oRBvLbdMKM0",
+    "accessibilityText": "This rubber duck can debug your code, 490 thousand views - play Short",
+    "onTap": {
+     "innertubeCommand": {
+      "clickTrackingParams": "COcBEIf2BBgBIhMIxI7c6PeamAMVIYyVAh0I4QUHWhhVQ3NCalVSclBvZXp5a0xzOUVxZ2FtT0GaAQMQ8jjKAQTEHgGp",
+      "commandMetadata": {
+       "webCommandMetadata": {
+        "url": "/shorts/oRBvLbdMKM0",
+        "webPageType": "WEB_PAGE_TYPE_SHORTS",
+        "rootVe": 37414
+       }
+      },
+      "reelWatchEndpoint": {
+       "videoId": "oRBvLbdMKM0",
+       "playerParams": "8AEByAMkuAQ0ogYVAQMpuosCjvBuU-OfxG5l-qybGC5MkAcC",
+       "thumbnail": {
+        "thumbnails": [
+         {
+          "url": "https://i.ytimg.com/vi/oRBvLbdMKM0/frame0.jpg",
+          "width": 1080,
+          "height": 1920
+         }
+        ],
+        "isOriginalAspectRatio": true
+       },
+       "overlay": {
+        "reelPlayerOverlayRenderer": {
+         "style": "REEL_PLAYER_OVERLAY_STYLE_SHORTS",
+         "trackingParams": "COkBELC1BCITCMSO3Oj3mpgDFSGMlQIdCOEFBw==",
+         "reelPlayerNavigationModel": "REEL_PLAYER_NAVIGATION_MODEL_UNSPECIFIED"
+        }
+       },
+       "params": "CDMwAroBGFVDc0JqVVJyUG9lenlrTHM5RXFnYW1PQQ%3D%3D",
+       "sequenceProvider": "REEL_WATCH_SEQUENCE_PROVIDER_RPC",
+       "sequenceParams": "GuwIIAFC5wgIARAjGtEIogfNCArKCEFjVjhWZFdMdVNhNDM5LXNHT0d6S3NlNnJvNlN6Z0pSUTMxYVBhczJYcEFoS2dUeF9ER3ZqNzlBdmVacUxhRDVfek4tVDdXS1Bwc0VGRXlaUGt4WkNxbWQwNHQ2djdrVzc0TWlLdTVMOFh3bk5aNS1RLW1JV0JkRXdRaFFxcnk2M2k4NnY5ZjdDWTFHay15b1ROeTJjVWE4cE5Hdk9UV01FeEg5dFZEYU5lQ1REQU0zeTlRQUNzd2RfQS1QVEtpTHR5dEU0bDBEaWNVN2lKNzZkTkx1Y3FmQTBqbDNPdkdkYWpWdlRjSHNmQ1R0VmlLYXQ3ZFNZc3lWMjhLcUVac2RHcXBxWFE0LWsxN3N6ZTNmdVR2Ync2VmpKTkhRTDk1bEZNaHVGUk5qc285OGZNVnR0aGtJaHQtUndweHIxck9pakRYeTd0TUE2YkhVZldiX0FOM0MzU2luWFdHekR1eGd4NVlPQzZKZGJuT0NsQnVnR0VzdU9neHlHX2NFT1ZSZ1R2WnhTcjZFWXVOUFdlVTFUeng1S3ZHV3h2WUFkYW45OEUxYnBCNE9KZjIzXzl4SDc5QXBLTW1DX0llc183UjFWY0Fkam9rV2MzZ3A4cjlRWG9XSGtDZlo1SVJWa1JVREZsMllGTU5aM3ZBaFdmUmNFQjR0ZlRLR0U1SlVxMjcxVnpyXy0xX2pEMFEybzN6VzJ2OVdNUnphQllpVk52cmZfZ0sxU0t6by10OG1lWlJsS1lXd1daamgtLXBTOURVUzFMcElHbk5LdllGaFV5ZmdfMWtIeHBpSjFHc2tYOFRWNEhhNXVxRGlUOHluNzJqR3F3UnFINlJVTjBQMTgyT291YUxBXzZOQ0x6T0pqbWFyN2dWdmNSYTNXUEMyY2tLTEdRZGNubWdUdnZLRUJvWXBRUjJrczFJUHQ5ZWVndUE2UVVvN0djRzRESnlvNGM3cFBqM3BXVEhCMUtTcG0wNGV0cWRESmF1YkVtSFlTa2Q0a19wcXVxOW5OU1RFb2tDVE1zcl8ydUpNVUlnYmpyaWI4QW1FVDlCbkFXRldkVEVVV1E3VnJUSGx3c3Z1allOTF8xbmNvM2dxMkF0dmdzdnR4eHlyTmg2eUpSbkdGaEJJaUhxR3RhTUR3MFBQM25tNkpxbG00NXd2TTFvaURUVXBjQm0xV0s4RDFWLWlxZUhNRVB0VEVKSUhTQzVPb1l3eWpzYXFWeXBqZzNQclowekJyYzhpZFhzRGZTREw3TC1hMUFqQVRrdmd1aUhub1l5Mld5dkJyUzIzQVNUUHJpYS1MSzhuOWQ3NkNORHZGY3pIeWJRN3NsRnhWOVg4T0NYalFKWDdWaXNSY3pueWVkSWxGc3gxZER3TUdBYjZaeWxNOHNuMVN3MW5LcXAyaTBNMXpxQi1tbFBoTXVaTU1UN3RVbWx0VlMyMHdnbjJPak82VjlWOWxDeGp1ZyoNCgtvUkJ2TGJkTUtNMCoCGDOQAQ0%3D",
+       "loggingContext": {
+        "vssLoggingContext": {
+         "serializedContextData": "CgIIDA%3D%3D"
+        },
+        "qoeLoggingContext": {
+         "serializedContextData": "CgIIDA%3D%3D"
+        }
+       },
+       "ustreamerConfig": "CAw="
+      }
+     }
+    },
+    "indexInCollection": 0,
+    "menuOnTapA11yLabel": "More actions",
+    "overlayMetadata": {
+     "primaryText": {
+      "content": "This rubber duck can debug your code"
+     },
+     "secondaryText": {
+      "content": "490K views"
+     }
+    },
+    "thumbnailViewModel": {
+     "thumbnailViewModel": {
+      "image": {
+       "sources": [
+        {
+         "url": "https://i.ytimg.com/vi/oRBvLbdMKM0/oar3.jpg?sqp=-oaymwEkCJUDENAFSFqQAgHyq4qpAxMIARUAAAAAJQAAyEI9AICiQ3gB&rs=AOn4CLBXDO4U7nPCX2DYhlsce9d0tHXyfw",
+         "width": 405,
+         "height": 720
+        },
+        {
+         "url": "https://i.ytimg.com/vi/oRBvLbdMKM0/oar3.jpg?sqp=-oaymwEnCJUDEOAESFqQAgHyq4qpAxYIARUAAAAAJQAAyEI9AICiQ3gByAEB&rs=AOn4CLDCvbCqYqeU4OBNnzgEzJKz9303Lw",
+         "width": 405,
+         "height": 608
+        }
+       ]
+      }
+     }
+    },
+    "stackedFrameData": {},
+    "titleTruncationStyle": "SHORTS_LOCKUP_TITLE_TRUNCATION_STYLE_UNKNOWN"
+   }
+  }
+ ]
+}

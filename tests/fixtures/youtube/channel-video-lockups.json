@@ -1,0 +1,483 @@
+{
+ "_source": "Real YouTube response (Nov 2026), menus stripped",
+ "items": [
+  {
+   "lockupViewModel": {
+    "contentImage": {
+     "thumbnailViewModel": {
+      "image": {
+       "sources": [
+        {
+         "url": "https://i.ytimg.com/vi/rMaMe32qQkA/hq720.jpg?sqp=-oaymwEjCOgCEMoBSFryq4qpAxUIARUAAAAAGAElAADIQj0AgKJDeAE=&rs=AOn4CLACQFhMhiMfYuRmsPcYLWKW9dKtzQ",
+         "width": 360,
+         "height": 202
+        },
+        {
+         "url": "https://i.ytimg.com/vi/rMaMe32qQkA/hq720.jpg?sqp=-oaymwEXCNAFEJQDSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLAbWvQhdzg8Oav9gsqI9X5Xt4rBrA",
+         "width": 720,
+         "height": 404
+        }
+       ]
+      },
+      "overlays": [
+       {
+        "thumbnailBottomOverlayViewModel": {
+         "badges": [
+          {
+           "thumbnailBadgeViewModel": {
+            "text": "5:35",
+            "badgeStyle": "THUMBNAIL_OVERLAY_BADGE_STYLE_DEFAULT",
+            "animationActivationTargetId": "rMaMe32qQkA",
+            "animationActivationEntityKey": "Eh8veW91dHViZS9hcHAvd2F0Y2gvcGxheWVyX3N0YXRlIMMCKAE%3D",
+            "lottieData": {
+             "url": "https://www.gstatic.com/youtube/img/lottie/audio_indicator/audio_indicator_v2.json",
+             "settings": {
+              "loop": true,
+              "autoplay": true
+             }
+            },
+            "animatedText": "Now playing",
+            "animationActivationEntitySelectorType": "THUMBNAIL_BADGE_ANIMATION_ENTITY_SELECTOR_TYPE_PLAYER_STATE",
+            "rendererContext": {}
+           }
+          }
+         ]
+        }
+       },
+       {}
+      ]
+     }
+    },
+    "metadata": {
+     "lockupMetadataViewModel": {
+      "title": {
+       "content": "Sysadmins are having the worst week of their lives... again"
+      },
+      "metadata": {
+       "contentMetadataViewModel": {
+        "metadataRows": [
+         {
+          "metadataParts": [
+           {
+            "text": {
+             "content": "921K views"
+            }
+           },
+           {
+            "text": {
+             "content": "1 day ago"
+            },
+            "accessibilityLabel": "1 day ago"
+           }
+          ]
+         }
+        ],
+        "delimiter": " • "
+       }
+      }
+     }
+    },
+    "contentId": "rMaMe32qQkA",
+    "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+    "themedPalette": {
+     "lightThemePalette": {
+      "baseBackground": 4294964976,
+      "raisedBackground": 4294964976,
+      "additiveBackground": 566851909,
+      "textPrimary": 4281735946,
+      "textSecondary": 4285419066,
+      "outline": 860564246,
+      "keyLight": 4292722604,
+      "collectionStack": 4290814091,
+      "invertedBackground": 4287579673,
+      "textPrimaryInverse": 4294964976,
+      "textDisabled": 2135632662,
+      "dropShadow": 432634181,
+      "cardOutline": 180975941,
+      "overlayBackground": 3426097930,
+      "overlayTextPrimary": 4294964976,
+      "solidWash": 4283116310,
+      "solidRim": 4281735946,
+      "overlaySolidWash": 4294634208,
+      "overlaySolidRim": 4294964976,
+      "tonalWash": 2583688944,
+      "tonalRim": 202311168,
+      "overlayTonalWash": 436205296,
+      "overlayTonalRim": 436205296,
+      "outlineRim": 1279994646,
+      "overlayOutlineRim": 871553738,
+      "solidWashInverse": 4294105802,
+      "solidRimInverse": 2147150560,
+      "tonalWashInverse": 654309104,
+      "tonalRimInverse": 653978336,
+      "outlineRimInverse": 654309104,
+      "solidBackground": 4283116310,
+      "solidBackgroundInverse": 4290814091,
+      "tonalBackground": 868262027,
+      "tonalBackgroundInverse": 435346122,
+      "outlineInverse": 872082144,
+      "directionalLightStopPrimary": 4294634208,
+      "directionalLightStopSecondary": 4294964976,
+      "primary": 4279174656,
+      "filledStateLayer": 4281735946,
+      "tonalTouchLight": 4294964976,
+      "tonalHoverLight": 3438996192,
+      "tonalStateLayer": 420414976,
+      "overlayDisabledContainer": 871553738,
+      "overlayTonalTouchLight": 1291512544,
+      "overlayTonalHoverLight": 1291512544,
+      "overlayTonalStateLayer": 436205296,
+      "disabledContainer": 420414976,
+      "filledTouchLight": 4285419066,
+      "filledHoverLight": 4284300584,
+      "onOverlayDisabledContainer": 2583688944,
+      "overlayTonalContainer": 2583358176,
+      "overlayOutline": 872412912,
+      "onFilledContainer": 4294964976,
+      "filledContainer": 4280028418,
+      "tonalContainer": 641080074,
+      "overlayPrimary": 4294964976,
+      "onOverlayFilledContainer": 4279174656,
+      "overlayFilledTouchLight": 4294964976,
+      "overlayFilledHoverLight": 4294634208,
+      "overlayFilledStateLayer": 4292722604,
+      "overlayFilledContainer": 4294105802,
+      "onDisabledContainer": 1712260608,
+      "temporaryOutline": 860564246
+     },
+     "darkThemePalette": {
+      "baseBackground": 4280028418,
+      "raisedBackground": 4281735946,
+      "additiveBackground": 734624069,
+      "textPrimary": 4294634208,
+      "textSecondary": 4292722604,
+      "outline": 1072880330,
+      "keyLight": 4284300584,
+      "collectionStack": 4285419066,
+      "invertedBackground": 4293109116,
+      "textPrimaryInverse": 4280028418,
+      "textDisabled": 2146622154,
+      "dropShadow": 432634181,
+      "cardOutline": 180975941,
+      "overlayBackground": 3426097930,
+      "overlayTextPrimary": 4294964976,
+      "solidWash": 4294634208,
+      "solidRim": 4294964976,
+      "overlaySolidWash": 4294634208,
+      "overlaySolidRim": 4294964976,
+      "tonalWash": 217242314,
+      "tonalRim": 218101488,
+      "overlayTonalWash": 436205296,
+      "overlayTonalRim": 436205296,
+      "outlineRim": 871553738,
+      "overlayOutlineRim": 871553738,
+      "solidWashInverse": 4285419066,
+      "solidRimInverse": 871553738,
+      "tonalWashInverse": 872412912,
+      "tonalRimInverse": 870170540,
+      "outlineRimInverse": 1291843312,
+      "solidBackground": 4290814091,
+      "solidBackgroundInverse": 4283116310,
+      "tonalBackground": 435346122,
+      "tonalBackgroundInverse": 868262027,
+      "outlineInverse": 860564246,
+      "directionalLightStopPrimary": 4281735946,
+      "directionalLightStopSecondary": 4280028418,
+      "primary": 4294964976,
+      "filledStateLayer": 4292722604,
+      "tonalTouchLight": 1073408736,
+      "tonalHoverLight": 653978336,
+      "tonalStateLayer": 436205296,
+      "overlayDisabledContainer": 871553738,
+      "overlayTonalTouchLight": 1291512544,
+      "overlayTonalHoverLight": 1291512544,
+      "overlayTonalStateLayer": 436205296,
+      "disabledContainer": 436205296,
+      "filledTouchLight": 4294964976,
+      "filledHoverLight": 4294634208,
+      "onOverlayDisabledContainer": 2583688944,
+      "overlayTonalContainer": 2583358176,
+      "overlayOutline": 872412912,
+      "onFilledContainer": 4279174656,
+      "filledContainer": 4294105802,
+      "tonalContainer": 435346122,
+      "overlayPrimary": 4294964976,
+      "onOverlayFilledContainer": 4279174656,
+      "overlayFilledTouchLight": 4294964976,
+      "overlayFilledHoverLight": 4294634208,
+      "overlayFilledStateLayer": 4292722604,
+      "overlayFilledContainer": 4294105802,
+      "onDisabledContainer": 1728050928,
+      "temporaryOutline": 871553738
+     }
+    },
+    "rendererContext": {
+     "loggingContext": {},
+     "commandContext": {
+      "onTap": {
+       "innertubeCommand": {
+        "clickTrackingParams": "CNICENTEDCITCNS8w-j3mpgDFfiElQIdkFkZP1oYVUNzQmpVUnJQb2V6eWtMczlFcWdhbU9BmgEDEPI4ygEE_L-MUw==",
+        "commandMetadata": {
+         "webCommandMetadata": {
+          "url": "/watch?v=rMaMe32qQkA",
+          "webPageType": "WEB_PAGE_TYPE_WATCH",
+          "rootVe": 3832
+         }
+        },
+        "watchEndpoint": {
+         "videoId": "rMaMe32qQkA",
+         "watchEndpointSupportedOnesieConfig": {
+          "html5PlaybackOnesieConfig": {
+           "commonConfig": {
+            "url": "https://rr2---sn-oxunxg8pjvn-bg0rr.googlevideo.com/initplayback?source=youtube&oeis=1&c=WEB&oad=3200&ovd=3200&oaad=11000&oavd=11000&ocs=700&oewis=1&oputc=1&epbp=1&msp=1&odepv=1&id=acc68c7b7daa4240&ip=2804%3A14c%3A180%3A9316%3A7e66%3A8d8a%3A5081%3A84c0&initcwndbps=2006875&mt=1795328008&oweuc="
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "lockupViewModel": {
+    "contentImage": {
+     "thumbnailViewModel": {
+      "image": {
+       "sources": [
+        {
+         "url": "https://i.ytimg.com/vi/Qxor6jpfSiU/hq720_custom_1.jpg?sqp=CJCTitgG-oaymwEjCOgCEMoBSFryq4qpAxUIARUAAAAAGAElAADIQj0AgKJDeAE=&rs=AOn4CLDQBrqgSU3ZMU5a8qQMAx2KpahOdQ",
+         "width": 360,
+         "height": 202
+        },
+        {
+         "url": "https://i.ytimg.com/vi/Qxor6jpfSiU/hq720_custom_1.jpg?sqp=CJCTitgG-oaymwEXCNAFEJQDSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLCSoHTvEH_opjNTJg9zCNlD3k8XNA",
+         "width": 720,
+         "height": 404
+        }
+       ]
+      },
+      "overlays": [
+       {
+        "thumbnailBottomOverlayViewModel": {
+         "badges": [
+          {
+           "thumbnailBadgeViewModel": {
+            "text": "5:34",
+            "badgeStyle": "THUMBNAIL_OVERLAY_BADGE_STYLE_DEFAULT",
+            "animationActivationTargetId": "Qxor6jpfSiU",
+            "animationActivationEntityKey": "Eh8veW91dHViZS9hcHAvd2F0Y2gvcGxheWVyX3N0YXRlIMMCKAE%3D",
+            "lottieData": {
+             "url": "https://www.gstatic.com/youtube/img/lottie/audio_indicator/audio_indicator_v2.json",
+             "settings": {
+              "loop": true,
+              "autoplay": true
+             }
+            },
+            "animatedText": "Now playing",
+            "animationActivationEntitySelectorType": "THUMBNAIL_BADGE_ANIMATION_ENTITY_SELECTOR_TYPE_PLAYER_STATE",
+            "rendererContext": {}
+           }
+          }
+         ]
+        }
+       },
+       {}
+      ]
+     }
+    },
+    "metadata": {
+     "lockupMetadataViewModel": {
+      "title": {
+       "content": "The only software that didn’t break this week..."
+      },
+      "metadata": {
+       "contentMetadataViewModel": {
+        "metadataRows": [
+         {
+          "metadataParts": [
+           {
+            "text": {
+             "content": "1M views"
+            }
+           },
+           {
+            "text": {
+             "content": "2 days ago"
+            },
+            "accessibilityLabel": "2 days ago"
+           }
+          ]
+         }
+        ],
+        "delimiter": " • "
+       }
+      }
+     }
+    },
+    "contentId": "Qxor6jpfSiU",
+    "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+    "themedPalette": {
+     "lightThemePalette": {
+      "baseBackground": 4294964976,
+      "raisedBackground": 4294964976,
+      "additiveBackground": 566851910,
+      "textPrimary": 4281867016,
+      "textSecondary": 4286270510,
+      "outline": 860891665,
+      "keyLight": 4293181093,
+      "collectionStack": 4291730814,
+      "invertedBackground": 4287645465,
+      "textPrimaryInverse": 4294964976,
+      "textDisabled": 2135960081,
+      "dropShadow": 432634182,
+      "cardOutline": 180975942,
+      "overlayBackground": 3426229000,
+      "overlayTextPrimary": 4294964976,
+      "solidWash": 4283443729,
+      "solidRim": 4281867016,
+      "overlaySolidWash": 4294699743,
+      "overlaySolidRim": 4294964976,
+      "tonalWash": 2583688944,
+      "tonalRim": 202311168,
+      "overlayTonalWash": 436205296,
+      "overlayTonalRim": 436205296,
+      "outlineRim": 1280322065,
+      "overlayOutlineRim": 871750087,
+      "solidWashInverse": 4294302151,
+      "solidRimInverse": 2147216095,
+      "tonalWashInverse": 654309104,
+      "tonalRimInverse": 654043871,
+      "outlineRimInverse": 654309104,
+      "solidBackground": 4283443729,
+      "solidBackgroundInverse": 4291730814,
+      "tonalBackground": 869178750,
+      "tonalBackgroundInverse": 435542471,
+      "outlineInverse": 872147679,
+      "directionalLightStopPrimary": 4294699743,
+      "directionalLightStopSecondary": 4294964976,
+      "primary": 4279174656,
+      "filledStateLayer": 4281867016,
+      "tonalTouchLight": 4294964976,
+      "tonalHoverLight": 3439061727,
+      "tonalStateLayer": 420414976,
+      "overlayDisabledContainer": 871750087,
+      "overlayTonalTouchLight": 1291578079,
+      "overlayTonalHoverLight": 1291578079,
+      "overlayTonalStateLayer": 436205296,
+      "disabledContainer": 420414976,
+      "filledTouchLight": 4286270510,
+      "filledHoverLight": 4284824351,
+      "onOverlayDisabledContainer": 2583688944,
+      "overlayTonalContainer": 2583423711,
+      "overlayOutline": 872412912,
+      "onFilledContainer": 4294964976,
+      "filledContainer": 4280093954,
+      "tonalContainer": 641211144,
+      "overlayPrimary": 4294964976,
+      "onOverlayFilledContainer": 4279174656,
+      "overlayFilledTouchLight": 4294964976,
+      "overlayFilledHoverLight": 4294699743,
+      "overlayFilledStateLayer": 4293181093,
+      "overlayFilledContainer": 4294302151,
+      "onDisabledContainer": 1712260608,
+      "temporaryOutline": 860891665
+     },
+     "darkThemePalette": {
+      "baseBackground": 4280093954,
+      "raisedBackground": 4281867016,
+      "additiveBackground": 734624070,
+      "textPrimary": 4294699743,
+      "textSecondary": 4293181093,
+      "outline": 1073076679,
+      "keyLight": 4284824351,
+      "collectionStack": 4286270510,
+      "invertedBackground": 4293109117,
+      "textPrimaryInverse": 4280093954,
+      "textDisabled": 2146818503,
+      "dropShadow": 432634182,
+      "cardOutline": 180975942,
+      "overlayBackground": 3426229000,
+      "overlayTextPrimary": 4294964976,
+      "solidWash": 4294699743,
+      "solidRim": 4294964976,
+      "overlaySolidWash": 4294699743,
+      "overlaySolidRim": 4294964976,
+      "tonalWash": 217438663,
+      "tonalRim": 218101488,
+      "overlayTonalWash": 436205296,
+      "overlayTonalRim": 436205296,
+      "outlineRim": 871750087,
+      "overlayOutlineRim": 871750087,
+      "solidWashInverse": 4286270510,
+      "solidRimInverse": 871750087,
+      "tonalWashInverse": 872412912,
+      "tonalRimInverse": 870629029,
+      "outlineRimInverse": 1291843312,
+      "solidBackground": 4291730814,
+      "solidBackgroundInverse": 4283443729,
+      "tonalBackground": 435542471,
+      "tonalBackgroundInverse": 869178750,
+      "outlineInverse": 860891665,
+      "directionalLightStopPrimary": 4281867016,
+      "directionalLightStopSecondary": 4280093954,
+      "primary": 4294964976,
+      "filledStateLayer": 4293181093,
+      "tonalTouchLight": 1073474271,
+      "tonalHoverLight": 654043871,
+      "tonalStateLayer": 436205296,
+      "overlayDisabledContainer": 871750087,
+      "overlayTonalTouchLight": 1291578079,
+      "overlayTonalHoverLight": 1291578079,
+      "overlayTonalStateLayer": 436205296,
+      "disabledContainer": 436205296,
+      "filledTouchLight": 4294964976,
+      "filledHoverLight": 4294699743,
+      "onOverlayDisabledContainer": 2583688944,
+      "overlayTonalContainer": 2583423711,
+      "overlayOutline": 872412912,
+      "onFilledContainer": 4279174656,
+      "filledContainer": 4294302151,
+      "tonalContainer": 435542471,
+      "overlayPrimary": 4294964976,
+      "onOverlayFilledContainer": 4279174656,
+      "overlayFilledTouchLight": 4294964976,
+      "overlayFilledHoverLight": 4294699743,
+      "overlayFilledStateLayer": 4293181093,
+      "overlayFilledContainer": 4294302151,
+      "onDisabledContainer": 1728050928,
+      "temporaryOutline": 871750087
+     }
+    },
+    "rendererContext": {
+     "loggingContext": {},
+     "commandContext": {
+      "onTap": {
+       "innertubeCommand": {
+        "clickTrackingParams": "CMgCENTEDCITCNS8w-j3mpgDFfiElQIdkFkZP1oYVUNzQmpVUnJQb2V6eWtMczlFcWdhbU9BmgEDEPI4ygEE_L-MUw==",
+        "commandMetadata": {
+         "webCommandMetadata": {
+          "url": "/watch?v=Qxor6jpfSiU",
+          "webPageType": "WEB_PAGE_TYPE_WATCH",
+          "rootVe": 3832
+         }
+        },
+        "watchEndpoint": {
+         "videoId": "Qxor6jpfSiU",
+         "watchEndpointSupportedOnesieConfig": {
+          "html5PlaybackOnesieConfig": {
+           "commonConfig": {
+            "url": "https://rr2---sn-oxunxg8pjvn-bg0e7e.googlevideo.com/initplayback?source=youtube&oeis=1&c=WEB&oad=3200&ovd=3200&oaad=11000&oavd=11000&ocs=700&oewis=1&oputc=1&epbp=1&msp=1&odepv=1&id=431a2bea3a5f4a25&ip=2804%3A14c%3A180%3A9316%3A7e66%3A8d8a%3A5081%3A84c0&initcwndbps=2006875&mt=1795328008&oweuc="
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ ]
+}
