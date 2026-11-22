@@ -16,12 +16,17 @@ export function channelIdFromHref(href) {
   }
 }
 
-export function createChannel({ href, name, avatar }) {
+// Id interno do YouTube (UC + 22 caracteres): é o que a API pública dos canais
+// exige para buscar vídeos e Shorts; o handle (/@nome) não serve.
+const UCID = /^UC[\w-]{22}$/;
+
+export function createChannel({ href, name, avatar, ucid }) {
   const id = channelIdFromHref(href);
   const cleanName = name?.trim();
   // Sem id ou nome o canal não pode ser exibido nem identificado depois.
   if (!id || !cleanName) return null;
-  return { id, name: cleanName, url: `${YOUTUBE_ORIGIN}${id}`, avatar: avatar || '' };
+  const channel = { id, name: cleanName, url: `${YOUTUBE_ORIGIN}${id}`, avatar: avatar || '' };
+  return UCID.test(ucid ?? '') ? { ...channel, ucid } : channel;
 }
 
 export function mergeChannels(existing, incoming) {
@@ -30,7 +35,9 @@ export function mergeChannels(existing, incoming) {
     const previous = merged[channel.id];
     // Avatares são lazy-loaded no YouTube; não perdemos um avatar já
     // conhecido só porque a imagem ainda não carregou nesta leitura.
-    merged[channel.id] = { ...channel, avatar: channel.avatar || previous?.avatar || '' };
+    const ucid = channel.ucid ?? previous?.ucid;
+    // O menu lateral não traz o ucid; uma leitura dele não pode apagar o que a sincronização guardou.
+    merged[channel.id] = { ...channel, avatar: channel.avatar || previous?.avatar || '', ...(ucid ? { ucid } : {}) };
   }
   return merged;
 }

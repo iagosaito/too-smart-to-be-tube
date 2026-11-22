@@ -30,3 +30,13 @@ function matchConfigValue(html, key) {
   const match = html.match(new RegExp(`"${key}"\\s*:\\s*"?([^",}]+)"?`));
   return match ? match[1] : null;
 }
+
+// A versão do cliente também está nos <script> da própria página aberta; ler
+// daqui evita baixar outra página só para descobri-la.
+export function clientVersionFromDocument(doc = document) {
+  for (const script of doc.querySelectorAll('script')) {
+    const text = script.textContent;
+    if (text.includes('INNERTUBE_CLIENT_VERSION')) return extractConfig(text).clientVersion;
+  }
+  return null;
+}

@@ -6,9 +6,13 @@ const NOW = 1_000_000_000_000;
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
+// Ids de vídeo têm 11 caracteres; derivados dos dados para serem estáveis e únicos.
+const fakeVideoId = (...parts) => parts.join('').replace(/[^\w-]/g, '').padEnd(11, 'x').slice(0, 11);
+
 // Formato clássico do feed: videoRenderer com autor e publishedTimeText.
 const videoRenderer = (handle, published, title = 'Um vídeo') => ({
   videoRenderer: {
+    videoId: fakeVideoId(handle, published, title),
     title: { runs: [{ text: title }] },
     navigationEndpoint: { watchEndpoint: { videoId: 'x' } },
     ownerText: { runs: [{ text: handle, navigationEndpoint: { browseEndpoint: { canonicalBaseUrl: `/@${handle}` } } }] },
@@ -21,6 +25,7 @@ const videoRenderer = (handle, published, title = 'Um vídeo') => ({
 const lockup = (handle, published, title = 'Outro vídeo', label = undefined) => ({
   lockupViewModel: {
     contentType: 'LOCKUP_CONTENT_TYPE_VIDEO',
+    contentId: fakeVideoId(handle, published, title),
     metadata: {
       lockupMetadataViewModel: {
         title: { content: title },
