@@ -10,7 +10,7 @@ import { pickFile } from './filePicker.js';
 import { el, syncChildren } from './elements.js';
 import { preserveFocus } from './focus.js';
 import { renderPage, SLOTS } from './render.js';
-import { FILTER_ALL, pluralize, resolveFilter, SORT_NAME } from './view.js';
+import { FILTER_ALL, pluralize, pruneSelection, resolveFilter, SORT_NAME, visibleChannels } from './view.js';
 
 export const PAGE_ID = 'tstb-page';
 export const OPEN_CLASS = 'tstb-page-open';
@@ -88,6 +88,7 @@ async function reload(page, context) {
 function render(page, context) {
   if (!page.isConnected) return;
   context.view.filter = resolveFilter(context.view.filter, context.state.categories);
+  context.view.selected = pruneSelection(context.view.selected, visibleChannels(context.state, context.view));
   const env = { now: context.now(), cardCache: context.cardCache };
   const parts = renderPage(context.state, context.view, createActions(page, context), env);
   preserveFocus(page, () => fillSlots(page, parts));

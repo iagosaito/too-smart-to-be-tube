@@ -367,6 +367,75 @@ describe('seleção em lote', () => {
   });
 });
 
+// Regressão: canais selecionados que saíam da tela (movidos individualmente ou
+// escondidos pela busca) continuavam selecionados, invisíveis, e eram movidos
+// junto pela ação em lote, desfazendo o que o usuário tinha acabado de fazer.
+describe('seleção só contém o que está na tela', () => {
+  const storeWith = (categoriesList) =>
+    createStore(createFakeStorageArea({ channels, categories: categoriesList, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 }));
+  const cardOf = (name) => $$('.tstb-card').find((node) => node.textContent.includes(name));
+  const channelIdsOf = (id) => area.dump().categories.find((category) => category.id === id).channelIds;
+
+  it('mover individualmente um canal selecionado o tira da seleção, e o lote não o move de novo', async () => {
+    area = createFakeStorageArea({
+      channels,
+      categories: [
+        { id: 'tech', name: 'Tech', channelIds: ['/@alura', '/@bossa'] },
+        { id: 'musica', name: 'Música', channelIds: [] },
+        { id: 'livros', name: 'Livros', channelIds: [] },
+      ],
+      lastSyncedAt: 1_000,
+      uploadsSyncedAt: 1_000,
+    });
+    await open({ store: createStore(area) });
+    chip('Tech').click();
+    checkFor('Alura').click();
+    checkFor('Bossa Nova').click();
+
+    changeSelect(cardOf('Alura').querySelector('.tstb-move-select'), 'musica');
+    await flush();
+    expect($('.tstb-bulkbar').textContent).toContain('1 canal selecionado');
+
+    changeSelect($('.tstb-bulk-select'), 'livros');
+    await flush();
+    expect(channelIdsOf('musica')).toEqual(['/@alura']);
+    expect(channelIdsOf('livros')).toEqual(['/@bossa']);
+  });
+
+  it('canais selecionados escondidos pela busca saem da seleção e não são movidos', async () => {
+    area = createFakeStorageArea({
+      channels,
+      categories: [{ id: 'livros', name: 'Livros', channelIds: [] }],
+      lastSyncedAt: 1_000,
+      uploadsSyncedAt: 1_000,
+    });
+    await open({ store: createStore(area) });
+    checkFor('Alura').click();
+    checkFor('Bossa Nova').click();
+
+    const search = $('.tstb-search-input');
+    search.value = 'bossa';
+    search.dispatchEvent(new Event('input'));
+    await flush();
+    expect($('.tstb-bulkbar').textContent).toContain('1 canal selecionado');
+
+    changeSelect($('.tstb-bulk-select'), 'livros');
+    await flush();
+    expect(channelIdsOf('livros')).toEqual(['/@bossa']);
+  });
+
+  it('a seleção visível continua intacta quando nada sai da tela', async () => {
+    await open({ store: storeWith(categories) });
+    checkFor('Alura').click();
+    checkFor('Bossa Nova').click();
+    const search = $('.tstb-search-input');
+    search.value = 'a';
+    search.dispatchEvent(new Event('input'));
+    await flush();
+    expect($('.tstb-bulkbar').textContent).toContain('2 canais selecionados');
+  });
+});
+
 describe('sincronização', () => {
   it('sincroniza automaticamente quando a última sincronização é antiga', async () => {
     const sync = vi.fn(async () => store.replaceChannels(Object.values(channels), 2 * HOUR));

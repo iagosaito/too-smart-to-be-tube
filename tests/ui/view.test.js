@@ -7,6 +7,7 @@ import {
   formatUploadAge,
   normalizeText,
   pluralize,
+  pruneSelection,
   resolveFilter,
   SORT_NAME,
   SORT_RECENT,
@@ -141,5 +142,18 @@ describe('formatUploadAge', () => {
     [NOW - 800 * DAY, 'Vídeo há 2 anos'],
   ])('%s → %s', (publishedAt, expected) => {
     expect(formatUploadAge(publishedAt, NOW)).toBe(expected);
+  });
+});
+
+describe('pruneSelection', () => {
+  const visible = [{ id: 'a' }, { id: 'b' }];
+
+  it('remove da seleção o que não está visível', () => {
+    expect([...pruneSelection(new Set(['a', 'x']), visible)]).toEqual(['a']);
+  });
+
+  it('devolve o mesmo Set quando nada muda', () => {
+    const selected = new Set(['a', 'b']);
+    expect(pruneSelection(selected, visible)).toBe(selected);
   });
 });

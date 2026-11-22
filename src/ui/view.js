@@ -79,3 +79,13 @@ export function formatUploadAge(publishedAt, now) {
   if (days < 365) return `Vídeo há ${pluralize(Math.floor(days / 30), 'mês', 'meses')}`;
   return `Vídeo há ${pluralize(Math.floor(days / 365), 'ano', 'anos')}`;
 }
+
+// Só o que está na tela pode estar selecionado. Sem isto, um canal marcado que
+// sumia da grade (movido individualmente ou escondido pela busca) seguia
+// selecionado, invisível, e era levado junto pela ação em lote.
+export function pruneSelection(selected, visible) {
+  const visibleIds = new Set(visible.map((channel) => channel.id));
+  const kept = [...selected].filter((id) => visibleIds.has(id));
+  // Mesmo Set quando nada muda: evita trabalho e re-renderizações à toa.
+  return kept.length === selected.size ? selected : new Set(kept);
+}
