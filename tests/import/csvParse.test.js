@@ -8,6 +8,7 @@ describe('detectDelimiter', () => {
     ['a;b;c\n1;2;3', ';'],
     ['a\tb\n1\t2', '\t'],
     ['sozinho', ','],
+    ['a;b\rc,d,e,f', ';'],
   ])('detecta o separador de %j', (text, expected) => {
     expect(detectDelimiter(text)).toBe(expected);
   });
@@ -37,5 +38,30 @@ describe('parseCsv', () => {
   it('faz o caminho de volta do que a exportação gera', () => {
     const rows = [['Canal', 'Categoria'], ['A, "B"', 'Música'], ['Linha\nquebrada', '']];
     expect(parseCsv(toCsv(rows))).toEqual(rows);
+  });
+});
+
+// Regressão (ReDoS): uma célula longa seguida de "\r" sozinho fazia a regex
+// do parser recuar em todos os comprimentos possíveis, com tempo quadrático:
+// um CSV malicioso de 5 MB travaria a aba do YouTube por horas.
+describe('parseCsv com entradas hostis', () => {
+  it('trata "\\r" sozinho como quebra de linha', () => {
+    expect(parseCsv('a,b\rc,d\r')).toEqual([['a', 'b'], ['c', 'd']]);
+  });
+
+  it('lê uma célula longa terminada em "\\r" sozinho em tempo linear', () => {
+    const text = 'Channel,Category\n' + 'a'.repeat(30_000) + '\rx';
+    const start = performance.now();
+    const rows = parseCsv(text);
+    expect(performance.now() - start).toBeLessThan(100);
+    expect(rows).toEqual([['Channel', 'Category'], ['a'.repeat(30_000)], ['x']]);
+  });
+
+  it('lê um arquivo de ~5 MB em menos de 1 segundo', () => {
+    const line = 'Some Channel Name,Category,https://www.youtube.com/@channel,/@channel\r\n';
+    const text = 'Channel,Category,URL,Identifier\r\n' + line.repeat(Math.floor(5_000_000 / line.length));
+    const start = performance.now();
+    parseCsv(text);
+    expect(performance.now() - start).toBeLessThan(1000);
   });
 });
