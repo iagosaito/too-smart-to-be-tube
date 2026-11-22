@@ -14,6 +14,50 @@ function fakeClock() {
 
 const httpError = (status) => new LocalizedError('error.http', { status });
 
+// Limites guardados num storage comum, como o chrome.storage.local entre abas.
+function sharedBudget() {
+  const storage = {};
+  return { load: async () => structuredClone(storage.budget ?? null), save: async (budget) => { storage.budget = structuredClone(budget); } };
+}
+
+// Regressão (#3): a fila era por aba e só em memória. Com N abas do YouTube o
+// limite virava N × 60 requisições por 10 min, um 429 numa aba não pausava as
+// outras e recarregar a página (F5) zerava a pausa.
+describe('limites compartilhados entre abas', () => {
+  const queueFor = (clock, shared, options = {}) => createRequestQueue({ minIntervalMs: 0, now: () => clock.now, sleep: clock.sleep, shared, ...options });
+
+  it('um 429 numa aba pausa as outras', async () => {
+    const clock = fakeClock();
+    const shared = sharedBudget();
+    const tabA = queueFor(clock, shared);
+    const tabB = queueFor(clock, shared);
+    await expect(tabA.run(async () => { throw httpError(429); })).rejects.toMatchObject({ key: 'error.rateLimited' });
+    const task = vi.fn(async () => 'ok');
+    await expect(tabB.run(task)).rejects.toMatchObject({ key: 'error.rateLimited' });
+    expect(task).not.toHaveBeenCalled();
+  });
+
+  it('recarregar a página (fila nova) não zera a pausa', async () => {
+    const clock = fakeClock();
+    const shared = sharedBudget();
+    await expect(queueFor(clock, shared).run(async () => { throw httpError(429); })).rejects.toBeDefined();
+    const task = vi.fn(async () => 'ok');
+    await expect(queueFor(clock, shared).run(task)).rejects.toMatchObject({ key: 'error.rateLimited' });
+    expect(task).not.toHaveBeenCalled();
+  });
+
+  it('o teto por janela soma as requisições de todas as abas', async () => {
+    const clock = fakeClock();
+    const shared = sharedBudget();
+    const tabA = queueFor(clock, shared, { maxPerWindow: 3 });
+    const tabB = queueFor(clock, shared, { maxPerWindow: 3 });
+    await tabA.run(async () => 1);
+    await tabA.run(async () => 2);
+    await tabB.run(async () => 3);
+    await expect(tabB.run(async () => 4)).rejects.toMatchObject({ key: 'error.rateLimited' });
+  });
+});
+
 describe('createRequestQueue', () => {
   it('roda no máximo N tarefas ao mesmo tempo', async () => {
     const clock = fakeClock();

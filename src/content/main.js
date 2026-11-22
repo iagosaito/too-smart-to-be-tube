@@ -53,10 +53,11 @@ async function syncLatestUploads() {
 }
 
 // Fonte do feed por categoria, uma por aba: cache persistido e uma fila que
-// controla o ritmo das consultas públicas aos canais.
+// controla o ritmo das consultas públicas aos canais. A pausa e o teto da
+// fila ficam no storage, valendo para todas as abas do YouTube abertas.
 const feedSource = createFeedSource({
   cache: createChannelTabCache({ load: store.loadChannelTabCache, save: store.saveChannelTabCache }),
-  queue: createRequestQueue(),
+  queue: createRequestQueue({ shared: { load: store.loadRequestBudget, save: store.saveRequestBudget } }),
   clientVersion: () => clientVersionFromDocument(document),
 });
 
