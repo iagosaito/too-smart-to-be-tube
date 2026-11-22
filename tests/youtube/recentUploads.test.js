@@ -89,6 +89,24 @@ describe('parseFeedPage', () => {
   });
 });
 
+// Regressão: o nome do canal vem antes da data nas metadataRows. Um canal
+// chamado "1 second ago" (ou contendo "5m ago") era lido como data de
+// publicação e ficava sempre no topo de "Vídeo mais recente".
+describe('nome do canal não é lido como data', () => {
+  function lockupWithAuthorName(authorName, published) {
+    const node = lockup('spoofer', published);
+    const parts = node.lockupViewModel.metadata.lockupMetadataViewModel.metadata.contentMetadataViewModel.metadataRows[0].metadataParts;
+    parts[0].avatarStack.avatarStackViewModel.text.content = authorName;
+    return node;
+  }
+
+  it.each(['1 second ago', 'Canal 5m ago', 'há 1 minuto'])('canal chamado %j continua com a data real do vídeo', (authorName) => {
+    expect(parseFeedPage({ contents: [lockupWithAuthorName(authorName, '3 days ago')] }, NOW)).toEqual([
+      { channelId: '/@spoofer', publishedAt: NOW - 3 * DAY },
+    ]);
+  });
+});
+
 describe('latestByChannel', () => {
   it('fica com a data mais recente de cada canal', () => {
     const items = [
