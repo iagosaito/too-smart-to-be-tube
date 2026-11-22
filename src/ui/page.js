@@ -55,8 +55,10 @@ export function closeCategoriesPage() {
 function needsSync(state, now) {
   // Campos nulos: quem já usava a extensão ainda não tem as datas ou o feed
   // (nem o ucid dos canais), então sincroniza na hora em vez de esperar a
-  // próxima hora cheia.
-  return isStale(state.lastSyncedAt, now) || state.uploadsSyncedAt == null || state.feedSyncedAt == null;
+  // próxima hora cheia. Se o feed já foi tentado e falhou, espera a próxima
+  // sincronização normal: tentar a cada abertura repetiria ~100 requisições.
+  const feedMissing = state.uploadsSyncedAt == null || state.feedSyncedAt == null;
+  return isStale(state.lastSyncedAt, now) || (feedMissing && state.feedAttemptedAt == null);
 }
 
 function syncCooldownLeft(context) {

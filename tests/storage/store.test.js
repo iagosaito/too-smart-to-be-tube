@@ -5,7 +5,7 @@ import { createFakeStorageArea } from '../helpers/fakeStorage.js';
 describe('createStore', () => {
   it('retorna estado padrão quando o storage está vazio', async () => {
     const store = createStore(createFakeStorageArea());
-    expect(await store.load()).toEqual({ channels: {}, categories: [], lastSyncedAt: null, latestUploads: {}, uploadsSyncedAt: null, preferences: {}, feedItems: [], feedSyncedAt: null });
+    expect(await store.load()).toEqual({ channels: {}, categories: [], lastSyncedAt: null, latestUploads: {}, uploadsSyncedAt: null, preferences: {}, feedItems: [], feedSyncedAt: null, feedAttemptedAt: null });
   });
 
   it('salva e recarrega categorias', async () => {

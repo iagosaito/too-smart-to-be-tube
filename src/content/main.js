@@ -47,6 +47,8 @@ async function syncLatestUploads() {
     await store.saveFeed(videos);
   } catch (error) {
     console.warn('[Too Smart To Be Tube] Could not read the subscriptions feed:', error);
+  } finally {
+    await store.markFeedAttempt();
   }
 }
 
