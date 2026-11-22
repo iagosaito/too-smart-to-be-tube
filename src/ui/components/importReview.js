@@ -8,7 +8,7 @@ const MAX_UNKNOWN_LISTED = 15;
 // Revisão antes de aplicar: importar sobrescreve organização manual, então o
 // usuário vê o impacto e decide. Fica logo abaixo do cabeçalho, perto do botão que o abriu.
 export function renderImportReview(pending, summary, actions) {
-  if (pending.error || !summary?.matched) return renderImportError(pending, summary, actions);
+  if (pending.error || summary?.error || !summary?.matched) return renderImportError(pending, summary, actions);
   return el('section', { className: 'tstb-review', role: 'region', 'aria-label': t('import.reviewTitle') }, [
     el('h3', { tabindex: '-1' }, t('import.reviewTitle')),
     el('p', { className: 'tstb-review-file' }, pending.fileName),
@@ -39,7 +39,7 @@ function renderUnknown(unknown) {
 
 function renderImportError(pending, summary, actions) {
   // pending.error guarda a chave de tradução, traduzida só na hora de mostrar.
-  const message = t(pending.error ?? 'import.noMatch');
+  const message = t(pending.error ?? summary?.error ?? 'import.noMatch');
   return el('section', { className: 'tstb-review tstb-review-error', role: 'alert' }, [
     el('h3', { tabindex: '-1' }, t('import.errorTitle')),
     el('p', { className: 'tstb-review-file' }, pending.fileName),

@@ -79,3 +79,42 @@ describe('planImport', () => {
     expect(summary).toMatchObject({ matched: 1, moved: 0 });
   });
 });
+
+// Regressão: a importação não tinha limites. Um CSV com milhares de linhas
+// para o mesmo canal criava milhares de categorias vazias (gravadas para
+// sempre), os nomes podiam ter qualquer tamanho e o plano tinha custo
+// quadrático, travando a aba na tela de revisão.
+describe('limites da importação', () => {
+  const many = (count, row) => Array.from({ length: count }, (_, index) => row(index));
+
+  it('linhas repetidas do mesmo canal criam só a categoria que vale (a última)', () => {
+    const { categories, summary } = planImport(state, entriesOf(...many(50, (i) => ['', `Cat ${i}`, '', '/@b'])));
+    expect(categories.map((c) => c.name)).toEqual(['Tech', 'Cat 49']);
+    expect(summary.created).toEqual(['Cat 49']);
+  });
+
+  it(`recusa arquivos com mais de ${20_000} linhas de canal`, () => {
+    const rows = [HEADER, ...many(20_001, (i) => ['', 'Tech', '', `/@c${i}`])];
+    expect(readImport(rows).error).toBe('import.tooManyRows');
+  });
+
+  it('recusa importações que criariam mais de 200 categorias novas, sem alterar nada', () => {
+    const channels = Object.fromEntries(many(201, (i) => [`/@c${i}`, channel(`c${i}`, `C${i}`)]));
+    const result = planImport({ channels, categories: [] }, entriesOf(...many(201, (i) => ['', `Nova ${i}`, '', `/@c${i}`])));
+    expect(result.summary.error).toBe('import.tooManyCategories');
+    expect(result.categories).toEqual([]);
+  });
+
+  it('corta nomes de categoria longos no mesmo limite da interface (40 caracteres)', () => {
+    const { categories } = planImport(state, entriesOf(['', 'x'.repeat(5_000), '', '/@b']));
+    expect(categories[1].name).toBe('x'.repeat(40));
+  });
+
+  it('planeja 20 mil linhas e centenas de categorias em tempo aceitável', () => {
+    const channels = Object.fromEntries(many(1_000, (i) => [`/@c${i}`, channel(`c${i}`, `C${i}`)]));
+    const entries = entriesOf(...many(20_000, (i) => ['', `Cat ${i % 150}`, '', `/@c${i % 1_000}`]));
+    const start = performance.now();
+    planImport({ channels, categories: [] }, entries);
+    expect(performance.now() - start).toBeLessThan(500);
+  });
+});
