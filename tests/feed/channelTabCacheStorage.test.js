@@ -1,0 +1,40 @@
+// Regressão (#8): o cache inteiro (até ~150 canais × 30 itens, perto de 1 MB)
+// ficava numa chave só, regravada a cada lote. Cada gravação chega com valor
+// antigo e novo ao storage.onChanged de todas as abas do YouTube abertas.
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { createChannelTabCache } from '../../src/feed/channelTabCache.js';
+import { createStore } from '../../src/storage/store.js';
+import { createFakeStorageArea } from '../helpers/fakeStorage.js';
+
+beforeEach(() => vi.useFakeTimers());
+afterEach(() => vi.useRealTimers());
+
+const channel = (n) => ({ id: `/@c${n}`, ucid: `UC${String(n).padStart(22, '0')}` });
+const items = (n) => Array.from({ length: 30 }, (_, i) => ({ videoId: `v${n}-${i}`, title: 'x'.repeat(150), channelId: `/@c${n}`, viewCount: 1 }));
+const bytes = (value) => JSON.stringify(value).length;
+
+it('gravar um canal não regrava o cache dos outros', async () => {
+  const area = createFakeStorageArea();
+  const cache = createChannelTabCache({ storage: createStore(area).channelTabStorage });
+  for (let n = 0; n < 100; n += 1) await cache.set(channel(n), 'shorts', items(n));
+  await vi.advanceTimersByTimeAsync(1000);
+
+  const writes = [];
+  const set = area.set;
+  area.set = async (payload) => { writes.push(payload); return set(payload); };
+  await cache.set(channel(100), 'shorts', items(100));
+  await vi.advanceTimersByTimeAsync(1000);
+
+  const written = writes.reduce((sum, payload) => sum + bytes(payload), 0);
+  expect(bytes(area.dump())).toBeGreaterThan(500_000);
+  expect(written).toBeLessThan(40_000);
+});
+
+it('outra aba lê o canal que esta aba gravou', async () => {
+  const area = createFakeStorageArea();
+  const tabA = createChannelTabCache({ storage: createStore(area).channelTabStorage, now: () => 1 });
+  const tabB = createChannelTabCache({ storage: createStore(area).channelTabStorage, now: () => 2 });
+  await tabA.set(channel(1), 'videos', items(1));
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(await tabB.get(channel(1), 'videos')).toEqual(items(1));
+});

@@ -71,10 +71,22 @@ describe('createStore', () => {
     expect(state.feedSyncedAt).toBe(77);
   });
 
-  it('guarda e lê o cache das abas de canal separado do resto do estado', async () => {
-    const store = createStore(createFakeStorageArea());
-    expect(await store.loadChannelTabCache()).toEqual({});
-    await store.saveChannelTabCache({ 'UCx:videos': { fetchedAt: 1, usedAt: 1, items: [] } });
-    expect(Object.keys(await store.loadChannelTabCache())).toEqual(['UCx:videos']);
+  it('guarda o cache das abas de canal numa chave por canal e aba, mais um índice', async () => {
+    const area = createFakeStorageArea();
+    const { channelTabStorage: storage } = createStore(area);
+    expect(await storage.loadEntry('UCx:videos')).toBeNull();
+    await storage.saveEntries({ 'UCx:videos': { fetchedAt: 1, usedAt: 1, items: [] } });
+    await storage.saveIndex({ 'UCx:videos': { fetchedAt: 1, usedAt: 1 } });
+    expect(await storage.loadEntry('UCx:videos')).toEqual({ fetchedAt: 1, usedAt: 1, items: [] });
+    expect(await storage.loadIndex()).toEqual({ 'UCx:videos': { fetchedAt: 1, usedAt: 1 } });
+    await storage.removeEntries(['UCx:videos']);
+    expect(await storage.loadEntry('UCx:videos')).toBeNull();
+    expect(Object.keys(area.dump())).toEqual(['tabCacheIndex']);
+  });
+
+  it('descarta o cache no formato antigo (tudo numa chave)', async () => {
+    const area = createFakeStorageArea({ channelTabCache: { 'UCx:videos': {} }, categories: [] });
+    await createStore(area).dropLegacyChannelTabCache();
+    expect(Object.keys(area.dump())).toEqual(['categories']);
   });
 });

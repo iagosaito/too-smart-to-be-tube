@@ -8,6 +8,9 @@ export function createFakeStorageArea(initial = {}) {
     async set(items) {
       data = { ...data, ...structuredClone(items) };
     },
+    async remove(keys) {
+      for (const key of [].concat(keys)) delete data[key];
+    },
     dump: () => structuredClone(data),
   };
 }

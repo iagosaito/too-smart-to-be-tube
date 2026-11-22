@@ -56,7 +56,7 @@ async function syncLatestUploads() {
 // controla o ritmo das consultas públicas aos canais. A pausa e o teto da
 // fila ficam no storage, valendo para todas as abas do YouTube abertas.
 const feedSource = createFeedSource({
-  cache: createChannelTabCache({ load: store.loadChannelTabCache, save: store.saveChannelTabCache }),
+  cache: createChannelTabCache({ storage: store.channelTabStorage }),
   queue: createRequestQueue({ shared: { load: store.loadRequestBudget, save: store.saveRequestBudget } }),
   clientVersion: () => clientVersionFromDocument(document),
 });
@@ -146,6 +146,8 @@ async function setup() {
 document.addEventListener('yt-navigate-start', closeCategoriesPage);
 document.addEventListener('yt-navigate-finish', setup);
 setup();
+// Uma vez por carregamento: apaga o cache no formato antigo (tudo numa chave).
+Promise.resolve(store.dropLegacyChannelTabCache()).catch(() => {});
 
 // Mantém a lista do menu lateral em dia quando as categorias mudam (inclusive
 // por outra aba do YouTube aberta ao mesmo tempo).
