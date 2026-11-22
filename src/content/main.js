@@ -146,8 +146,6 @@ async function setup() {
 document.addEventListener('yt-navigate-start', closeCategoriesPage);
 document.addEventListener('yt-navigate-finish', setup);
 setup();
-// Uma vez por carregamento: apaga o cache no formato antigo (tudo numa chave).
-Promise.resolve(store.dropLegacyChannelTabCache()).catch(() => {});
 
 // Mantém a lista do menu lateral em dia quando as categorias mudam (inclusive
 // por outra aba do YouTube aberta ao mesmo tempo).

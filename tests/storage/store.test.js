@@ -83,10 +83,4 @@ describe('createStore', () => {
     expect(await storage.loadEntry('UCx:videos')).toBeNull();
     expect(Object.keys(area.dump())).toEqual(['tabCacheIndex']);
   });
-
-  it('descarta o cache no formato antigo (tudo numa chave)', async () => {
-    const area = createFakeStorageArea({ channelTabCache: { 'UCx:videos': {} }, categories: [] });
-    await createStore(area).dropLegacyChannelTabCache();
-    expect(Object.keys(area.dump())).toEqual(['categories']);
-  });
 });

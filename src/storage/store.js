@@ -5,10 +5,9 @@ const KEYS = ['channels', 'categories', 'lastSyncedAt', 'latestUploads', 'upload
 // para várias semanas de feed por categoria sem pesar no storage.
 export const MAX_FEED_ITEMS = 800;
 // Cache das abas de canal: uma chave por canal e aba (tabCache:<ucid>:<aba>)
-// e um índice só com as datas. Antes era tudo numa chave só (legado).
+// e um índice só com as datas.
 const TAB_CACHE_PREFIX = 'tabCache:';
 const TAB_CACHE_INDEX_KEY = 'tabCacheIndex';
-const LEGACY_TAB_CACHE_KEY = 'channelTabCache';
 // Pausa e inícios recentes da fila de consultas, comuns a todas as abas.
 const REQUEST_BUDGET_KEY = 'requestBudget';
 
@@ -28,9 +27,6 @@ export function createStore(area) {
     // falha persistente faria toda abertura da página sincronizar de novo.
     markFeedAttempt: (now = Date.now()) => area.set({ feedAttemptedAt: now }),
     channelTabStorage: createChannelTabStorage(area),
-    // O formato antigo (tudo numa chave) é descartado: vira cache vazio, que
-    // se refaz sob demanda.
-    dropLegacyChannelTabCache: () => area.remove?.(LEGACY_TAB_CACHE_KEY),
     loadRequestBudget: async () => (await area.get([REQUEST_BUDGET_KEY]))[REQUEST_BUDGET_KEY] ?? null,
     saveRequestBudget: (budget) => area.set({ [REQUEST_BUDGET_KEY]: budget }),
   };
