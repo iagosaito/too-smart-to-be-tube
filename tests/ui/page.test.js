@@ -280,6 +280,45 @@ describe('desempenho', () => {
   });
 });
 
+describe('controle de categoria no cartão por visão', () => {
+  const cardOf = (name) => $$('.tstb-card').find((node) => node.textContent.includes(name));
+
+  it('em "Todas" cada cartão mostra a pílula com a sua categoria', async () => {
+    await open();
+    expect(cardOf('Alura').querySelector('.tstb-pill').value).toBe('tech');
+    expect(cardOf('Alura').querySelector('.tstb-move')).toBeNull();
+  });
+
+  it('dentro de uma categoria não repete a pílula; oferece o ícone de mover', async () => {
+    await open();
+    chip('Tech').click();
+    const card = cardOf('Alura');
+    expect(card.querySelector('.tstb-pill')).toBeNull();
+    const select = card.querySelector('.tstb-move .tstb-move-select');
+    expect(select.getAttribute('aria-label')).toBe('Mover Alura para outra categoria');
+    expect(select.value).toBe('tech');
+  });
+
+  it('o ícone de mover tira o canal da categoria aberta', async () => {
+    await open();
+    chip('Tech').click();
+    changeSelect(cardOf('Alura').querySelector('.tstb-move-select'), '');
+    await flush();
+    expect(area.dump().categories[0].channelIds).toEqual([]);
+    expect($('.tstb-empty-state').textContent).toContain('Categoria vazia');
+  });
+
+  it('em "Sem categoria" a pílula convida a escolher em vez de repetir "Sem categoria"', async () => {
+    await open();
+    chip('Sem categoria').click();
+    const pill = cardOf('Bossa').querySelector('.tstb-pill');
+    expect(pill.options[pill.selectedIndex].textContent).toBe('Escolher categoria…');
+    changeSelect(pill, 'tech');
+    await flush();
+    expect(area.dump().categories[0].channelIds).toEqual(['/@alura', '/@bossa']);
+  });
+});
+
 describe('seleção em lote', () => {
   it('marcar canais mostra a barra com a contagem', async () => {
     await open();

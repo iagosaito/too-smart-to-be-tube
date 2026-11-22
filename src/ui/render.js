@@ -1,11 +1,11 @@
-import { renderChannelGrid } from './components/channelGrid.js';
+import { CATEGORY_CONTROL, renderChannelGrid } from './components/channelGrid.js';
 import { renderChips } from './components/chips.js';
 import { renderBulkBar, renderEmptyState } from './components/feedback.js';
 import { renderHeader } from './components/header.js';
 import { renderImportReview } from './components/importReview.js';
 import { planImport } from '../import/categorizationImport.js';
 import { renderViewHeading } from './components/viewHeading.js';
-import { buildChips, FILTER_NONE, formatUploadAge, SORT_RECENT, visibleChannels } from './view.js';
+import { buildChips, FILTER_ALL, FILTER_NONE, formatUploadAge, SORT_RECENT, visibleChannels } from './view.js';
 
 // Regiões fixas da página. Cada render preenche cada região separadamente,
 // assim a grade (a parte cara) não é tocada quando só o cabeçalho muda.
@@ -20,10 +20,23 @@ export function renderPage(state, view, actions, { now, cardCache }) {
     chips: renderChips(buildChips(state), view.filter, actions),
     heading: renderViewHeading(state, view, actions, channels.length),
     results: channels.length
-      ? renderChannelGrid(channels, { categories: state.categories, view, actions, cache: cardCache, metaOf: metaFor(state, view, now) })
+      ? renderChannelGrid(channels, {
+        categories: state.categories,
+        view,
+        actions,
+        cache: cardCache,
+        metaOf: metaFor(state, view, now),
+        control: categoryControlFor(view.filter),
+      })
       : renderEmptyState(emptyStateFor(state, view, actions)),
     bulkBar: view.selected.size ? renderBulkBar(state.categories, view.selected.size, actions) : null,
   };
+}
+
+function categoryControlFor(filter) {
+  if (filter === FILTER_ALL) return CATEGORY_CONTROL.PILL;
+  if (filter === FILTER_NONE) return CATEGORY_CONTROL.CHOOSE;
+  return CATEGORY_CONTROL.MOVE_ICON;
 }
 
 function metaFor(state, view, now) {

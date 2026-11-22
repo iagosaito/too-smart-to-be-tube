@@ -656,6 +656,53 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   color: var(--tstb-on-strong);
 }
 
+/* Ícone de mover (dentro de uma categoria): canto superior direito, simétrico
+   ao ✓ da esquerda, e só no hover/foco, para a grade ficar limpa. */
+.tstb-move {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--tstb-bg);
+  color: var(--tstb-muted);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.tstb-move svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tstb-card:hover .tstb-move,
+.tstb-move:focus-within {
+  opacity: 1;
+}
+
+.tstb-move:hover {
+  background: var(--tstb-control-hover);
+  color: var(--tstb-text);
+}
+
+.tstb-move:focus-within {
+  outline: 2px solid var(--tstb-accent);
+  outline-offset: 2px;
+}
+
+/* O select cobre o ícone por inteiro e é invisível: o clique abre o menu nativo. */
+.tstb-move-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
 .tstb-pill {
   max-width: 100%;
   height: 28px;

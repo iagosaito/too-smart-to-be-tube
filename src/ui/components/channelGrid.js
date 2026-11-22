@@ -10,11 +10,18 @@ export function createCardCache() {
   return { cards: new Map(), list: null };
 }
 
+// Como o cartão oferece "mover para outra categoria" depende da visão:
+// - PILL: em "Todas", a pílula mostra a categoria de cada canal (informação útil);
+// - MOVE_ICON: dentro de uma categoria, todos seriam iguais; a pílula vira um
+//   ícone discreto no hover, deixando a grade limpa;
+// - CHOOSE: em "Sem categoria", escolher é a tarefa principal; a pílula convida a agir.
+export const CATEGORY_CONTROL = { PILL: 'pill', MOVE_ICON: 'move-icon', CHOOSE: 'choose' };
+
 // metaOf devolve a linha de apoio do cartão (ex.: "Vídeo há 2 dias") ou null.
-export function renderChannelGrid(channels, { categories, view, actions, cache = createCardCache(), metaOf = () => null }) {
+export function renderChannelGrid(channels, { categories, view, actions, cache = createCardCache(), metaOf = () => null, control = CATEGORY_CONTROL.PILL }) {
   // As opções do select seguem a mesma ordem A–Z dos chips.
   const sorted = sortCategoriesByName(categories);
-  const shared = { categories: sorted, actions, metaOf, categoryOf: mapCategoryByChannel(sorted), categoriesKey: keyOf(sorted) };
+  const shared = { categories: sorted, actions, metaOf, control, categoryOf: mapCategoryByChannel(sorted), categoriesKey: keyOf(sorted) };
   const cards = channels.map((channel) => cachedCard(channel, view.selected.has(channel.id), shared, cache.cards));
   // A mesma <ul> é reaproveitada para que só os cartões alterados sejam trocados no DOM.
   cache.list ??= el('ul');
@@ -27,7 +34,7 @@ function cachedCard(channel, selected, shared, cache) {
   const categoryId = shared.categoryOf.get(channel.id) ?? '';
   const meta = shared.metaOf(channel);
   // Tudo o que aparece no cartão entra na chave; se algo mudar, ele é recriado.
-  const key = [channel.name, channel.avatar, categoryId, selected, meta, shared.categoriesKey].join('\u0000');
+  const key = [channel.name, channel.avatar, categoryId, selected, meta, shared.control, shared.categoriesKey].join('\u0000');
   const cached = cache.get(channel.id);
   if (cached?.key === key) return cached.node;
   const node = renderCard(channel, { ...shared, categoryId, selected, meta });
@@ -51,8 +58,24 @@ function renderCard(channel, options) {
   return el('li', { className: options.selected ? 'tstb-card tstb-card-selected' : 'tstb-card' }, [
     renderCheck(channel, options),
     renderCardLink(channel, options.actions, options.meta),
-    renderCategoryPill(channel, options),
+    renderCategoryControl(channel, options),
   ]);
+}
+
+function renderCategoryControl(channel, options) {
+  if (options.control === CATEGORY_CONTROL.MOVE_ICON) return renderMoveIcon(channel, options);
+  return renderCategoryPill(channel, options);
+}
+
+function renderMoveIcon(channel, options) {
+  // Um <select> transparente sobre o ícone: o clique abre o menu nativo de
+  // categorias (acessível e sem popover próprio), mas só o ícone aparece.
+  const select = renderCategorySelect(channel, options, {
+    className: 'tstb-move-select',
+    label: `Mover ${channel.name} para outra categoria`,
+    emptyLabel: 'Sem categoria',
+  });
+  return el('div', { className: 'tstb-move', title: 'Mover para outra categoria' }, [svgIcon(ICONS.moveToFolder), select]);
 }
 
 function renderCheck(channel, { selected, actions }) {
@@ -96,14 +119,24 @@ function renderAvatar(channel) {
   return el('div', { className: 'tstb-avatar tstb-avatar-empty', 'aria-hidden': 'true' }, channel.name.charAt(0));
 }
 
-function renderCategoryPill(channel, { categories, categoryId, actions }) {
-  const options = [{ id: '', name: 'Sem categoria' }, ...categories].map(({ id, name }) => el('option', { value: id }, name));
+function renderCategoryPill(channel, options) {
+  const choosing = options.control === CATEGORY_CONTROL.CHOOSE;
+  return renderCategorySelect(channel, options, {
+    // Estilo diferente para "Sem categoria" destaca o que ainda falta organizar.
+    className: options.categoryId ? 'tstb-pill' : 'tstb-pill tstb-pill-empty',
+    label: `Categoria de ${channel.name}`,
+    // Na fila "Sem categoria", repetir o óbvio em todo cartão não ajuda; o texto convida a agir.
+    emptyLabel: choosing ? 'Escolher categoria…' : 'Sem categoria',
+  });
+}
+
+function renderCategorySelect(channel, { categories, categoryId, actions }, { className, label, emptyLabel }) {
+  const options = [{ id: '', name: emptyLabel }, ...categories].map(({ id, name }) => el('option', { value: id }, name));
   const select = el(
     'select',
     {
-      // Estilo diferente para "Sem categoria" destaca o que ainda falta organizar.
-      className: categoryId ? 'tstb-pill' : 'tstb-pill tstb-pill-empty',
-      'aria-label': `Categoria de ${channel.name}`,
+      className,
+      'aria-label': label,
       'data-focus-key': `pill:${channel.id}`,
       onChange: (event) => actions.assign(channel.id, event.target.value || null),
     },
