@@ -107,7 +107,7 @@ describe('ordem alfabética das categorias', () => {
 
   it('chips, pílulas e "Mover para…" usam a mesma ordem A–Z', async () => {
     await open({ store: createStore(createFakeStorageArea({ channels, categories: unordered, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 })) });
-    expect($$('.tstb-chips-track .tstb-chip-label').map((node) => node.textContent)).toEqual(['Comida', 'Tech', 'Viagem']);
+    expect($$('.tstb-chips [data-chip-id]:not(.tstb-chip-all):not(.tstb-chip-pending) .tstb-chip-label').map((node) => node.textContent)).toEqual(['Comida', 'Tech', 'Viagem']);
     expect(optionLabels($('.tstb-pill'))).toEqual(['Sem categoria', 'Comida', 'Tech', 'Viagem']);
     checkFor('Alura').click();
     expect(optionLabels($('.tstb-bulk-select'))).toEqual(['Mover para…', 'Comida', 'Tech', 'Viagem', 'Sem categoria']);

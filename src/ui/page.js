@@ -1,7 +1,6 @@
 import { assignChannel, assignChannels, createCategory, removeCategory, renameCategory } from '../core/categories.js';
 import { SELECTORS } from '../dom/selectors.js';
 import { createCardCache } from './components/channelGrid.js';
-import { listenForResize, preserveChipsScroll } from './components/chips.js';
 import { csvFileName, subscriptionsCsv } from '../export/subscriptionsCsv.js';
 import { parseCsv } from '../import/csvParse.js';
 import { planImport, readImport } from '../import/categorizationImport.js';
@@ -28,7 +27,6 @@ const AUTO_SYNC_AFTER_MS = 60 * 60 * 1000;
 export async function openCategoriesPage(options) {
   const context = createContext(options);
   const page = mountPage();
-  listenForResize();
   // A página anterior fica só oculta (não destruída), então um vídeo continuaria tocando.
   document.querySelector('video')?.pause();
   await reload(page, context);
@@ -92,7 +90,7 @@ function render(page, context) {
   context.view.filter = resolveFilter(context.view.filter, context.state.categories);
   const env = { now: context.now(), cardCache: context.cardCache };
   const parts = renderPage(context.state, context.view, createActions(page, context), env);
-  preserveFocus(page, () => preserveChipsScroll(page, () => fillSlots(page, parts)));
+  preserveFocus(page, () => fillSlots(page, parts));
 }
 
 function fillSlots(page, parts) {
