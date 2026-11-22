@@ -1,5 +1,6 @@
 import { assignChannel, assignChannels, createCategory, removeCategory, renameCategory } from '../core/categories.js';
 import { SELECTORS } from '../dom/selectors.js';
+import { closeCategoryMenu, closeCategoryMenuIfDetached } from './components/categoryMenu.js';
 import { createCardCache } from './components/channelGrid.js';
 import { csvFileName, subscriptionsCsv } from '../export/subscriptionsCsv.js';
 import { parseCsv } from '../import/csvParse.js';
@@ -35,6 +36,7 @@ export async function openCategoriesPage(options) {
 }
 
 export function closeCategoriesPage() {
+  closeCategoryMenu();
   document.getElementById(PAGE_ID)?.remove();
   document.documentElement.classList.remove(OPEN_CLASS);
 }
@@ -92,6 +94,7 @@ function render(page, context) {
   const env = { now: context.now(), cardCache: context.cardCache };
   const parts = renderPage(context.state, context.view, createActions(page, context), env);
   preserveFocus(page, () => fillSlots(page, parts));
+  closeCategoryMenuIfDetached();
 }
 
 function fillSlots(page, parts) {

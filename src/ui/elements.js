@@ -9,6 +9,8 @@ export function el(tag, props = {}, children = []) {
 }
 
 function applyProp(node, key, value) {
+  // null/undefined significam "sem este atributo" (setAttribute gravaria o texto "null").
+  if (value == null) return;
   if (key.startsWith('on')) {
     node.addEventListener(key.slice(2).toLowerCase(), value);
   } else if (key === 'className' || key === 'value') {

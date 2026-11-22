@@ -1,6 +1,7 @@
 import { sortCategoriesByName } from '../../core/categories.js';
 import { el, svgIcon, syncChildren } from '../elements.js';
 import { ICONS } from '../icons.js';
+import { closeCategoryMenu, isCategoryMenuOpenFor, openCategoryMenu } from './categoryMenu.js';
 
 // Cada interação re-renderiza a página inteira (simples de manter), mas
 // recriar centenas de cartões com imagem e select a cada clique travava a UI.
@@ -68,14 +69,13 @@ function renderCategoryControl(channel, options) {
 }
 
 function renderMoveIcon(channel, options) {
-  // Um <select> transparente sobre o ícone: o clique abre o menu nativo de
-  // categorias (acessível e sem popover próprio), mas só o ícone aparece.
-  const select = renderCategorySelect(channel, options, {
-    className: 'tstb-move-select',
+  return renderMenuTrigger(channel, options, {
+    className: 'tstb-move',
     label: `Mover ${channel.name} para outra categoria`,
+    title: 'Mover para outra categoria',
+    content: svgIcon(ICONS.moveToFolder),
     emptyLabel: 'Sem categoria',
   });
-  return el('div', { className: 'tstb-move', title: 'Mover para outra categoria' }, [svgIcon(ICONS.moveToFolder), select]);
 }
 
 function renderCheck(channel, { selected, actions }) {
@@ -121,28 +121,44 @@ function renderAvatar(channel) {
 
 function renderCategoryPill(channel, options) {
   const choosing = options.control === CATEGORY_CONTROL.CHOOSE;
-  return renderCategorySelect(channel, options, {
+  // Na fila "Sem categoria", repetir o óbvio em todo cartão não ajuda; o texto convida a agir.
+  const emptyLabel = choosing ? 'Escolher categoria…' : 'Sem categoria';
+  const current = options.categories.find((category) => category.id === options.categoryId);
+  return renderMenuTrigger(channel, options, {
     // Estilo diferente para "Sem categoria" destaca o que ainda falta organizar.
-    className: options.categoryId ? 'tstb-pill' : 'tstb-pill tstb-pill-empty',
-    label: `Categoria de ${channel.name}`,
-    // Na fila "Sem categoria", repetir o óbvio em todo cartão não ajuda; o texto convida a agir.
-    emptyLabel: choosing ? 'Escolher categoria…' : 'Sem categoria',
+    className: current ? 'tstb-pill' : 'tstb-pill tstb-pill-empty',
+    label: `Categoria de ${channel.name}: ${current?.name ?? 'sem categoria'}`,
+    content: [el('span', { className: 'tstb-pill-label' }, current?.name ?? emptyLabel), svgIcon(ICONS.chevronDown)],
+    emptyLabel: 'Sem categoria',
   });
 }
 
-function renderCategorySelect(channel, { categories, categoryId, actions }, { className, label, emptyLabel }) {
-  const options = [{ id: '', name: emptyLabel }, ...categories].map(({ id, name }) => el('option', { value: id }, name));
-  const select = el(
-    'select',
+// Botão + menu próprio no lugar do <select> nativo: o menu só abre no clique
+// (não ao apertar o botão do mouse) e só uma opção clicada muda a categoria.
+function renderMenuTrigger(channel, { categories, categoryId, actions }, { className, label, title, content, emptyLabel }) {
+  const items = () => [{ id: '', name: emptyLabel }, ...categories].map(({ id, name }) => ({ id, label: name, checked: id === categoryId }));
+  const onClick = (event) => {
+    const trigger = event.currentTarget;
+    if (isCategoryMenuOpenFor(trigger)) return closeCategoryMenu();
+    openCategoryMenu(trigger, {
+      label,
+      items: items(),
+      // Escolher a categoria atual não precisa gravar nem redesenhar nada.
+      onSelect: (id) => id !== categoryId && actions.assign(channel.id, id || null),
+    });
+  };
+  return el(
+    'button',
     {
+      type: 'button',
       className,
+      title: title ?? null,
       'aria-label': label,
+      'aria-haspopup': 'menu',
+      'aria-expanded': 'false',
       'data-focus-key': `pill:${channel.id}`,
-      onChange: (event) => actions.assign(channel.id, event.target.value || null),
+      onClick,
     },
-    options,
+    content,
   );
-  // value só pode ser definido depois que as opções existem.
-  select.value = categoryId;
-  return select;
 }

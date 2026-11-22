@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { closeCategoriesPage, isStale, OPEN_CLASS, openCategoriesPage, PAGE_ID } from '../../src/ui/page.js';
 import { createStore } from '../../src/storage/store.js';
+import { closeCategoryMenu, MENU_ID } from '../../src/ui/components/categoryMenu.js';
 import { TOAST_ID } from '../../src/ui/components/feedback.js';
 import { createFakeStorageArea } from '../helpers/fakeStorage.js';
 
@@ -16,6 +17,7 @@ let area;
 let store;
 
 beforeEach(() => {
+  closeCategoryMenu();
   document.body.innerHTML = '<ytd-page-manager><ytd-browse id="home">Início</ytd-browse></ytd-page-manager>';
   document.documentElement.className = '';
   // O jsdom não implementa rolagem e polui a saída com avisos.
@@ -35,6 +37,15 @@ const checkFor = (name) => $$('.tstb-check').find((node) => node.getAttribute('a
 // Ações gravam no storage de forma assíncrona; aguardamos a fila de tarefas esvaziar.
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 const open = (options = {}) => openCategoriesPage({ store, now: () => 1_000, searchDelay: 0, ...options });
+
+// Menu próprio de categoria dos cartões (pílula e ícone de mover).
+const menu = () => document.getElementById(MENU_ID);
+const menuLabels = () => [...menu().querySelectorAll('.tstb-menu-item')].map((item) => item.textContent);
+const checkedInMenu = () => menu().querySelector('[aria-checked="true"]')?.textContent;
+function chooseInMenu(trigger, label) {
+  trigger.click();
+  [...menu().querySelectorAll('.tstb-menu-item')].find((item) => item.textContent === label).click();
+}
 
 function changeSelect(select, value) {
   select.value = value;
@@ -93,7 +104,7 @@ describe('visão geral', () => {
     await open();
     const card = $$('.tstb-card').find((node) => node.textContent.includes('Alura'));
     expect(card.querySelector('a').href).toBe('https://www.youtube.com/@alura');
-    expect(card.querySelector('select').value).toBe('tech');
+    expect(card.querySelector('.tstb-pill').textContent).toBe('Tech');
   });
 });
 
@@ -104,11 +115,14 @@ describe('ordem alfabética das categorias', () => {
     { id: 'c', name: 'Comida', channelIds: [] },
   ];
   const optionLabels = (select) => [...select.options].map((option) => option.textContent);
+  afterEach(() => closeCategoryMenu());
 
   it('chips, pílulas e "Mover para…" usam a mesma ordem A–Z', async () => {
     await open({ store: createStore(createFakeStorageArea({ channels, categories: unordered, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 })) });
     expect($$('.tstb-chips [data-chip-id]:not(.tstb-chip-all):not(.tstb-chip-pending) .tstb-chip-label').map((node) => node.textContent)).toEqual(['Comida', 'Tech', 'Viagem']);
-    expect(optionLabels($('.tstb-pill'))).toEqual(['Sem categoria', 'Comida', 'Tech', 'Viagem']);
+    $('.tstb-pill').click();
+    expect(menuLabels()).toEqual(['Sem categoria', 'Comida', 'Tech', 'Viagem']);
+    closeCategoryMenu();
     checkFor('Alura').click();
     expect(optionLabels($('.tstb-bulk-select'))).toEqual(['Mover para…', 'Comida', 'Tech', 'Viagem', 'Sem categoria']);
   });
@@ -239,7 +253,7 @@ describe('categorias', () => {
   it('move um canal pela pílula de categoria', async () => {
     await open();
     const card = $$('.tstb-card').find((node) => node.textContent.includes('Bossa'));
-    changeSelect(card.querySelector('select'), 'tech');
+    chooseInMenu(card.querySelector('.tstb-pill'), 'Tech');
     await flush();
     expect(area.dump().categories[0].channelIds).toEqual(['/@alura', '/@bossa']);
   });
@@ -267,7 +281,7 @@ describe('desempenho', () => {
     expect(cardNames()).toEqual(['Bossa Nova']);
   });
 
-  it('renomear uma categoria invalida os cartões (as opções do select mudam)', async () => {
+  it('renomear uma categoria invalida os cartões (as opções do menu mudam)', async () => {
     await open();
     const alura = cardOf('Alura');
     chip('Tech').click();
@@ -276,7 +290,9 @@ describe('desempenho', () => {
     $('.tstb-rename-input').closest('form').requestSubmit();
     await flush();
     expect(cardOf('Alura')).not.toBe(alura);
-    expect(cardOf('Alura').querySelector('option[value="tech"]').textContent).toBe('Tecnologia');
+    cardOf('Alura').querySelector('.tstb-move').click();
+    expect(menuLabels()).toContain('Tecnologia');
+    closeCategoryMenu();
   });
 });
 
@@ -285,7 +301,7 @@ describe('controle de categoria no cartão por visão', () => {
 
   it('em "Todas" cada cartão mostra a pílula com a sua categoria', async () => {
     await open();
-    expect(cardOf('Alura').querySelector('.tstb-pill').value).toBe('tech');
+    expect(cardOf('Alura').querySelector('.tstb-pill').textContent).toBe('Tech');
     expect(cardOf('Alura').querySelector('.tstb-move')).toBeNull();
   });
 
@@ -294,15 +310,17 @@ describe('controle de categoria no cartão por visão', () => {
     chip('Tech').click();
     const card = cardOf('Alura');
     expect(card.querySelector('.tstb-pill')).toBeNull();
-    const select = card.querySelector('.tstb-move .tstb-move-select');
-    expect(select.getAttribute('aria-label')).toBe('Mover Alura para outra categoria');
-    expect(select.value).toBe('tech');
+    const move = card.querySelector('.tstb-move');
+    expect(move.getAttribute('aria-label')).toBe('Mover Alura para outra categoria');
+    move.click();
+    expect(checkedInMenu()).toBe('Tech');
+    closeCategoryMenu();
   });
 
   it('o ícone de mover tira o canal da categoria aberta', async () => {
     await open();
     chip('Tech').click();
-    changeSelect(cardOf('Alura').querySelector('.tstb-move-select'), '');
+    chooseInMenu(cardOf('Alura').querySelector('.tstb-move'), 'Sem categoria');
     await flush();
     expect(area.dump().categories[0].channelIds).toEqual([]);
     expect($('.tstb-empty-state').textContent).toContain('Categoria vazia');
@@ -312,10 +330,41 @@ describe('controle de categoria no cartão por visão', () => {
     await open();
     chip('Sem categoria').click();
     const pill = cardOf('Bossa').querySelector('.tstb-pill');
-    expect(pill.options[pill.selectedIndex].textContent).toBe('Escolher categoria…');
-    changeSelect(pill, 'tech');
+    expect(pill.textContent).toBe('Escolher categoria…');
+    chooseInMenu(pill, 'Tech');
     await flush();
     expect(area.dump().categories[0].channelIds).toEqual(['/@alura', '/@bossa']);
+  });
+});
+
+describe('menu de categoria do cartão', () => {
+  const cardOf = (name) => $$('.tstb-card').find((node) => node.textContent.includes(name));
+
+  it('clicar de novo na pílula fecha o menu sem mudar nada', async () => {
+    await open();
+    const pill = cardOf('Alura').querySelector('.tstb-pill');
+    pill.click();
+    expect(menu()).not.toBeNull();
+    expect(pill.getAttribute('aria-expanded')).toBe('true');
+    pill.click();
+    expect(menu()).toBeNull();
+    expect(pill.getAttribute('aria-expanded')).toBe('false');
+    expect(area.dump().categories).toEqual(categories);
+  });
+
+  it('escolher a categoria atual não grava nada', async () => {
+    const set = vi.spyOn(area, 'set');
+    await open();
+    chooseInMenu(cardOf('Alura').querySelector('.tstb-pill'), 'Tech');
+    await flush();
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('fechar a página de Categorias fecha o menu aberto', async () => {
+    await open();
+    cardOf('Alura').querySelector('.tstb-pill').click();
+    closeCategoriesPage();
+    expect(menu()).toBeNull();
   });
 });
 
@@ -392,7 +441,7 @@ describe('seleção só contém o que está na tela', () => {
     checkFor('Alura').click();
     checkFor('Bossa Nova').click();
 
-    changeSelect(cardOf('Alura').querySelector('.tstb-move-select'), 'musica');
+    chooseInMenu(cardOf('Alura').querySelector('.tstb-move'), 'Música');
     await flush();
     expect($('.tstb-bulkbar').textContent).toContain('1 canal selecionado');
 
