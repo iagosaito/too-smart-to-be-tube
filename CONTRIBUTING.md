@@ -38,6 +38,19 @@ tab that stays open keeps running the old script.
 - **Minimal permissions.** The extension only requests `storage`. Changes that need new permissions must justify
   them in the pull request.
 
+## Adding a language
+
+The interface language follows YouTube's `<html lang>`; translations live in `src/i18n/locales/`.
+
+1. Copy `src/i18n/locales/en.js` to a new file named after the language code (e.g. `fr.js`) and translate every
+   value. Keys with `{ one, other }` are plurals; keep the `{placeholders}` as they are.
+2. Register it in `DICTIONARIES` and add its full tag (e.g. `fr: 'fr'`) to `LOCALE_TAGS` in
+   `src/i18n/i18n.js`.
+3. Add `_locales/<code>/messages.json` with the extension name and description.
+4. Run `npm test`: the dictionary parity test fails if any key is missing or has a different shape.
+
+The CSV format stays in English on purpose, so files work the same in every language.
+
 ## Tests
 
 Every change ships with tests. For **bug fixes**, write a test that reproduces the bug first, check that it
