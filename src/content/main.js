@@ -93,27 +93,43 @@ function stopBackgroundWork() {
   document.removeEventListener('yt-navigate-finish', setup);
 }
 
-// Os menus podem só ser montados muito depois do carregamento (ex.: a página
-// abre com o menu recolhido e o usuário expande depois), por isso a espera
-// não tem timeout. Cada espera é iniciada uma vez; depois disso o observer
-// do menu mantém o item no lugar.
+// Os menus podem só ser montados muito depois do carregamento (ex.: numa
+// janela estreita o menu expandido só existe quando o usuário abre o ☰).
+// Cada espera é iniciada uma vez; depois disso o observer do menu mantém o
+// item no lugar.
 const waiting = new Set();
+// Sem o contêiner do menu, a espera vigia o documento inteiro: com prazo,
+// para não rodar a cada mutação da página (inclusive durante um vídeo).
+// A próxima navegação tenta de novo.
+const DOCUMENT_WAIT_MS = 10_000;
 
-async function whenPresent(selector, keep) {
+async function whenPresent(selector, keep, scopeSelector) {
   const current = document.querySelector(selector);
   // Se o YouTube recriou o menu inteiro, este é um elemento novo: passa a ser observado.
   if (current) return keep(current);
   if (waiting.has(selector)) return;
   waiting.add(selector);
-  keep(await waitFor(selector, { timeout: null }));
-  waiting.delete(selector);
+  try {
+    keep(await waitFor(selector, waitScope(scopeSelector)));
+  } catch {
+    // Prazo esgotado sem o menu: nada a fazer até a próxima navegação.
+  } finally {
+    waiting.delete(selector);
+  }
+}
+
+function waitScope(scopeSelector) {
+  // Dentro do contêiner do menu as mutações são raras, então dá para esperar
+  // sem prazo pelo momento em que o usuário abrir o menu.
+  const scope = document.querySelector(scopeSelector);
+  return scope ? { root: scope, timeout: null } : { timeout: DOCUMENT_WAIT_MS };
 }
 
 function setupMenus() {
-  whenPresent(SELECTORS.miniGuideItems, (items) => keepMiniGuideEntry(items, openCategories));
+  whenPresent(SELECTORS.miniGuideItems, (items) => keepMiniGuideEntry(items, openCategories), SELECTORS.miniGuide);
   // Espera uma seção, não só o ytd-guide-renderer, porque ele existe vazio
   // antes de o YouTube preencher o menu.
-  whenPresent(SELECTORS.guideSection, (section) => keepSidebarEntry(section.closest(SELECTORS.guide) ?? section.parentElement, openCategories));
+  whenPresent(SELECTORS.guideSection, (section) => keepSidebarEntry(section.closest(SELECTORS.guide) ?? section.parentElement, openCategories), SELECTORS.guideDrawer);
 }
 
 async function setup() {

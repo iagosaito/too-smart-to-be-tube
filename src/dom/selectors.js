@@ -3,8 +3,13 @@
 export const SELECTORS = {
   guide: 'ytd-guide-renderer',
   guideSection: 'ytd-guide-section-renderer',
-  // Versão recolhida do menu: outro componente, montado só quando é exibido.
+  // Versão recolhida do menu: outro componente. Hoje o YouTube já o monta
+  // escondido no carregamento, mas pode montá-lo só quando é exibido.
+  miniGuide: 'ytd-mini-guide-renderer',
   miniGuideItems: 'ytd-mini-guide-renderer #items',
+  // Gaveta do menu expandido: existe vazia desde o carregamento e o YouTube
+  // só cria as seções dentro dela quando o menu abre.
+  guideDrawer: 'tp-yt-app-drawer#guide',
   miniGuideEntry: 'ytd-mini-guide-entry-renderer',
   // O item de Categorias entra logo antes de Inscrições (ou depois do Shorts, se Inscrições sumir).
   miniGuideSubscriptions: 'a[href="/feed/subscriptions"]',
