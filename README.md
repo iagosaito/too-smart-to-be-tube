@@ -19,6 +19,8 @@ No account, no server, no API key: everything runs in your browser and your data
   within YouTube's own layout, following its light and dark themes.
 - **All your subscriptions, synced automatically.** Reads your full subscription list (not just the channels
   shown in the sidebar), at most once an hour or on demand.
+- **A feed per category.** Open a category to see the latest **videos and Shorts** from just those channels, in
+  a grid that looks like YouTube's — straight from the sidebar.
 - **Fast organizing.** Create categories inline, move one channel from its card, or select many channels and move
   them in one go.
 - **Find things quickly.** Categories as chips in alphabetical order, accent-insensitive search, and per-view
@@ -51,14 +53,16 @@ Then load it in Chrome (or any Chromium browser such as Edge or Brave):
 
 ## Usage
 
-1. Click **Categories** in YouTube's sidebar. The first visit syncs your subscriptions and the dates of their
-   latest videos in the background.
-2. Create a category with **+ New category** in the chip bar.
-3. Assign channels:
+1. Click **Categories** in YouTube's sidebar. The first visit syncs your subscriptions and their latest videos in
+   the background.
+2. Your categories also appear in the sidebar: click one to open its **Videos** feed, switch to **Shorts**, or to
+   **Channels** to organize it.
+3. Create a category with **+ New category** in the chip bar.
+4. Assign channels:
    - in **All**, use the category pill under each channel;
    - inside a category, hover a channel and use the move icon in its top-right corner;
    - to move many at once, tick the ✓ on several channels and pick a destination in the bar at the bottom.
-4. Rename a category by clicking its title; delete it with the trash icon next to it.
+5. Rename a category by clicking its title; delete it with the trash icon next to it.
 
 ### Organizing in bulk with CSV
 
@@ -108,6 +112,10 @@ YouTube page
   session you are already logged in with, so no API key or OAuth consent is needed.
 - **Trusted Types safe.** YouTube blocks `innerHTML`; all UI is built with `createElement`/`textContent`, which
   also means channel names can never inject HTML.
+- **Feed without risking your account.** Category videos come from the subscriptions feed the sync already
+  downloads (no extra requests). Shorts and older videos are read per channel through **public, cookie-less**
+  requests, at a human pace (2 at a time, a cap per 10 minutes, automatic pause if YouTube asks), and cached for
+  hours. Design notes: [docs/design/category-feed.md](docs/design/category-feed.md).
 - **Fast with hundreds of channels.** Channel cards are cached and only the cards that changed are touched in the
   DOM, with `content-visibility` skipping off-screen work.
 
@@ -133,9 +141,11 @@ src/
 ├── core/      pure logic: channels, categories, text normalization (no DOM, no chrome.*)
 ├── dom/       YouTube DOM: selectors, sidebar injection, DOM scraping, waitFor
 ├── export/    CSV generation
+├── feed/      category feed: composition, per-channel cache and loading in batches
 ├── i18n/      language detection, translations (en, pt, es), plurals and relative dates
 ├── import/    CSV parsing and import planning
 ├── storage/   chrome.storage.local wrapper
+├── sync/      sync coordinator and the rate-limited request queue
 ├── ui/        Categories page, components and styles
 └── youtube/   InnerTube access: auth headers, subscriptions, latest uploads
 tests/         Vitest + jsdom unit tests mirroring src/
