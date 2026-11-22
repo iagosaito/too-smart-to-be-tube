@@ -9,6 +9,7 @@ export default {
   'header.syncing': 'Sincronizando…',
   'header.search': 'Buscar canal',
   'header.sync': 'Sincronizar',
+  'header.syncCooldown': 'Sincronizado hace poco. Disponible de nuevo en un momento.',
   'header.export': 'Exportar CSV',
   'header.import': 'Importar CSV',
 
