@@ -87,8 +87,7 @@ export default {
   'import.tooLarge': 'The file is too large (5 MB max).',
   'import.missingCategory': 'The file needs a "Category" column.',
   'import.missingIdentifier': 'The file needs an "Identifier", "URL" or "Channel" column.',
-  'import.tooManyRows': 'The file has more than 20,000 rows.',
-  'import.tooManyCategories': 'The file would create more than 200 new categories.',
+  'import.tooManyCategories': 'The file would create more than 1,000 new categories.',
   'import.noRows': 'The file has no channel rows.',
   'import.organized': { one: '{count} channel organized', other: '{count} channels organized' },
 
