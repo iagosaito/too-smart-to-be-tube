@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Site estático sem terceiros: nada de fontes, scripts ou analytics externos. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>Too Smart To Be Tube — your YouTube subscriptions, organized</title>
+  <meta name="description" content="A free, open-source Chrome extension that sorts your YouTube subscriptions into categories, each with its own feed of videos and Shorts. No account, no tracking, no paywall.">
+  <meta name="theme-color" content="#0b0b10">
+  <meta property="og:title" content="Too Smart To Be Tube">
+  <meta property="og:description" content="Your YouTube subscriptions, organized into categories — each with its own feed of videos and Shorts. Free, open source, private.">
+  <meta property="og:image" content="assets/feed-videos.webp">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="nav" id="top">
+    <div class="nav-inner">
+      <a class="brand" href="#top" aria-label="Too Smart To Be Tube, back to top">
+        <img src="assets/logo.svg" alt="" width="28" height="28">
+        <span>Too Smart To Be Tube</span>
+      </a>
+      <nav aria-label="Sections">
+        <ul class="nav-links">
+          <li><a href="#tour">Tour</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#privacy">Privacy</a></li>
+          <li><a href="#compare">Compare</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </nav>
+      <a class="btn btn-small btn-primary" href="#install">Get it free</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- 1. Promessa em uma frase + prova visual imediata. -->
+    <section class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="container hero-copy">
+        <p class="eyebrow"><span class="dot" aria-hidden="true"></span> Free &amp; open-source Chrome extension</p>
+        <h1>Your subscriptions,<br><span class="grad">finally organized.</span></h1>
+        <p class="lead">
+          Sort the channels you follow into categories like <em>Programming</em>, <em>Music</em> or <em>Recipes</em> —
+          and open each one as its own feed of <strong>videos and Shorts</strong>. Right inside YouTube.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#install">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16 7 11l1.4-1.4 2.6 2.6V4h2v8.2l2.6-2.6L17 11zM5 20v-2h14v2z"/></svg>
+            Get it free
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/iagosaito/too-smart-to-be-tube" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2"/></svg>
+            View source on GitHub
+          </a>
+        </div>
+        <ul class="trust" aria-label="At a glance">
+          <li>No account</li>
+          <li>No tracking</li>
+          <li>No paywall</li>
+          <li>English · Português · Español</li>
+        </ul>
+      </div>
+      <div class="container">
+        <figure class="window hero-shot reveal">
+          <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>youtube.com</span></div>
+          <img src="assets/feed-videos.webp" width="2200" height="1277"
+               alt="The extension inside YouTube: a Programming category opened as a grid of the latest videos from its six channels, with tabs for Videos, Shorts and Channels, and the categories listed in the sidebar.">
+        </figure>
+        <p class="caption">Real extension, demo channels. Your categories show up in the sidebar, too.</p>
+      </div>
+    </section>
+
+    <!-- 2. A dor, nas palavras de quem sente. -->
+    <section class="section pains" aria-labelledby="pains-title">
+      <div class="container">
+        <h2 id="pains-title" class="section-title">Following 300 channels shouldn't feel like chaos.</h2>
+        <div class="pain-grid">
+          <article class="pain reveal">
+            <span class="pain-icon" aria-hidden="true">🌊</span>
+            <h3>One endless feed</h3>
+            <p>Cooking, coding and concerts all mixed together. The video you wanted is buried under ones you didn't.</p>
+          </article>
+          <article class="pain reveal">
+            <span class="pain-icon" aria-hidden="true">🙈</span>
+            <h3>Channels you forget</h3>
+            <p>The sidebar shows a handful of channels. The rest of what you subscribed to quietly disappears.</p>
+          </article>
+          <article class="pain reveal">
+            <span class="pain-icon" aria-hidden="true">🎛️</span>
+            <h3>Moods, not lists</h3>
+            <p>Some nights you want to learn, some nights you want music. YouTube doesn't let you pick the room.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Tour guiado: o "menu de apresentação", um passo por vez. -->
+    <section class="section tour" id="tour" aria-labelledby="tour-title">
+      <div class="container">
+        <p class="kicker">Take the tour</p>
+        <h2 id="tour-title" class="section-title">Every category becomes its own little YouTube.</h2>
+        <div class="tour-layout">
+          <div class="tour-menu" role="tablist" aria-label="Tour" aria-orientation="vertical">
+            <button class="tour-tab" role="tab" id="tab-videos" aria-controls="panel-tour" aria-selected="true" data-shot="feed-videos" data-alt="A category's Videos tab: a grid of the newest videos from just those channels." data-ratio="2200/1277">
+              <span class="step">01</span>
+              <span><strong>Videos, by category</strong><small>The newest uploads from just those channels, in a familiar grid. Opens instantly — it reuses what your subscriptions feed already loaded.</small></span>
+            </button>
+            <button class="tour-tab" role="tab" id="tab-shorts" aria-controls="panel-tour" aria-selected="false" tabindex="-1" data-shot="feed-shorts" data-alt="A category's Shorts tab: vertical thumbnails from the category's channels." data-ratio="2040/1672">
+              <span class="step">02</span>
+              <span><strong>Shorts, too</strong><small>Vertical Shorts from the same channels, interleaved so no single creator floods the page.</small></span>
+            </button>
+            <button class="tour-tab" role="tab" id="tab-channels" aria-controls="panel-tour" aria-selected="false" tabindex="-1" data-shot="channels" data-alt="The Channels tab: channel cards with their latest upload date, ready to be moved between categories." data-ratio="2040/1672">
+              <span class="step">03</span>
+              <span><strong>Organize in seconds</strong><small>Move one channel from its card, or select many and move them at once. Sort by who posted last.</small></span>
+            </button>
+            <button class="tour-tab" role="tab" id="tab-sidebar" aria-controls="panel-tour" aria-selected="false" tabindex="-1" data-shot="sidebar" data-alt="YouTube's sidebar with a Categories section listing Books, Documentaries, Football, Gaming, Music, Programming and Recipes." data-ratio="1/1">
+              <span class="step">04</span>
+              <span><strong>One click from anywhere</strong><small>Your categories live in YouTube's sidebar, just like Subscriptions. Click one and you're in.</small></span>
+            </button>
+          </div>
+          <figure class="window tour-shot" id="panel-tour" role="tabpanel" aria-labelledby="tab-videos" tabindex="0">
+            <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>youtube.com</span></div>
+            <img id="tour-image" src="assets/feed-videos.webp" width="2200" height="1277" loading="lazy"
+                 alt="A category's Videos tab: a grid of the newest videos from just those channels.">
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Recursos em grade "bento": varredura rápida. -->
+    <section class="section" id="features" aria-labelledby="features-title">
+      <div class="container">
+        <p class="kicker">Features</p>
+        <h2 id="features-title" class="section-title">Everything you need. Nothing you'll have to learn.</h2>
+        <div class="bento">
+          <article class="card card-wide reveal">
+            <div>
+              <h3>Feels like YouTube, because it lives in YouTube</h3>
+              <p>No pop-up, no separate dashboard. A page inside YouTube's own layout that follows its light and dark themes and its language.</p>
+            </div>
+            <div class="theme-compare">
+              <img src="assets/feed-videos.webp" width="2200" height="1277" loading="lazy" alt="Dark theme.">
+              <img src="assets/light.webp" width="2200" height="1277" loading="lazy" alt="Light theme.">
+            </div>
+          </article>
+          <article class="card reveal">
+            <h3>All your subscriptions</h3>
+            <p>Reads your full list — not just the few channels in the sidebar — and keeps it in sync automatically.</p>
+          </article>
+          <article class="card reveal">
+            <h3>Unlimited categories</h3>
+            <p>No folder caps, no "upgrade to Pro". Create as many as you need, rename them in place.</p>
+          </article>
+          <article class="card reveal">
+            <h3>Sort by latest upload</h3>
+            <p>See who posted "2 days ago" and who's been quiet for a year. Great for spring-cleaning.</p>
+          </article>
+          <article class="card reveal">
+            <h3>Spreadsheet-friendly</h3>
+            <p>Export to CSV, categorize hundreds of channels in a spreadsheet, import back. You review every change — and can undo it.</p>
+          </article>
+          <article class="card reveal">
+            <h3>Speaks your language</h3>
+            <p>English, Português and Español, following the language you chose on YouTube.</p>
+          </article>
+          <article class="card reveal">
+            <h3>Keyboard &amp; screen-reader ready</h3>
+            <p>Real buttons and menus, arrow-key navigation, visible focus and ARIA labels throughout.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Privacidade: o diferencial que dá para provar. -->
+    <section class="section privacy" id="privacy" aria-labelledby="privacy-title">
+      <div class="container">
+        <p class="kicker">Privacy by design</p>
+        <h2 id="privacy-title" class="section-title">Your subscriptions are nobody's business.</h2>
+        <p class="section-lead">Most extensions in this space ask you to log in, sync to their servers or send usage analytics somewhere. This one can't — by construction.</p>
+        <dl class="stats">
+          <div class="stat reveal"><dt>Permissions requested</dt><dd>1</dd><p>Only <code>storage</code>, to keep your categories in your own browser.</p></div>
+          <div class="stat reveal"><dt>Servers</dt><dd>0</dd><p>No backend, no account, no API key. Nothing leaves your machine.</p></div>
+          <div class="stat reveal"><dt>Analytics &amp; trackers</dt><dd>0</dd><p>No telemetry, no ads, no third-party scripts. Not even on this page.</p></div>
+          <div class="stat reveal"><dt>Lines you can't read</dt><dd>0</dd><p>Every line is open source, tested and scanned by CodeQL and OpenSSF Scorecard.</p></div>
+        </dl>
+        <div class="callout reveal">
+          <h3>Gentle with YouTube, safe for your account</h3>
+          <p>The category feed reuses the videos your subscriptions page already loaded — opening it costs zero extra requests. Shorts and older videos come from <strong>public, signed-out</strong> channel pages, fetched at a human pace (two at a time, capped per 10 minutes), paused automatically if YouTube asks, and cached for hours.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Comparação honesta com o que existe por aí. -->
+    <section class="section" id="compare" aria-labelledby="compare-title">
+      <div class="container">
+        <p class="kicker">Why this one</p>
+        <h2 id="compare-title" class="section-title">How it stacks up.</h2>
+        <p class="section-lead">Compared with what's typically on offer from subscription managers in the Chrome Web Store.</p>
+        <div class="table-wrap reveal">
+          <table class="compare">
+            <thead>
+              <tr><th scope="col"><span class="sr-only">Feature</span></th><th scope="col" class="us">Too Smart To Be Tube</th><th scope="col">Typical alternatives</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Price</th><td class="us"><span class="yes">Free, forever</span></td><td>Free tier with limits; best features behind a subscription</td></tr>
+              <tr><th scope="row">Category limit</th><td class="us"><span class="yes">Unlimited</span></td><td>Often capped on the free plan</td></tr>
+              <tr><th scope="row">Feed of videos <em>and</em> Shorts per category</th><td class="us"><span class="yes">Yes</span></td><td>Usually videos only, or filters on top of the main feed</td></tr>
+              <tr><th scope="row">Where your data lives</th><td class="us"><span class="yes">Only in your browser</span></td><td>Often synced to the vendor's servers or a cloud drive</td></tr>
+              <tr><th scope="row">Usage analytics</th><td class="us"><span class="yes">None</span></td><td>Commonly included</td></tr>
+              <tr><th scope="row">Permissions</th><td class="us"><span class="yes">Just <code>storage</code></span></td><td>Frequently broader access</td></tr>
+              <tr><th scope="row">Open source</th><td class="us"><span class="yes">Yes, every line</span></td><td>Rarely</td></tr>
+              <tr><th scope="row">Bulk organize via CSV</th><td class="us"><span class="yes">Export, edit, review, undo</span></td><td>Rare</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Instalação em três passos. -->
+    <section class="section install" id="install" aria-labelledby="install-title">
+      <div class="container">
+        <p class="kicker">Get started</p>
+        <h2 id="install-title" class="section-title">Up and running in a minute.</h2>
+        <ol class="steps">
+          <li class="reveal"><span class="num">1</span><h3>Install</h3><p>Coming soon to the Chrome Web Store. Today, build it from source in two commands and load it in <code>chrome://extensions</code>.</p></li>
+          <li class="reveal"><span class="num">2</span><h3>Open Categories</h3><p>Click <strong>Categories</strong> in YouTube's sidebar. Your subscriptions sync in the background.</p></li>
+          <li class="reveal"><span class="num">3</span><h3>Sort &amp; enjoy</h3><p>Create a category, move a few channels, and click it to get its own feed.</p></li>
+        </ol>
+        <div class="terminal reveal" aria-label="Install from source">
+          <div class="terminal-bar"><span>Terminal</span><button class="copy" type="button" data-copy="git clone https://github.com/iagosaito/too-smart-to-be-tube.git&#10;cd too-smart-to-be-tube &amp;&amp; npm ci &amp;&amp; npm run build">Copy</button></div>
+<pre><code><span class="prompt">$</span> git clone https://github.com/iagosaito/too-smart-to-be-tube.git
+<span class="prompt">$</span> cd too-smart-to-be-tube &amp;&amp; npm ci &amp;&amp; npm run build</code></pre>
+          <p class="terminal-note">Then enable <strong>Developer mode</strong> in <code>chrome://extensions</code> and choose <strong>Load unpacked</strong> → the project folder.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Dúvidas que impedem a instalação. -->
+    <section class="section faq" id="faq" aria-labelledby="faq-title">
+      <div class="container narrow">
+        <p class="kicker">FAQ</p>
+        <h2 id="faq-title" class="section-title">Good questions.</h2>
+        <details>
+          <summary>Is it really free?</summary>
+          <p>Yes. No premium tier, no trial, no ads. It's an open-source project — if it helps you, a star on GitHub is the only payment.</p>
+        </details>
+        <details>
+          <summary>Can it get my YouTube account in trouble?</summary>
+          <p>It doesn't change anything on your account: no unsubscribing, no likes, no automation. Videos come from the subscriptions page you'd load anyway; Shorts and older uploads come from public channel pages, requested without your cookies, slowly, and cached.</p>
+        </details>
+        <details>
+          <summary>Where are my categories stored? What if I switch computers?</summary>
+          <p>In your browser's local extension storage, and nowhere else. To move them, export a CSV and import it on the other machine.</p>
+        </details>
+        <details>
+          <summary>Does it work in Edge, Brave or other Chromium browsers?</summary>
+          <p>It's a standard Manifest V3 extension, so Chromium-based browsers should run it. It's developed and tested on Chrome.</p>
+        </details>
+        <details>
+          <summary>I follow 500+ channels. Will it be slow?</summary>
+          <p>No. Rendering, search and sorting are built for hundreds of channels, and category feeds load in small batches you control.</p>
+        </details>
+        <details>
+          <summary>YouTube changed something and it broke. What now?</summary>
+          <p>Please open an issue on GitHub. The code is tested against real YouTube responses, so fixes are usually quick.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- 9. Último empurrão. -->
+    <section class="final">
+      <div class="container final-inner reveal">
+        <h2>Give your subscriptions some rooms.</h2>
+        <p>Free, private and open source. Takes a minute to set up.</p>
+        <div class="cta-row center">
+          <a class="btn btn-primary" href="#install">Get it free</a>
+          <a class="btn btn-ghost" href="https://github.com/iagosaito/too-smart-to-be-tube" rel="noopener">Star on GitHub</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p><img src="assets/logo.svg" alt="" width="20" height="20"> Too Smart To Be Tube · Open source on <a href="https://github.com/iagosaito/too-smart-to-be-tube" rel="noopener">GitHub</a></p>
+      <p class="fine">Not affiliated with, endorsed or sponsored by YouTube or Google. YouTube is a trademark of Google LLC. Screenshots use fictional demo channels.</p>
+    </div>
+  </footer>
+</body>
+</html>
