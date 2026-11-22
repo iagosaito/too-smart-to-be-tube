@@ -1,5 +1,6 @@
 import { el, svgIcon } from '../elements.js';
 import { ICONS } from '../icons.js';
+import { CATEGORY_NAME_MAX } from '../../core/categories.js';
 import { t } from '../../i18n/i18n.js';
 import { FILTER_ALL, FILTER_NONE } from '../view.js';
 
@@ -50,7 +51,7 @@ function renderNewCategoryChip(actions) {
 }
 
 function renderNewCategoryForm(actions, button) {
-  const input = el('input', { type: 'text', className: 'tstb-chip-input', placeholder: t('chips.newPlaceholder'), 'aria-label': t('chips.newLabel'), maxlength: '40' });
+  const input = el('input', { type: 'text', className: 'tstb-chip-input', placeholder: t('chips.newPlaceholder'), 'aria-label': t('chips.newLabel'), maxlength: String(CATEGORY_NAME_MAX) });
   const onSubmit = (event) => {
     event.preventDefault();
     actions.create(input.value);

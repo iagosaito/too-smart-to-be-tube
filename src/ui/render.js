@@ -4,7 +4,7 @@ import { renderChips } from './components/chips.js';
 import { renderBulkBar, renderEmptyState } from './components/feedback.js';
 import { renderHeader } from './components/header.js';
 import { renderImportReview } from './components/importReview.js';
-import { planImport } from '../import/categorizationImport.js';
+import { cachedPlanImport } from '../import/categorizationImport.js';
 import { renderViewHeading } from './components/viewHeading.js';
 import { buildChips, FILTER_ALL, FILTER_NONE, formatUploadAge, SORT_RECENT, visibleChannels } from './view.js';
 
@@ -48,9 +48,10 @@ function metaFor(state, view, now) {
 }
 
 function renderPendingImport(state, pending, actions) {
-  // O resumo é recalculado a cada render: se o usuário mexer em algo enquanto
-  // revisa, os números continuam batendo com o que será aplicado.
-  const summary = pending.entries ? planImport(state, pending.entries).summary : null;
+  // O resumo acompanha o estado atual (se o usuário mexer em algo enquanto
+  // revisa, os números batem com o que será aplicado), mas só é recalculado
+  // quando o estado muda de fato.
+  const summary = pending.entries ? cachedPlanImport(state, pending.entries).summary : null;
   return renderImportReview(pending, summary, actions);
 }
 
