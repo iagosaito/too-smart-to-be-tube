@@ -2,16 +2,31 @@
   "name": "too-smart-to-be-tube",
   "version": "0.1.0",
   "private": true,
-  "description": "Extensão do Chrome para organizar as inscrições do YouTube em categorias.",
+  "description": "Chrome extension that organizes your YouTube subscriptions into categories, right inside YouTube.",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iagosaito/too-smart-to-be-tube.git"
+  },
+  "homepage": "https://github.com/iagosaito/too-smart-to-be-tube#readme",
+  "bugs": {
+    "url": "https://github.com/iagosaito/too-smart-to-be-tube/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "node build.mjs",
     "watch": "node build.mjs --watch",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lint": "eslint ."
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "esbuild": "^0.25.0",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
     "jsdom": "^26.0.0",
     "vitest": "^3.0.0"
   }

@@ -11,7 +11,7 @@ export function detectDelimiter(text) {
 
 export function parseCsv(text) {
   // O BOM que a exportação adiciona não pode virar parte do nome da primeira coluna.
-  const body = String(text).replace(/^﻿/, '');
+  const body = String(text).replace(/^\uFEFF/, '');
   const delimiter = detectDelimiter(body);
   const rows = [[]];
   for (const [, raw, separator] of body.matchAll(cellPattern(delimiter))) {
