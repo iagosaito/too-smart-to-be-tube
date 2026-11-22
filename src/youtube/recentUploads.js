@@ -1,4 +1,5 @@
 import { channelIdFromHref } from '../core/channels.js';
+import { LocalizedError } from '../i18n/errors.js';
 import { YOUTUBE_ORIGIN } from './auth.js';
 import { continuationToken, fetchContinuation, fetchFirstPage, findAll } from './innertube.js';
 
@@ -23,7 +24,7 @@ const PT_PATTERN = /há\s+(\d+)\s+(segundo|minuto|hora|dia|semana|mês|mes|meses
 
 export async function fetchLatestUploads({ fetchFn = fetch, cookie = document.cookie, now = Date.now() } = {}) {
   const { config, data } = await fetchFirstPage(fetchFn, FEED_URL);
-  if (!data) throw new Error('não foi possível ler o feed de inscrições');
+  if (!data) throw new LocalizedError('error.feedUnavailable');
   const items = parseFeedPage(data, now);
   let token = continuationToken(data);
   for (let page = 0; token && page < MAX_PAGES; page += 1) {

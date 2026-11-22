@@ -1,4 +1,5 @@
 import { el, svgIcon } from '../ui/elements.js';
+import { t } from '../i18n/i18n.js';
 import { ICONS } from '../ui/icons.js';
 import { SELECTORS } from './selectors.js';
 
@@ -76,6 +77,6 @@ function buildButton(className, onClick) {
   // <button> em vez de <a href="#">: não é navegação, e assim ganha teclado/acessibilidade de graça.
   return el('button', { type: 'button', className, onClick }, [
     svgIcon(ICONS.folder),
-    el('span', { className: 'tstb-sidebar-label' }, 'Categorias'),
+    el('span', { className: 'tstb-sidebar-label' }, t('app.title')),
   ]);
 }

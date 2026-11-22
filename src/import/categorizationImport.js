@@ -2,24 +2,28 @@ import { assignChannel, createCategory, findCategoryOf } from '../core/categorie
 import { channelIdFromHref } from '../core/channels.js';
 import { normalizeText } from '../core/text.js';
 
-// Aceita os nomes da exportação e variações comuns (inglês, sem acento), já
-// que o arquivo pode ter sido montado à mão ou em outra ferramenta.
+// O formato do CSV é sempre em inglês (Channel, Category, URL, Identifier),
+// independente do idioma da interface. Os nomes em português continuam
+// aceitos porque arquivos exportados por versões anteriores usavam eles.
 const COLUMNS = {
-  name: ['canal', 'channel', 'nome', 'name'],
-  category: ['categoria', 'category'],
+  name: ['channel', 'name', 'canal', 'nome'],
+  category: ['category', 'categoria'],
   url: ['url', 'link'],
-  id: ['identificador', 'id', 'handle'],
+  id: ['identifier', 'id', 'handle', 'identificador'],
 };
-const NO_CATEGORY = normalizeText('Sem categoria');
+// Célula vazia já significa "sem categoria"; estes textos são aceitos por
+// clareza e pela mesma compatibilidade com arquivos antigos.
+const NO_CATEGORY = new Set(['No category', 'Sem categoria'].map(normalizeText));
 
 export function readImport(rows) {
   const columns = mapColumns(rows[0] ?? []);
-  if (columns.category === undefined) return { entries: [], error: 'O arquivo precisa de uma coluna "Categoria".' };
+  // error é uma chave de tradução: a interface traduz no idioma ativo.
+  if (columns.category === undefined) return { entries: [], error: 'import.missingCategory' };
   if ([columns.id, columns.url, columns.name].every((index) => index === undefined)) {
-    return { entries: [], error: 'O arquivo precisa de uma coluna "Identificador", "URL" ou "Canal".' };
+    return { entries: [], error: 'import.missingIdentifier' };
   }
   const entries = rows.slice(1).map((row) => toEntry(row, columns));
-  return entries.length ? { entries, error: null } : { entries, error: 'O arquivo não tem nenhuma linha de canal.' };
+  return entries.length ? { entries, error: null } : { entries, error: 'import.noRows' };
 }
 
 function mapColumns(header) {
@@ -35,7 +39,7 @@ function toEntry(row, columns) {
   const cell = (key) => (columns[key] === undefined ? '' : unguard(row[columns[key]] ?? '').trim());
   const category = cell('category');
   // Vazio ou "Sem categoria" significam, explicitamente, tirar o canal de qualquer categoria.
-  return { id: cell('id'), url: cell('url'), name: cell('name'), category: normalizeText(category) === NO_CATEGORY ? '' : category };
+  return { id: cell('id'), url: cell('url'), name: cell('name'), category: NO_CATEGORY.has(normalizeText(category)) ? '' : category };
 }
 
 function unguard(value) {

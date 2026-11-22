@@ -27,6 +27,7 @@ No account, no server, no API key: everything runs in your browser and your data
   recency.
 - **CSV export and import.** Export everything to a spreadsheet, categorize it there (or with an assistant), and
   import it back. A review step shows exactly what will change, and you can undo it afterwards.
+- **Speaks your YouTube language.** English, Portuguese and Spanish, following the language you picked on YouTube.
 - **Keyboard and screen-reader friendly.** Real buttons and menus with focus management, arrow-key navigation
   and ARIA labels.
 
@@ -59,16 +60,29 @@ Then load it in Chrome (or any Chromium browser such as Edge or Brave):
    - to move many at once, tick the ✓ on several channels and pick a destination in the bar at the bottom.
 4. Rename a category by clicking its title; delete it with the trash icon next to it.
 
-> The interface is currently in Brazilian Portuguese.
-
 ### Organizing in bulk with CSV
 
 **Export CSV** downloads `Channel, Category, URL, Identifier` for every subscription. Fill in the *Category*
 column in any spreadsheet and use **Import CSV**:
 
+- the file format is always in English, whatever language the interface is in;
 - channels that are not in the file keep their current category;
-- an empty cell or `Sem categoria` removes the channel from its category;
-- both `,` and `;` separators are accepted, as well as English or Portuguese headers.
+- an empty *Category* cell (or `No category`) removes the channel from its category;
+- both `,` and `;` separators are accepted, so files saved by Excel in any locale work.
+
+## Languages
+
+The interface follows the language you chose **on YouTube** (not your browser's), so switching YouTube to
+Español switches the extension too.
+
+| Language | Status |
+| --- | --- |
+| English | ✅ (also used for any language without a translation) |
+| Português (Brasil) | ✅ |
+| Español | ✅ |
+
+Dates such as "Video 2 days ago" use your language's own formatting. Category names are yours and are never
+translated. Want to add a language? See [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language).
 
 ## How it works
 
@@ -119,6 +133,7 @@ src/
 ├── core/      pure logic: channels, categories, text normalization (no DOM, no chrome.*)
 ├── dom/       YouTube DOM: selectors, sidebar injection, DOM scraping, waitFor
 ├── export/    CSV generation
+├── i18n/      language detection, translations (en, pt, es), plurals and relative dates
 ├── import/    CSV parsing and import planning
 ├── storage/   chrome.storage.local wrapper
 ├── ui/        Categories page, components and styles

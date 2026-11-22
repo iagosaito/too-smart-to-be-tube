@@ -1,3 +1,5 @@
+import { LocalizedError } from '../i18n/errors.js';
+
 export const YOUTUBE_ORIGIN = 'https://www.youtube.com';
 
 export function readCookie(cookieString, name) {
@@ -18,7 +20,7 @@ export async function sapisidHash(sapisid, origin, timestamp) {
 export async function buildAuthHeaders(config, cookieString, now = Date.now()) {
   // O cookie seguro é o fallback porque alguns navegadores só expõem ele.
   const sapisid = readCookie(cookieString, 'SAPISID') ?? readCookie(cookieString, '__Secure-3PAPISID');
-  if (!sapisid) throw new Error('você precisa estar logado no YouTube');
+  if (!sapisid) throw new LocalizedError('error.notSignedIn');
 
   const timestamp = Math.floor(now / 1000);
   const headers = {

@@ -11,7 +11,9 @@ import { pickFile } from './filePicker.js';
 import { el, syncChildren } from './elements.js';
 import { preserveFocus } from './focus.js';
 import { renderPage, SLOTS } from './render.js';
-import { FILTER_ALL, pluralize, pruneSelection, resolveFilter, SORT_NAME, visibleChannels } from './view.js';
+import { describeError } from '../i18n/errors.js';
+import { plural, t } from '../i18n/i18n.js';
+import { FILTER_ALL, pruneSelection, resolveFilter, SORT_NAME, visibleChannels } from './view.js';
 
 export const PAGE_ID = 'tstb-page';
 export const OPEN_CLASS = 'tstb-page-open';
@@ -107,7 +109,7 @@ async function runSync(page, context) {
   try {
     await context.sync();
   } catch (error) {
-    context.view.syncError = error.message;
+    context.view.syncError = describeError(error);
   }
   context.view.syncing = false;
   await reload(page, context);
@@ -183,18 +185,18 @@ async function createAndOpen(categories, name, save) {
 
 async function removeWithConfirmation(context, category, save) {
   const count = category.channelIds.length;
-  const detail = count ? ` ${pluralize(count, 'canal volta', 'canais voltam')} para "Sem categoria".` : '';
+  const detail = count ? ` ${plural('confirm.deleteDetail', count, { none: t('chips.none') })}` : '';
   // Confirmação porque excluir não tem "desfazer" e desfaz trabalho manual de organização.
-  if (!context.confirm(`Excluir a categoria "${category.name}"?${detail}`)) return;
+  if (!context.confirm(`${t('confirm.delete', { name: category.name })}${detail}`)) return;
   await save(removeCategory(context.state.categories, category.id), { filter: FILTER_ALL });
-  showToast(`Categoria "${category.name}" excluída`);
+  showToast(t('toast.categoryDeleted', { name: category.name }));
 }
 
 async function moveSelection(context, categoryId, save) {
   const ids = [...context.view.selected];
-  const target = context.state.categories.find((category) => category.id === categoryId)?.name ?? 'Sem categoria';
+  const target = context.state.categories.find((category) => category.id === categoryId)?.name ?? t('chips.none');
   await save(assignChannels(context.state.categories, ids, categoryId), { selected: new Set() });
-  showToast(`${pluralize(ids.length, 'canal movido', 'canais movidos')} para "${target}"`);
+  showToast(plural('toast.moved', ids.length, { target }));
 }
 
 function exportSubscriptions(context) {
@@ -202,7 +204,7 @@ function exportSubscriptions(context) {
   const { state } = context;
   context.download(csvFileName(context.now()), subscriptionsCsv(state));
   const count = Object.keys(state.channels).length;
-  showToast(`${pluralize(count, 'inscrição exportada', 'inscrições exportadas')}`);
+  showToast(plural('toast.exported', count));
 }
 
 async function startImport(page, context) {
@@ -215,7 +217,8 @@ async function startImport(page, context) {
 }
 
 async function readImportFile(file) {
-  if (file.size > MAX_IMPORT_BYTES) return { fileName: file.name, error: 'O arquivo é grande demais (máximo de 5 MB).' };
+  // error é uma chave de tradução, como os erros de readImport.
+  if (file.size > MAX_IMPORT_BYTES) return { fileName: file.name, error: 'import.tooLarge' };
   const { entries, error } = readImport(parseCsv(await file.text()));
   return { fileName: file.name, entries: error ? null : entries, error };
 }
@@ -226,8 +229,8 @@ async function applyImport(page, context) {
   const { categories, summary } = planImport(context.state, context.view.pendingImport.entries);
   await saveCategories(page, context, categories, { pendingImport: null, filter: FILTER_ALL, selected: new Set() });
   const undo = () => saveCategories(page, context, previous);
-  const message = `${pluralize(summary.matched, 'canal organizado', 'canais organizados')} em ${pluralize(summary.categoryCount, 'categoria', 'categorias')}`;
-  showToast(message, { duration: UNDO_TOAST_MS, action: { label: 'Desfazer', onClick: undo } });
+  const message = t('import.summary', { channels: plural('import.organized', summary.matched), categories: plural('import.categories', summary.categoryCount) });
+  showToast(message, { duration: UNDO_TOAST_MS, action: { label: t('common.undo'), onClick: undo } });
 }
 
 function toggled(set, value) {

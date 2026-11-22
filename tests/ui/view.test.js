@@ -6,7 +6,6 @@ import {
   formatSyncInfo,
   formatUploadAge,
   normalizeText,
-  pluralize,
   pruneSelection,
   resolveFilter,
   SORT_NAME,
@@ -84,22 +83,14 @@ describe('resolveFilter', () => {
   });
 });
 
-describe('pluralize', () => {
-  it('usa singular apenas para 1', () => {
-    expect(pluralize(1, 'canal', 'canais')).toBe('1 canal');
-    expect(pluralize(0, 'canal', 'canais')).toBe('0 canais');
-    expect(pluralize(2, 'canal', 'canais')).toBe('2 canais');
-  });
-});
-
 describe('formatSyncInfo', () => {
   const MIN = 60_000;
   it.each([
     [null, 'Ainda não sincronizado'],
     [0, 'Sincronizado agora'],
-    [5 * MIN, 'Sincronizado há 5 min'],
-    [3 * 60 * MIN, 'Sincronizado há 3 h'],
-    [24 * 60 * MIN, 'Sincronizado há 1 dia'],
+    [5 * MIN, 'Sincronizado há 5 minutos'],
+    [3 * 60 * MIN, 'Sincronizado há 3 horas'],
+    [24 * 60 * MIN, 'Sincronizado ontem'],
     [72 * 60 * MIN, 'Sincronizado há 3 dias'],
   ])('com %s ms de diferença mostra "%s"', (elapsed, expected) => {
     const now = 1_000_000_000;
@@ -132,7 +123,7 @@ describe('formatUploadAge', () => {
   it.each([
     [null, null],
     [NOW - 10 * 60_000, 'Vídeo agora há pouco'],
-    [NOW - 5 * HOUR, 'Vídeo há 5 h'],
+    [NOW - 5 * HOUR, 'Vídeo há 5 horas'],
     [NOW - DAY, 'Vídeo ontem'],
     [NOW - 4 * DAY, 'Vídeo há 4 dias'],
     [NOW - 7 * DAY, 'Vídeo há 1 semana'],

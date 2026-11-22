@@ -37,7 +37,7 @@ describe('buildAuthHeaders', () => {
     expect(headers['X-Goog-PageId']).toBe('42');
   });
 
-  it('falha com mensagem clara quando não está logado', async () => {
-    await expect(buildAuthHeaders(config, 'PREF=x')).rejects.toThrow('logado');
+  it('falha com um erro traduzível quando não está logado', async () => {
+    await expect(buildAuthHeaders(config, 'PREF=x')).rejects.toMatchObject({ key: 'error.notSignedIn' });
   });
 });

@@ -22,6 +22,7 @@ npm-debug.log*
 
 # Exportações de inscrições: contêm dados pessoais e não fazem parte do código
 inscricoes-youtube-*.csv
+youtube-subscriptions-*.csv
 
 # Sistema operacional e editores
 .DS_Store

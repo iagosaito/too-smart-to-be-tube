@@ -43,24 +43,24 @@ export function assignChannels(categories, channelIds, categoryId) {
 // Ordem de exibição é sempre alfabética, independente da ordem de criação:
 // posições previsíveis deixam achar a categoria sem ler a lista inteira, e
 // não mudam quando canais são movidos (como aconteceria ordenando por tamanho).
-export function sortCategoriesByName(categories) {
-  return [...categories].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+export function sortCategoriesByName(categories, locale) {
+  return [...categories].sort((a, b) => a.name.localeCompare(b.name, locale, { sensitivity: 'base' }));
 }
 
 export function findCategoryOf(categories, channelId) {
   return categories.find((category) => category.channelIds.includes(channelId)) ?? null;
 }
 
-export function groupChannels(categories, channelsById) {
+export function groupChannels(categories, channelsById, locale) {
   const assigned = new Set();
   const groups = categories.map((category) => {
     // Ignora ids sem canal conhecido (ex.: inscrição cancelada) em vez de quebrar.
     const channels = category.channelIds.map((id) => channelsById[id]).filter(Boolean);
     channels.forEach((channel) => assigned.add(channel.id));
-    return { category, channels: sortByName(channels) };
+    return { category, channels: sortByName(channels, locale) };
   });
   const uncategorized = Object.values(channelsById).filter((channel) => !assigned.has(channel.id));
-  return { groups, uncategorized: sortByName(uncategorized) };
+  return { groups, uncategorized: sortByName(uncategorized, locale) };
 }
 
 function hasCategoryNamed(categories, name, ignoreId = null) {

@@ -1,3 +1,4 @@
+import { LocalizedError } from '../i18n/errors.js';
 import { buildAuthHeaders, YOUTUBE_ORIGIN } from './auth.js';
 import { extractConfig, extractInitialData } from './pageData.js';
 
@@ -18,7 +19,7 @@ export async function fetchContinuation(fetchFn, config, token, cookie, { hl } =
   const body = JSON.stringify({ context: { client }, continuation: token });
   const query = config.apiKey ? `?key=${config.apiKey}&prettyPrint=false` : '?prettyPrint=false';
   const response = await fetchFn(`${YOUTUBE_ORIGIN}/youtubei/v1/browse${query}`, { method: 'POST', headers, body, credentials: 'include' });
-  if (!response.ok) throw new Error(`o YouTube respondeu ${response.status}`);
+  if (!response.ok) throw new LocalizedError('error.http', { status: response.status });
   return response.json();
 }
 

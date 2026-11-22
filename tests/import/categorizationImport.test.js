@@ -28,12 +28,12 @@ describe('readImport', () => {
   });
 
   it.each([
-    [[['Canal', 'URL'], ['A', 'x']], 'Categoria'],
-    [[['Categoria', 'Outra'], ['Tech', 'x']], 'Identificador'],
-    [[HEADER], 'nenhuma linha'],
-    [[], 'Categoria'],
+    [[['Channel', 'URL'], ['A', 'x']], 'import.missingCategory'],
+    [[['Category', 'Other'], ['Tech', 'x']], 'import.missingIdentifier'],
+    [[HEADER], 'import.noRows'],
+    [[], 'import.missingCategory'],
   ])('explica o erro quando falta algo', (rows, message) => {
-    expect(readImport(rows).error).toContain(message);
+    expect(readImport(rows).error).toBe(message);
   });
 });
 

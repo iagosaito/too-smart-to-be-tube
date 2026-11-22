@@ -1,8 +1,12 @@
 import { groupChannels } from '../core/categories.js';
 import { toCsv } from './csv.js';
 
-const HEADER = ['Canal', 'Categoria', 'URL', 'Identificador'];
-const NO_CATEGORY = 'Sem categoria';
+// Formato sempre em inglês, independente do idioma da interface: um único
+// formato para documentar, editar em planilhas e importar de volta.
+const HEADER = ['Channel', 'Category', 'URL', 'Identifier'];
+// Célula vazia em vez de um texto traduzido: é o que a importação entende
+// como "sem categoria" em qualquer idioma.
+const NO_CATEGORY = '';
 
 // Mesma ordem da página (categorias do usuário, "Sem categoria" por último,
 // nomes em ordem alfabética), para o arquivo bater com o que a pessoa vê.
@@ -25,5 +29,5 @@ export function csvFileName(timestamp) {
   // Data local (não UTC): exportar às 23h não deve gerar o arquivo com a data de amanhã.
   const date = new Date(timestamp);
   const pad = (number) => String(number).padStart(2, '0');
-  return `inscricoes-youtube-${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}.csv`;
+  return `youtube-subscriptions-${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}.csv`;
 }
