@@ -16,17 +16,25 @@ export const SLOTS = ['header', 'review', 'chips', 'heading', 'results', 'bulkBa
 // env agrupa o que não é estado nem ação: o relógio (injetável nos testes) e o cache de cartões.
 export function renderPage(state, view, actions, { now, cardCache, feed }) {
   const channels = visibleChannels(state, view);
-  // Dentro de uma categoria, nas abas Vídeos e Shorts, os resultados são o feed.
-  if (feed) return { ...managementParts(state, view, actions, now, channels), results: renderFeed(feed, actions), bulkBar: null };
-  return managementParts(state, view, actions, now, channels, cardCache);
+  const common = commonParts(state, view, actions, now, channels);
+  // Dentro de uma categoria, nas abas Vídeos e Shorts, os resultados são o
+  // feed: a grade de canais nem é montada (com centenas de canais ela custava
+  // milhares de elementos a cada render, só para ser descartada).
+  if (feed) return { ...common, results: renderFeed(feed, actions), bulkBar: null };
+  return { ...common, ...managementParts(state, view, actions, now, channels, cardCache) };
 }
 
-function managementParts(state, view, actions, now, channels, cardCache) {
+function commonParts(state, view, actions, now, channels) {
   return {
     header: renderHeader({ state, view, actions, now }),
     review: view.pendingImport ? renderPendingImport(state, view.pendingImport, actions) : null,
     chips: renderChips(buildChips(state), view.filter, actions),
     heading: renderViewHeading(state, view, actions, channels.length),
+  };
+}
+
+function managementParts(state, view, actions, now, channels, cardCache) {
+  return {
     results: channels.length
       ? renderChannelGrid(channels, {
         categories: state.categories,
