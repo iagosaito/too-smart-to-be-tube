@@ -88,6 +88,31 @@ describe('createFeedSource', () => {
     expect(fetchTab).toHaveBeenCalledOnce();
   });
 
+  // Regressão: uma sessão nova (canal adicionado à categoria, página reaberta)
+  // pedia de novo canais cujo lote ainda estava em andamento.
+  it('pedidos simultâneos do mesmo canal e aba compartilham uma única consulta', async () => {
+    const release = {};
+    const fetchTab = vi.fn(({ tab }) => new Promise((resolve) => { release[tab] = resolve; }));
+    const source = createFeedSource({ cache: cacheStub(), queue: { run: (task) => task() }, clientVersion: () => '2.2026', fetchTab });
+    const first = source.load(channel(1), 'videos');
+    const second = source.load(channel(1), 'videos');
+    const otherTab = source.load(channel(1), 'shorts');
+    await flush();
+    expect(fetchTab).toHaveBeenCalledTimes(2);
+    release.videos(['ok']);
+    release.shorts(['short']);
+    expect(await second).toBe(await first);
+    expect(await otherTab).toEqual(['short']);
+  });
+
+  it('uma consulta que falhou não fica presa: o próximo pedido consulta de novo', async () => {
+    const fetchTab = vi.fn().mockRejectedValueOnce(new Error('rede')).mockResolvedValueOnce(['ok']);
+    const source = createFeedSource({ cache: cacheStub(), queue: { run: (task) => task() }, clientVersion: () => '2.2026', fetchTab });
+    await expect(source.load(channel(1), 'videos')).rejects.toThrow('rede');
+    expect(await source.load(channel(1), 'videos')).toEqual(['ok']);
+    expect(fetchTab).toHaveBeenCalledTimes(2);
+  });
+
   it('sem a versão do cliente na página, falha com erro traduzível em vez de consultar', async () => {
     const source = createFeedSource({ cache: cacheStub(), queue: { run: vi.fn() }, clientVersion: () => null });
     await expect(source.load(channel(1), 'videos')).rejects.toMatchObject({ key: 'error.feedUnavailable' });
