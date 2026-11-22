@@ -607,13 +607,26 @@ describe('importar CSV', () => {
   });
 
   it('mostra o erro e não deixa aplicar quando o arquivo criaria categorias demais', async () => {
-    const rows = Array.from({ length: 201 }, (_, i) => `${i === 0 ? '/@alura' : `/@extra${i}`},Nova ${i}`);
-    const many = Object.fromEntries(Array.from({ length: 201 }, (_, i) => [`/@extra${i}`, { id: `/@extra${i}`, name: `Extra ${i}`, url: '', avatar: '' }]));
+    const rows = Array.from({ length: 1_001 }, (_, i) => `${i === 0 ? '/@alura' : `/@extra${i}`},Nova ${i}`);
+    const many = Object.fromEntries(Array.from({ length: 1_001 }, (_, i) => [`/@extra${i}`, { id: `/@extra${i}`, name: `Extra ${i}`, url: '', avatar: '' }]));
     area = createFakeStorageArea({ channels: { ...channels, ...many }, categories, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 });
     await importFile(fakeFile(`Identifier,Category\r\n${rows.join('\r\n')}`), { store: createStore(area) });
-    expect($('.tstb-review-error').textContent).toContain('mais de 200 categorias novas');
+    expect($('.tstb-review-error').textContent).toContain('mais de 1.000 categorias novas');
     expect(button('Aplicar importação')).toBeUndefined();
     expect(area.dump().categories).toEqual(categories);
+  });
+
+  it('aceita um arquivo com exatamente o tamanho máximo (5 MB)', async () => {
+    await importFile(fakeFile(CSV, { size: 5 * 1024 * 1024 }));
+    expect($('.tstb-review-error')).toBeNull();
+    expect(button('Aplicar importação')).toBeDefined();
+  });
+
+  it('recusa, sem ler, um arquivo 1 byte acima do máximo', async () => {
+    const text = vi.fn();
+    await importFile({ name: 'grande.csv', size: 5 * 1024 * 1024 + 1, text });
+    expect($('.tstb-review-error').textContent).toContain('grande demais');
+    expect(text).not.toHaveBeenCalled();
   });
 
   it('recusa arquivos grandes demais sem lê-los', async () => {

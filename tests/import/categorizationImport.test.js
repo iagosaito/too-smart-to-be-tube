@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { planImport, readImport } from '../../src/import/categorizationImport.js';
+import { cachedPlanImport, MAX_NEW_CATEGORIES, planImport, readImport } from '../../src/import/categorizationImport.js';
 
 const channel = (handle, name) => ({ id: `/@${handle}`, name, url: `https://www.youtube.com/@${handle}`, avatar: '' });
 const state = {
@@ -93,16 +93,36 @@ describe('limites da importação', () => {
     expect(summary.created).toEqual(['Cat 49']);
   });
 
-  it(`recusa arquivos com mais de ${20_000} linhas de canal`, () => {
-    const rows = [HEADER, ...many(20_001, (i) => ['', 'Tech', '', `/@c${i}`])];
-    expect(readImport(rows).error).toBe('import.tooManyRows');
+  it('não limita o número de linhas (o tamanho do arquivo já limita)', () => {
+    const rows = [HEADER, ...many(60_000, (i) => ['', 'Tech', '', `/@c${i}`])];
+    const { entries, error } = readImport(rows);
+    expect(error).toBeNull();
+    expect(entries).toHaveLength(60_000);
   });
 
-  it('recusa importações que criariam mais de 200 categorias novas, sem alterar nada', () => {
-    const channels = Object.fromEntries(many(201, (i) => [`/@c${i}`, channel(`c${i}`, `C${i}`)]));
-    const result = planImport({ channels, categories: [] }, entriesOf(...many(201, (i) => ['', `Nova ${i}`, '', `/@c${i}`])));
+  const withChannels = (count) => ({ channels: Object.fromEntries(many(count, (i) => [`/@c${i}`, channel(`c${i}`, `C${i}`)])), categories: [] });
+  const oneCategoryEach = (count) => entriesOf(...many(count, (i) => ['', `Nova ${i}`, '', `/@c${i}`]));
+
+  it(`aceita criar exatamente ${MAX_NEW_CATEGORIES} categorias novas`, () => {
+    const result = planImport(withChannels(MAX_NEW_CATEGORIES), oneCategoryEach(MAX_NEW_CATEGORIES));
+    expect(result.summary.error).toBeUndefined();
+    expect(result.categories).toHaveLength(MAX_NEW_CATEGORIES);
+  });
+
+  it(`recusa importações que criariam mais de ${MAX_NEW_CATEGORIES} categorias novas, sem alterar nada`, () => {
+    const result = planImport(withChannels(MAX_NEW_CATEGORIES + 1), oneCategoryEach(MAX_NEW_CATEGORIES + 1));
     expect(result.summary.error).toBe('import.tooManyCategories');
     expect(result.categories).toEqual([]);
+  });
+
+  it('reaproveita o plano enquanto arquivo e estado não mudam', () => {
+    const entries = entriesOf(['', 'Música', '', '/@b']);
+    const first = cachedPlanImport(state, entries);
+    expect(cachedPlanImport({ ...state }, entries)).toBe(first);
+    const changed = cachedPlanImport({ ...state, categories: [] }, entries);
+    expect(changed).not.toBe(first);
+    // Categorias novas ganham ids aleatórios: compara o resumo, não os ids.
+    expect(changed.summary).toEqual(planImport({ ...state, categories: [] }, entries).summary);
   });
 
   it('corta nomes de categoria longos no mesmo limite da interface (60 caracteres)', () => {

@@ -14,10 +14,13 @@ const COLUMNS = {
 // Célula vazia já significa "sem categoria"; estes textos são aceitos por
 // clareza e pela mesma compatibilidade com arquivos antigos.
 const NO_CATEGORY = new Set(['No category', 'Sem categoria'].map(normalizeText));
-// Limites contra arquivos malformados ou maliciosos: um CSV de inscrições
-// real tem no máximo alguns milhares de linhas e poucas dezenas de categorias.
-export const MAX_IMPORT_ROWS = 20_000;
-export const MAX_NEW_CATEGORIES = 200;
+// Limites contra arquivos malformados ou maliciosos. O tamanho limita tudo o
+// que vem depois: 5 MB são ~60 mil canais e, como leitura e plano são lineares,
+// o pior caso (linhas mínimas) leva ~1 s. Contar linhas seria redundante.
+export const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
+// Teto de categorias criadas de uma vez: folgado para qualquer organização
+// real, mas impede que um arquivo encha o menu com lixo.
+export const MAX_NEW_CATEGORIES = 1_000;
 
 export function readImport(rows) {
   const columns = mapColumns(rows[0] ?? []);
@@ -26,7 +29,6 @@ export function readImport(rows) {
   if ([columns.id, columns.url, columns.name].every((index) => index === undefined)) {
     return { entries: [], error: 'import.missingIdentifier' };
   }
-  if (rows.length - 1 > MAX_IMPORT_ROWS) return { entries: [], error: 'import.tooManyRows' };
   const entries = rows.slice(1).map((row) => toEntry(row, columns));
   return entries.length ? { entries, error: null } : { entries, error: 'import.noRows' };
 }
@@ -50,6 +52,20 @@ function toEntry(row, columns) {
 function unguard(value) {
   // Desfaz a proteção contra fórmulas que a exportação aplica ("'=..." → "=...").
   return /^'[=+\-@]/.test(value) ? value.slice(1) : value;
+}
+
+// O plano custa ~0,5 s com dezenas de milhares de linhas e a revisão é
+// redesenhada a cada interação: reaproveita o último plano enquanto o arquivo
+// e o estado forem os mesmos. O estado é recarregado (objetos novos) a cada
+// gravação, então comparar por identidade basta para saber se mudou.
+const planCache = new WeakMap();
+
+export function cachedPlanImport(state, entries) {
+  const cached = planCache.get(entries);
+  if (cached?.channels === state.channels && cached.categories === state.categories) return cached.plan;
+  const plan = planImport(state, entries);
+  planCache.set(entries, { channels: state.channels, categories: state.categories, plan });
+  return plan;
 }
 
 export function planImport(state, entries) {
