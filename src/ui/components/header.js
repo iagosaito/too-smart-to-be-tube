@@ -8,7 +8,7 @@ export function renderHeader({ state, view, actions, now }) {
     el('div', { className: 'tstb-heading' }, [el('h1', {}, t('app.title')), renderSubtitle(state, view, now)]),
     el('div', { className: 'tstb-header-actions' }, [
       renderSearch(view.query, actions),
-      actions.canSync ? renderSyncButton(view.syncing, actions) : null,
+      actions.canSync ? renderSyncButton(view, actions) : null,
       renderImportButton(Object.keys(state.channels).length > 0, actions),
       renderExportButton(Object.keys(state.channels).length > 0, actions),
     ]),
@@ -40,10 +40,18 @@ function renderSearch(query, actions) {
   return el('label', { className: 'tstb-search' }, [svgIcon(ICONS.search), input]);
 }
 
-function renderSyncButton(syncing, actions) {
+function renderSyncButton({ syncing, syncCoolingDown }, actions) {
+  // Logo depois de sincronizar, o botão descansa um pouco (ver syncCoordinator):
+  // a dica explica por que está desabilitado em vez de parecer quebrado.
   return el(
     'button',
-    { type: 'button', className: syncing ? 'tstb-button tstb-syncing' : 'tstb-button', disabled: syncing, onClick: actions.sync },
+    {
+      type: 'button',
+      className: syncing ? 'tstb-button tstb-syncing' : 'tstb-button',
+      disabled: syncing || syncCoolingDown,
+      title: syncCoolingDown && !syncing ? t('header.syncCooldown') : null,
+      onClick: actions.sync,
+    },
     [svgIcon(ICONS.sync), syncing ? t('header.syncing') : t('header.sync')],
   );
 }

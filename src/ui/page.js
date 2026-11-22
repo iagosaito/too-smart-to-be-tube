@@ -32,7 +32,9 @@ export async function openCategoriesPage(options) {
   // A página anterior fica só oculta (não destruída), então um vídeo continuaria tocando.
   document.querySelector('video')?.pause();
   await reload(page, context);
-  if (context.sync && needsSync(context.state, context.now())) runSync(page, context);
+  // Também acompanha uma sincronização já em andamento (aberta por outra
+  // instância da página), para mostrar "Sincronizando…" em vez de oferecer outra.
+  if (context.sync && (context.sync.isRunning() || needsSync(context.state, context.now()))) runSync(page, context);
   return page;
 }
 
@@ -46,6 +48,10 @@ function needsSync(state, now) {
   // uploadsSyncedAt nulo: quem já usava a extensão ainda não tem as datas dos
   // vídeos, então sincroniza na hora em vez de esperar a próxima hora cheia.
   return isStale(state.lastSyncedAt, now) || state.uploadsSyncedAt == null;
+}
+
+function syncCooldownLeft(context) {
+  return context.sync ? Math.max(0, context.sync.availableAt() - context.now()) : 0;
 }
 
 export function isStale(lastSyncedAt, now) {
@@ -63,6 +69,7 @@ function createContext(options) {
     state: null,
     cardCache: createCardCache(),
     searchTimer: null,
+    cooldownTimer: null,
     // Estado só de tela (filtro, busca, seleção): não é salvo, como a busca do próprio YouTube.
     view: { filter: FILTER_ALL, query: '', sort: null, selected: new Set(), syncing: false, syncError: '', pendingImport: null },
   };
@@ -92,6 +99,8 @@ function render(page, context) {
   if (!page.isConnected) return;
   context.view.filter = resolveFilter(context.view.filter, context.state.categories);
   context.view.selected = pruneSelection(context.view.selected, visibleChannels(context.state, context.view));
+  context.view.syncCoolingDown = syncCooldownLeft(context) > 0;
+  scheduleCooldownEnd(page, context);
   const env = { now: context.now(), cardCache: context.cardCache };
   const parts = renderPage(context.state, context.view, createActions(page, context), env);
   preserveFocus(page, () => fillSlots(page, parts));
@@ -102,11 +111,18 @@ function fillSlots(page, parts) {
   for (const slot of page.children) syncChildren(slot, parts[slot.dataset.slot] ? [parts[slot.dataset.slot]] : []);
 }
 
+function scheduleCooldownEnd(page, context) {
+  // Redesenha quando o intervalo acaba, para o botão reabilitar sozinho.
+  clearTimeout(context.cooldownTimer);
+  const left = syncCooldownLeft(context);
+  if (left > 0) context.cooldownTimer = setTimeout(() => render(page, context), left);
+}
+
 async function runSync(page, context) {
   Object.assign(context.view, { syncing: true, syncError: '' });
   render(page, context);
   try {
-    await context.sync();
+    await context.sync.sync();
   } catch (error) {
     context.view.syncError = describeError(error);
   }

@@ -3,6 +3,7 @@ import { closeCategoriesPage, isStale, OPEN_CLASS, openCategoriesPage, PAGE_ID }
 import { createStore } from '../../src/storage/store.js';
 import { closeCategoryMenu, MENU_ID } from '../../src/ui/components/categoryMenu.js';
 import { TOAST_ID } from '../../src/ui/components/feedback.js';
+import { createSyncCoordinator } from '../../src/sync/syncCoordinator.js';
 import { createFakeStorageArea } from '../helpers/fakeStorage.js';
 
 const channels = {
@@ -36,7 +37,13 @@ const cardNames = () => $$('.tstb-card-name').map((node) => node.textContent);
 const checkFor = (name) => $$('.tstb-check').find((node) => node.getAttribute('aria-label') === `Selecionar ${name}`);
 // Ações gravam no storage de forma assíncrona; aguardamos a fila de tarefas esvaziar.
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
-const open = (options = {}) => openCategoriesPage({ store, now: () => 1_000, searchDelay: 0, ...options });
+// Testes passam a sincronização como função simples; aqui ela vira o
+// coordenador real, sem intervalo mínimo (o cooldown tem testes próprios).
+function withCoordinator(options) {
+  if (typeof options.sync !== 'function') return options;
+  return { ...options, sync: createSyncCoordinator(options.sync, { now: options.now ?? (() => 1_000), cooldownMs: 0 }) };
+}
+const open = (options = {}) => openCategoriesPage({ store, now: () => 1_000, searchDelay: 0, ...withCoordinator(options) });
 
 // Menu próprio de categoria dos cartões (pílula e ícone de mover).
 const menu = () => document.getElementById(MENU_ID);
@@ -677,6 +684,43 @@ describe('ordenar por vídeo mais recente', () => {
     const sync = vi.fn(async () => 3);
     await open({ store: withUploads({ uploadsSyncedAt: undefined }), sync, now: () => NOW });
     expect(sync).toHaveBeenCalledOnce();
+  });
+});
+
+describe('intervalo entre sincronizações', () => {
+  it('logo depois de sincronizar, o botão fica desabilitado com a explicação e reabilita sozinho', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    try {
+      vi.setSystemTime(10_000_000);
+      // Sincronização recente no storage: a abertura não dispara a automática.
+      const fresh = createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: Date.now(), uploadsSyncedAt: Date.now() }));
+      const coordinator = createSyncCoordinator(async () => 3, { cooldownMs: 60_000 });
+      await openCategoriesPage({ store: fresh, sync: coordinator, now: Date.now, searchDelay: 0 });
+      button('Sincronizar').click();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(button('Sincronizar').disabled).toBe(true);
+      expect(button('Sincronizar').title).toContain('Disponível novamente');
+
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(button('Sincronizar').disabled).toBe(false);
+      expect(button('Sincronizar').hasAttribute('title')).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('ao abrir a página durante uma sincronização já em andamento, mostra "Sincronizando…" sem iniciar outra', async () => {
+    let finish;
+    const run = vi.fn(() => new Promise((resolve) => (finish = resolve)));
+    // Mesmo relógio da página (now: () => 1_000), como em produção, onde ambos usam Date.now.
+    const coordinator = createSyncCoordinator(run, { cooldownMs: 0, now: () => 1_000 });
+    coordinator.sync();
+    await openCategoriesPage({ store, sync: coordinator, now: () => 1_000, searchDelay: 0 });
+    expect(button('Sincronizando…').disabled).toBe(true);
+    finish(1);
+    await flush();
+    expect(run).toHaveBeenCalledOnce();
+    expect(button('Sincronizar').disabled).toBe(false);
   });
 });
 

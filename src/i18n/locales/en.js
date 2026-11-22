@@ -9,6 +9,7 @@ export default {
   'header.syncing': 'Syncing…',
   'header.search': 'Search channels',
   'header.sync': 'Sync',
+  'header.syncCooldown': 'Just synced. Available again in a moment.',
   'header.export': 'Export CSV',
   'header.import': 'Import CSV',
 

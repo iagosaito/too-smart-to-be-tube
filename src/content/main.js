@@ -6,6 +6,7 @@ import { createStore } from '../storage/store.js';
 import { showToast } from '../ui/components/feedback.js';
 import { closeCategoriesPage, openCategoriesPage } from '../ui/page.js';
 import { t } from '../i18n/i18n.js';
+import { createSyncCoordinator } from '../sync/syncCoordinator.js';
 import { runIfAlive } from './extensionContext.js';
 import { fetchLatestUploads } from '../youtube/recentUploads.js';
 import { fetchAllSubscriptions } from '../youtube/subscriptions.js';
@@ -25,6 +26,10 @@ async function syncAllSubscriptions() {
   return channels.length;
 }
 
+// Um coordenador por aba, compartilhado por todas as páginas de Categorias
+// abertas nela: cliques repetidos não disparam sincronizações em paralelo.
+const syncCoordinator = createSyncCoordinator(syncAllSubscriptions);
+
 async function syncLatestUploads() {
   // A data dos vídeos é um extra: se o feed falhar, a lista de inscrições
   // (já salva) continua valendo e o erro não deve derrubar a sincronização.
@@ -40,7 +45,7 @@ async function openCategories() {
   // completa (várias requisições) roda em segundo plano.
   await runIfAlive(async () => {
     await syncFromDom();
-    await openCategoriesPage({ store, sync: syncAllSubscriptions });
+    await openCategoriesPage({ store, sync: syncCoordinator });
   }, warnOrphaned);
 }
 

@@ -4,6 +4,7 @@ import { injectSidebarEntry } from '../../src/dom/sidebar.js';
 import { parseCsv } from '../../src/import/csvParse.js';
 import { planImport, readImport } from '../../src/import/categorizationImport.js';
 import { createStore } from '../../src/storage/store.js';
+import { createSyncCoordinator } from '../../src/sync/syncCoordinator.js';
 import { closeCategoryMenu, MENU_ID } from '../../src/ui/components/categoryMenu.js';
 import { openCategoriesPage, PAGE_ID } from '../../src/ui/page.js';
 import { createFakeStorageArea } from '../helpers/fakeStorage.js';
@@ -39,7 +40,7 @@ async function openIn(lang) {
     uploadsSyncedAt: NOW,
     latestUploads: { '/@bossa': NOW - 2 * DAY },
   });
-  await openCategoriesPage({ store: createStore(area), sync: vi.fn(), download, now: () => NOW });
+  await openCategoriesPage({ store: createStore(area), sync: createSyncCoordinator(vi.fn(), { cooldownMs: 0 }), download, now: () => NOW });
   return document.getElementById(PAGE_ID);
 }
 
