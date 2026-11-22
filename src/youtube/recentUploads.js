@@ -51,7 +51,7 @@ function channelOf(node) {
 function publishedAtOf(node, now) {
   // Só olhamos os campos de data/metadados, nunca o título: um vídeo chamado
   // "3 days ago" não pode virar data de publicação.
-  const sources = [node.publishedTimeText, ...findAll(node, 'metadataRows')];
+  const sources = [node.publishedTimeText, ...findAll(node, 'metadataParts').flat().filter(isNotAuthor)];
   // accessibilityLabel traz a forma por extenso ("1 day ago") mesmo quando o texto visível é abreviado.
   const keys = ['simpleText', 'content', 'text', 'accessibilityLabel'];
   const texts = sources.flatMap((source) => keys.flatMap((key) => findAll(source, key)));
@@ -60,6 +60,13 @@ function publishedAtOf(node, now) {
     if (timestamp !== null) return timestamp;
   }
   return null;
+}
+
+// O nome do canal também fica nas metadataRows, antes da data. Um canal
+// chamado "1 second ago" seria lido como data de publicação, então partes que
+// representam o autor (avatar ou link para um canal) nunca são consideradas.
+function isNotAuthor(part) {
+  return Boolean(part) && !part.avatarStack && findAll(part, 'browseEndpoint').length === 0;
 }
 
 export function parseRelativeTime(text, now) {
