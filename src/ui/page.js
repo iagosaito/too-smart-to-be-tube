@@ -4,7 +4,7 @@ import { closeCategoryMenu, closeCategoryMenuIfDetached } from './components/cat
 import { createCardCache } from './components/channelGrid.js';
 import { csvFileName, subscriptionsCsv } from '../export/subscriptionsCsv.js';
 import { parseCsv } from '../import/csvParse.js';
-import { planImport, readImport } from '../import/categorizationImport.js';
+import { cachedPlanImport, MAX_IMPORT_BYTES, readImport } from '../import/categorizationImport.js';
 import { showToast } from './components/feedback.js';
 import { downloadTextFile } from './download.js';
 import { pickFile } from './filePicker.js';
@@ -21,7 +21,6 @@ export const OPEN_CLASS = 'tstb-page-open';
 // deixava a digitação travada com muitas inscrições.
 const SEARCH_DELAY_MS = 150;
 // Um CSV de inscrições tem poucos KB; o limite barra arquivos errados (ex.: um vídeo).
-const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 // Tempo maior que o padrão para dar chance de clicar em "Desfazer".
 const UNDO_TOAST_MS = 10_000;
 // Sincronizar a cada abertura faria dezenas de requisições à toa; uma vez por hora basta.
@@ -225,8 +224,8 @@ async function readImportFile(file) {
 
 async function applyImport(page, context) {
   const previous = context.state.categories;
-  // Recalcula com o estado atual para aplicar exatamente o que a revisão mostra agora.
-  const { categories, summary } = planImport(context.state, context.view.pendingImport.entries);
+  // Mesmo plano (do cache) que a revisão mostra agora, calculado com o estado atual.
+  const { categories, summary } = cachedPlanImport(context.state, context.view.pendingImport.entries);
   // A revisão já esconde o botão nesses casos; a checagem aqui garante que nada
   // fora do limite seja gravado mesmo se a ação for chamada por outro caminho.
   if (summary.error || !summary.matched) return;
