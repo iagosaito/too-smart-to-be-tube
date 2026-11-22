@@ -1,3 +1,4 @@
+import { t } from '../i18n/i18n.js';
 import { CATEGORY_CONTROL, renderChannelGrid } from './components/channelGrid.js';
 import { renderChips } from './components/chips.js';
 import { renderBulkBar, renderEmptyState } from './components/feedback.js';
@@ -42,7 +43,7 @@ function categoryControlFor(filter) {
 function metaFor(state, view, now) {
   // Em ordem de recência, dizer "sem vídeos recentes" explica por que o canal
   // está no fim; em A–Z isso seria só ruído, então a linha some.
-  const fallback = view.sort === SORT_RECENT ? 'Sem vídeos recentes' : null;
+  const fallback = view.sort === SORT_RECENT ? t('upload.none') : null;
   return (channel) => formatUploadAge(state.latestUploads?.[channel.id], now) ?? fallback;
 }
 
@@ -55,18 +56,19 @@ function renderPendingImport(state, pending, actions) {
 
 function emptyStateFor(state, view, actions) {
   if (!Object.keys(state.channels).length) {
-    const action = actions.canSync ? { label: 'Sincronizar inscrições', onClick: actions.sync } : null;
-    return { title: 'Nenhuma inscrição ainda', text: 'Sincronize para trazer seus canais.', action };
+    const action = actions.canSync ? { label: t('empty.noSubscriptions.action'), onClick: actions.sync } : null;
+    return { title: t('empty.noSubscriptions.title'), text: t('empty.noSubscriptions.text'), action };
   }
   if (view.query) {
-    return { title: 'Nenhum canal encontrado', text: `Nada corresponde a "${view.query}".`, action: { label: 'Limpar busca', onClick: () => actions.search('') } };
+    const action = { label: t('empty.noResults.action'), onClick: () => actions.search('') };
+    return { title: t('empty.noResults.title'), text: t('empty.noResults.text', { query: view.query }), action };
   }
   if (view.filter === FILTER_NONE) {
-    return { title: 'Tudo organizado!', text: 'Todos os seus canais já têm uma categoria.' };
+    return { title: t('empty.allSorted.title'), text: t('empty.allSorted.text') };
   }
   return {
-    title: 'Categoria vazia',
-    text: 'Abra "Sem categoria", marque os canais e mova-os para cá.',
-    action: { label: 'Ver canais sem categoria', onClick: () => actions.setFilter(FILTER_NONE) },
+    title: t('empty.category.title'),
+    text: t('empty.category.text'),
+    action: { label: t('empty.category.action'), onClick: () => actions.setFilter(FILTER_NONE) },
   };
 }

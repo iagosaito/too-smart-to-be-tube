@@ -52,6 +52,7 @@ jobs:
               ...manifest.content_scripts.flatMap((script) => [...script.js, ...(script.css ?? [])]),
               ...Object.values(manifest.icons),
             ];
+            if (manifest.default_locale) files.push(`_locales/${manifest.default_locale}/messages.json`);
             const missing = files.filter((file) => !existsSync(file));
             if (missing.length) throw new Error('Missing files referenced by manifest: ' + missing.join(', '));
             console.log('manifest.json OK:', files.length, 'files referenced');
@@ -59,7 +60,7 @@ jobs:
 
       - name: Package extension
         if: matrix.node == 24
-        run: zip -r too-smart-to-be-tube.zip manifest.json dist icons src/ui/styles.css
+        run: zip -r too-smart-to-be-tube.zip manifest.json _locales dist icons src/ui/styles.css
 
       - name: Upload extension package
         if: matrix.node == 24

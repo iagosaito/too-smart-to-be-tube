@@ -5,5 +5,6 @@ export default defineConfig({
     // jsdom porque boa parte do código manipula o DOM do YouTube.
     environment: 'jsdom',
     include: ['tests/**/*.test.js'],
+    setupFiles: ['tests/setup/locale.js'],
   },
 });

@@ -35,7 +35,9 @@ export function mergeChannels(existing, incoming) {
   return merged;
 }
 
-export function sortByName(channels) {
-  // localeCompare para ordenar acentos e maiúsculas de forma natural em pt-BR.
-  return [...channels].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+// locale opcional (ex.: "pt-BR"): a ordem alfabética muda entre idiomas. O
+// núcleo não sabe qual idioma está ativo; quem chama informa.
+export function sortByName(channels, locale) {
+  // localeCompare para ordenar acentos e maiúsculas de forma natural.
+  return [...channels].sort((a, b) => a.name.localeCompare(b.name, locale, { sensitivity: 'base' }));
 }

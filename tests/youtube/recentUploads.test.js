@@ -119,6 +119,6 @@ describe('fetchLatestUploads', () => {
 
   it('falha com mensagem clara quando o feed não pode ser lido', async () => {
     const fetchFn = vi.fn().mockResolvedValue(textResponse('<html>login</html>'));
-    await expect(fetchLatestUploads({ fetchFn, cookie: '' })).rejects.toThrow('feed de inscrições');
+    await expect(fetchLatestUploads({ fetchFn, cookie: '' })).rejects.toMatchObject({ key: 'error.feedUnavailable' });
   });
 });

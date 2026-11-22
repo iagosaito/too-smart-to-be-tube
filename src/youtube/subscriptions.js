@@ -1,4 +1,5 @@
 import { createChannel } from '../core/channels.js';
+import { LocalizedError } from '../i18n/errors.js';
 import { YOUTUBE_ORIGIN } from './auth.js';
 import { continuationToken, fetchContinuation, fetchFirstPage, findAll } from './innertube.js';
 
@@ -25,7 +26,7 @@ async function fetchChannelsPage(fetchFn) {
   const { config, data } = await fetchFirstPage(fetchFn, CHANNELS_PAGE_URL);
   const firstPage = data ? parseChannelsPage(data) : { channels: [], token: null };
   // Lista vazia quase sempre significa sessão deslogada; falhar evita apagar o cache.
-  if (!firstPage.channels.length) throw new Error('nenhuma inscrição encontrada (você está logado?)');
+  if (!firstPage.channels.length) throw new LocalizedError('error.noSubscriptions');
   return { config, firstPage };
 }
 

@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Too Smart To Be Tube",
+    "description": "Extension name shown in chrome://extensions and the Chrome Web Store."
+  },
+  "extDescription": {
+    "message": "Organiza tus suscripciones de YouTube en categorías, dentro del propio YouTube.",
+    "description": "Short description shown in chrome://extensions and the Chrome Web Store."
+  }
+}

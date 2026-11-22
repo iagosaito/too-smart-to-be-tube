@@ -1,5 +1,6 @@
 import { el, svgIcon } from '../elements.js';
 import { ICONS } from '../icons.js';
+import { t } from '../../i18n/i18n.js';
 import { FILTER_ALL, FILTER_NONE } from '../view.js';
 
 // Chips em vez de seções empilhadas: mostram uma categoria por vez. A barra
@@ -13,7 +14,7 @@ export function renderChips(chips, activeId, actions) {
   const all = chips.find((chip) => chip.id === FILTER_ALL);
   const none = chips.find((chip) => chip.id === FILTER_NONE);
   const categories = chips.filter((chip) => chip !== all && chip !== none);
-  return el('nav', { className: 'tstb-chips', 'aria-label': 'Filtrar por categoria' }, [
+  return el('nav', { className: 'tstb-chips', 'aria-label': t('chips.label') }, [
     renderChip(all, activeId, actions, { icon: ICONS.grid, className: 'tstb-chip-all' }),
     ...categories.map((chip) => renderChip(chip, activeId, actions)),
     renderChip(none, activeId, actions, { className: 'tstb-chip-pending' }),
@@ -43,13 +44,13 @@ function renderChip(chip, activeId, actions, { icon = null, className = '' } = {
 
 function renderNewCategoryChip(actions) {
   // Criar direto na barra mantém o usuário no contexto, sem diálogo modal.
-  const button = el('button', { type: 'button', className: 'tstb-chip tstb-chip-new' }, [svgIcon(ICONS.add), 'Nova categoria']);
+  const button = el('button', { type: 'button', className: 'tstb-chip tstb-chip-new' }, [svgIcon(ICONS.add), t('chips.new')]);
   button.addEventListener('click', () => button.replaceWith(renderNewCategoryForm(actions, button)));
   return button;
 }
 
 function renderNewCategoryForm(actions, button) {
-  const input = el('input', { type: 'text', className: 'tstb-chip-input', placeholder: 'Nome e Enter', 'aria-label': 'Nome da nova categoria', maxlength: '40' });
+  const input = el('input', { type: 'text', className: 'tstb-chip-input', placeholder: t('chips.newPlaceholder'), 'aria-label': t('chips.newLabel'), maxlength: '40' });
   const onSubmit = (event) => {
     event.preventDefault();
     actions.create(input.value);

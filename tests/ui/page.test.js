@@ -536,7 +536,7 @@ describe('exportar CSV', () => {
     chip('Tech').click();
     button('Exportar CSV').click();
     const [fileName, csv] = download.mock.calls[0];
-    expect(fileName).toBe('inscricoes-youtube-2026-11-22.csv');
+    expect(fileName).toBe('youtube-subscriptions-2026-11-22.csv');
     expect(csv.trim().split('\r\n')).toHaveLength(4);
     expect(csv).toContain('Alura,Tech,https://www.youtube.com/@alura,/@alura');
     expect(document.getElementById(TOAST_ID).textContent).toBe('3 inscrições exportadas');
@@ -595,7 +595,7 @@ describe('importar CSV', () => {
 
   it('explica o erro de formato e só oferece Fechar', async () => {
     await importFile(fakeFile('Nome,Outra\r\nA,B'));
-    expect($('.tstb-review-error').textContent).toContain('coluna "Categoria"');
+    expect($('.tstb-review-error').textContent).toContain('coluna "Category"');
     expect(button('Aplicar importação')).toBeUndefined();
     button('Fechar').click();
     expect($('.tstb-review')).toBeNull();

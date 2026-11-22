@@ -90,12 +90,12 @@ describe('fetchAllSubscriptions', () => {
 
   it('falha quando a primeira página não tem inscrições (deslogado)', async () => {
     const fetchFn = vi.fn().mockResolvedValue(textResponse('<html>login</html>'));
-    await expect(fetchAllSubscriptions({ fetchFn, cookie: '' })).rejects.toThrow('logado');
+    await expect(fetchAllSubscriptions({ fetchFn, cookie: '' })).rejects.toMatchObject({ key: 'error.noSubscriptions' });
   });
 
   it('falha quando a continuação responde com erro HTTP', async () => {
     const fetchFn = fakeFetch();
     fetchFn.mockResolvedValueOnce({ ok: false, status: 401 });
-    await expect(fetchAllSubscriptions({ fetchFn, cookie: 'SAPISID=abc' })).rejects.toThrow('401');
+    await expect(fetchAllSubscriptions({ fetchFn, cookie: 'SAPISID=abc' })).rejects.toMatchObject({ key: 'error.http', params: { status: 401 } });
   });
 });

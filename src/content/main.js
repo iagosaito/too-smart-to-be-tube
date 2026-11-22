@@ -5,6 +5,7 @@ import { waitFor } from '../dom/waitFor.js';
 import { createStore } from '../storage/store.js';
 import { showToast } from '../ui/components/feedback.js';
 import { closeCategoriesPage, openCategoriesPage } from '../ui/page.js';
+import { t } from '../i18n/i18n.js';
 import { runIfAlive } from './extensionContext.js';
 import { fetchLatestUploads } from '../youtube/recentUploads.js';
 import { fetchAllSubscriptions } from '../youtube/subscriptions.js';
@@ -30,7 +31,7 @@ async function syncLatestUploads() {
   try {
     await store.saveUploads(await fetchLatestUploads());
   } catch (error) {
-    console.warn('[Too Smart To Be Tube] Não foi possível ler o feed de inscrições:', error);
+    console.warn('[Too Smart To Be Tube] Could not read the subscriptions feed:', error);
   }
 }
 
@@ -47,9 +48,9 @@ function warnOrphaned() {
   // Só avisamos quando o usuário clica: em tarefas de fundo seria um alerta
   // sem contexto a cada navegação.
   closeCategoriesPage();
-  showToast('A extensão foi atualizada. Recarregue a página para continuar usando as Categorias.', {
+  showToast(t('toast.extensionUpdated'), {
     duration: 15_000,
-    action: { label: 'Recarregar', onClick: () => window.location.reload() },
+    action: { label: t('common.reload'), onClick: () => window.location.reload() },
   });
 }
 
