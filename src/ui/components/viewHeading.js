@@ -3,22 +3,27 @@ import { ICONS } from '../icons.js';
 import { CATEGORY_NAME_MAX } from '../../core/categories.js';
 import { plural, t } from '../../i18n/i18n.js';
 import { FILTER_NONE, SORT_NAME, SORT_RECENT } from '../view.js';
+import { FEED_TAB } from '../../feed/categoryFeed.js';
+import { renderCategoryTabs } from './categoryTabs.js';
 
 // Duas zonas separadas pelo objeto em que agem: à esquerda, a categoria
 // (nome editável e excluir); à direita, a lista (ordenar). Excluir ao lado de
 // Ordenar misturava uma ação rara e destrutiva com um controle de uso frequente.
 export function renderViewHeading(state, view, actions, count) {
   const category = state.categories.find((item) => item.id === view.filter);
-  return el('div', { className: 'tstb-view-heading' }, [
+  // Abas só dentro de uma categoria: "Todas" e "Sem categoria" são telas de organizar.
+  const tabs = category && actions.hasFeed;
+  const onChannels = !tabs || view.tab === FEED_TAB.CHANNELS;
+  const heading = el('div', { className: 'tstb-view-heading' }, [
     el('div', { className: 'tstb-title-group' }, [
       renderTitle(category, view, count, actions),
       category ? renderDeleteButton(category, actions) : null,
     ]),
-    el('div', { className: 'tstb-heading-actions' }, [
-      renderSortSelect(view.sort, actions),
-      category ? null : renderSelectionHint(),
-    ]),
+    // Ordenar e a dica de seleção só fazem sentido na lista de canais.
+    onChannels ? el('div', { className: 'tstb-heading-actions' }, [renderSortSelect(view.sort, actions), category ? null : renderSelectionHint()]) : null,
   ]);
+  // As abas ficam fora de .tstb-view-heading: renomear substitui só o título.
+  return tabs ? el('div', { className: 'tstb-view-header' }, [heading, renderCategoryTabs(view.tab, actions)]) : heading;
 }
 
 function renderTitle(category, view, count, actions) {

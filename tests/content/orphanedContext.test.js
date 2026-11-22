@@ -16,7 +16,7 @@ beforeAll(async () => {
   process.on('unhandledRejection', recordRejection);
   document.body.innerHTML = GUIDE_HTML;
   // Script carregado com a extensão viva...
-  globalThis.chrome = { runtime: { id: 'test' }, storage: { local: { get: invalidated, set: invalidated } } };
+  globalThis.chrome = { runtime: { id: 'test' }, storage: { local: { get: invalidated, set: invalidated }, onChanged: { addListener: () => {} } } };
   await import('../../src/content/main.js');
   await flush();
   // ...e a extensão recarregada em seguida: o contexto deste script se perde.

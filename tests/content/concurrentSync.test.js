@@ -13,7 +13,7 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 it('cliques repetidos em Categorias compartilham uma única sincronização', async () => {
   document.body.innerHTML = `<ytd-page-manager></ytd-page-manager>${GUIDE_HTML}`;
   window.scrollTo = vi.fn();
-  globalThis.chrome = { runtime: { id: 'test' }, storage: { local: createFakeStorageArea() } };
+  globalThis.chrome = { runtime: { id: 'test' }, storage: { local: createFakeStorageArea(), onChanged: { addListener: () => {} } } };
   const channelsHtml = channelsPageHtml(initialData([channelRenderer('alura', 'Alura')]));
   globalThis.fetch = vi.fn(async (url) => ({ ok: true, text: async () => (String(url).includes('/feed/channels') ? channelsHtml : channelsPageHtml({})) }));
   await import('../../src/content/main.js');

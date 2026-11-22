@@ -1,6 +1,12 @@
 import { scrapeChannels } from '../dom/scraper.js';
 import { SELECTORS } from '../dom/selectors.js';
-import { keepMiniGuideEntry, keepSidebarEntry } from '../dom/sidebar.js';
+import { keepMiniGuideEntry, keepSidebarEntry, setSidebarCategories } from '../dom/sidebar.js';
+import { sortCategoriesByName } from '../core/categories.js';
+import { createChannelTabCache } from '../feed/channelTabCache.js';
+import { createFeedSource } from '../feed/feedSource.js';
+import { localeTag } from '../i18n/i18n.js';
+import { createRequestQueue } from '../sync/requestQueue.js';
+import { clientVersionFromDocument } from '../youtube/pageData.js';
 import { waitFor } from '../dom/waitFor.js';
 import { createStore } from '../storage/store.js';
 import { showToast } from '../ui/components/feedback.js';
@@ -8,7 +14,7 @@ import { closeCategoriesPage, openCategoriesPage } from '../ui/page.js';
 import { t } from '../i18n/i18n.js';
 import { createSyncCoordinator } from '../sync/syncCoordinator.js';
 import { runIfAlive } from './extensionContext.js';
-import { fetchLatestUploads } from '../youtube/recentUploads.js';
+import { fetchSubscriptionFeed, latestByChannel } from '../youtube/recentUploads.js';
 import { fetchAllSubscriptions } from '../youtube/subscriptions.js';
 
 const store = createStore(chrome.storage.local);
@@ -31,22 +37,42 @@ async function syncAllSubscriptions() {
 const syncCoordinator = createSyncCoordinator(syncAllSubscriptions);
 
 async function syncLatestUploads() {
-  // A data dos vídeos é um extra: se o feed falhar, a lista de inscrições
-  // (já salva) continua valendo e o erro não deve derrubar a sincronização.
+  // O feed de Inscrições é um extra: se falhar, a lista de inscrições (já
+  // salva) continua valendo e o erro não deve derrubar a sincronização.
   try {
-    await store.saveUploads(await fetchLatestUploads());
+    const videos = await fetchSubscriptionFeed();
+    // Os mesmos vídeos alimentam a data do último vídeo de cada canal e o feed
+    // por categoria (aba Vídeos), sem nenhuma requisição a mais.
+    await store.saveUploads(latestByChannel(videos));
+    await store.saveFeed(videos);
   } catch (error) {
     console.warn('[Too Smart To Be Tube] Could not read the subscriptions feed:', error);
   }
 }
 
-async function openCategories() {
+// Fonte do feed por categoria, uma por aba: cache persistido e uma fila que
+// controla o ritmo das consultas públicas aos canais.
+const feedSource = createFeedSource({
+  cache: createChannelTabCache({ load: store.loadChannelTabCache, save: store.saveChannelTabCache }),
+  queue: createRequestQueue(),
+  clientVersion: () => clientVersionFromDocument(document),
+});
+
+async function openCategories(options = {}) {
   // A leitura do DOM é instantânea e já mostra algo enquanto a sincronização
   // completa (várias requisições) roda em segundo plano.
   await runIfAlive(async () => {
     await syncFromDom();
-    await openCategoriesPage({ store, sync: syncCoordinator });
+    await openCategoriesPage({ store, sync: syncCoordinator, feedSource, ...options });
   }, warnOrphaned);
+}
+
+// Clicar numa categoria no menu lateral abre direto o feed dela.
+const openCategoryFeed = (categoryId) => openCategories({ initialFilter: categoryId });
+
+async function refreshSidebarCategories(categories) {
+  const list = categories ?? (await store.load()).categories;
+  setSidebarCategories(sortCategoriesByName(list, localeTag()), openCategoryFeed);
 }
 
 function warnOrphaned() {
@@ -90,6 +116,7 @@ function setupMenus() {
 
 async function setup() {
   setupMenus();
+  runIfAlive(refreshSidebarCategories, stopBackgroundWork);
   await runIfAlive(syncFromDom, stopBackgroundWork);
 }
 
@@ -100,3 +127,9 @@ async function setup() {
 document.addEventListener('yt-navigate-start', closeCategoriesPage);
 document.addEventListener('yt-navigate-finish', setup);
 setup();
+
+// Mantém a lista do menu lateral em dia quando as categorias mudam (inclusive
+// por outra aba do YouTube aberta ao mesmo tempo).
+chrome.storage.onChanged?.addListener((changes, area) => {
+  if (area === 'local' && changes.categories) refreshSidebarCategories(changes.categories.newValue ?? []);
+});

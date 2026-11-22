@@ -24,7 +24,7 @@ beforeEach(() => {
   // O jsdom não implementa rolagem e polui a saída com avisos.
   window.scrollTo = vi.fn();
   // Sincronização recente: a maioria dos testes não deve disparar a sincronização automática.
-  area = createFakeStorageArea({ channels, categories, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 });
+  area = createFakeStorageArea({ channels, categories, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 });
   store = createStore(area);
 });
 
@@ -125,7 +125,7 @@ describe('ordem alfabética das categorias', () => {
   afterEach(() => closeCategoryMenu());
 
   it('chips, pílulas e "Mover para…" usam a mesma ordem A–Z', async () => {
-    await open({ store: createStore(createFakeStorageArea({ channels, categories: unordered, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 })) });
+    await open({ store: createStore(createFakeStorageArea({ channels, categories: unordered, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 })) });
     expect($$('.tstb-chips [data-chip-id]:not(.tstb-chip-all):not(.tstb-chip-pending) .tstb-chip-label').map((node) => node.textContent)).toEqual(['Comida', 'Tech', 'Viagem']);
     $('.tstb-pill').click();
     expect(menuLabels()).toEqual(['Sem categoria', 'Comida', 'Tech', 'Viagem']);
@@ -167,7 +167,7 @@ describe('filtros e busca', () => {
   });
 
   it('categoria vazia oferece atalho para "Sem categoria"', async () => {
-    area = createFakeStorageArea({ channels, categories: [{ id: 'v', name: 'Vazia', channelIds: [] }], lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 });
+    area = createFakeStorageArea({ channels, categories: [{ id: 'v', name: 'Vazia', channelIds: [] }], lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 });
     await open({ store: createStore(area) });
     chip('Vazia').click();
     button('Ver canais sem categoria').click();
@@ -428,7 +428,7 @@ describe('seleção em lote', () => {
 // junto pela ação em lote, desfazendo o que o usuário tinha acabado de fazer.
 describe('seleção só contém o que está na tela', () => {
   const storeWith = (categoriesList) =>
-    createStore(createFakeStorageArea({ channels, categories: categoriesList, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 }));
+    createStore(createFakeStorageArea({ channels, categories: categoriesList, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 }));
   const cardOf = (name) => $$('.tstb-card').find((node) => node.textContent.includes(name));
   const channelIdsOf = (id) => area.dump().categories.find((category) => category.id === id).channelIds;
 
@@ -524,7 +524,7 @@ describe('sincronização', () => {
 
   it('sem canais, o estado vazio oferece sincronizar', async () => {
     const sync = vi.fn(async () => 0);
-    await open({ store: createStore(createFakeStorageArea({ lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 })), sync });
+    await open({ store: createStore(createFakeStorageArea({ lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 })), sync });
     expect($('.tstb-empty-state').textContent).toContain('Nenhuma inscrição ainda');
     button('Sincronizar inscrições').click();
     expect(sync).toHaveBeenCalledOnce();
@@ -550,7 +550,7 @@ describe('exportar CSV', () => {
   });
 
   it('fica desabilitado sem inscrições', async () => {
-    await open({ store: createStore(createFakeStorageArea({ lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 })) });
+    await open({ store: createStore(createFakeStorageArea({ lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 })) });
     expect(button('Exportar CSV').disabled).toBe(true);
   });
 });
@@ -644,7 +644,7 @@ describe('importar CSV', () => {
   });
 
   it('fica desabilitado sem inscrições', async () => {
-    await open({ store: createStore(createFakeStorageArea({ lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 })) });
+    await open({ store: createStore(createFakeStorageArea({ lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 })) });
     expect(button('Importar CSV').disabled).toBe(true);
   });
 });
@@ -652,7 +652,7 @@ describe('importar CSV', () => {
 describe('ordenar por vídeo mais recente', () => {
   const NOW = 10 * 24 * 3_600_000;
   const withUploads = (extra = {}) =>
-    createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: NOW, uploadsSyncedAt: NOW, latestUploads: { '/@bossa': NOW - 2 * 24 * 3_600_000, '/@xss': NOW - 3_600_000 }, ...extra }));
+    createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: NOW, uploadsSyncedAt: NOW, feedSyncedAt: NOW, latestUploads: { '/@bossa': NOW - 2 * 24 * 3_600_000, '/@xss': NOW - 3_600_000 }, ...extra }));
   const sortSelect = () => $('.tstb-sort-select');
 
   it('começa em A–Z e mostra a data do último vídeo no cartão', async () => {
@@ -693,7 +693,7 @@ describe('intervalo entre sincronizações', () => {
     try {
       vi.setSystemTime(10_000_000);
       // Sincronização recente no storage: a abertura não dispara a automática.
-      const fresh = createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: Date.now(), uploadsSyncedAt: Date.now() }));
+      const fresh = createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: Date.now(), uploadsSyncedAt: Date.now(), feedSyncedAt: Date.now() }));
       const coordinator = createSyncCoordinator(async () => 3, { cooldownMs: 60_000 });
       await openCategoriesPage({ store: fresh, sync: coordinator, now: Date.now, searchDelay: 0 });
       button('Sincronizar').click();
