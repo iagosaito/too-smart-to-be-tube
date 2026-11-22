@@ -29,9 +29,11 @@ function renderTitle(category, view, count, actions) {
 }
 
 function renderEditableName(category, actions) {
-  // Renomear clicando no próprio nome (como o título de um documento) dispensa
-  // um botão para uma ação rara. O lápis e o fundo no hover mostram que o
-  // texto é editável; sendo <button>, também funciona por Tab + Enter.
+  // Renomear clicando no próprio nome (como o título de um documento no
+  // Notion/Docs) dispensa um botão para uma ação rara. Só o fundo e o cursor de
+  // texto no hover indicam que é editável: um lápis escondido reservava espaço
+  // e deixava um buraco entre o nome e a contagem. Sendo <button>, também
+  // funciona por Tab + Enter.
   return el(
     'button',
     {
@@ -41,7 +43,7 @@ function renderEditableName(category, actions) {
       'aria-label': `Renomear categoria ${category.name}`,
       onClick: (event) => startRename(event.currentTarget.closest('.tstb-view-heading'), category, actions),
     },
-    [el('span', {}, category.name), svgIcon(ICONS.edit)],
+    category.name,
   );
 }
 

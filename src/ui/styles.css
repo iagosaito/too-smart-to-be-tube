@@ -442,12 +442,9 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   min-width: 0;
 }
 
-/* O nome parece título, não botão; o hover revela que é editável. A margem
-   negativa compensa o padding para o texto ficar alinhado à grade. */
+/* O nome parece título, não botão; o fundo no hover revela que é editável.
+   A margem negativa compensa o padding para o texto ficar alinhado à grade. */
 .tstb-title-edit {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
   margin-left: -8px;
   padding: 2px 8px;
   border: 0;
@@ -458,22 +455,9 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   cursor: text;
 }
 
-.tstb-title-edit svg {
-  width: 18px;
-  height: 18px;
-  color: var(--tstb-muted);
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
 .tstb-title-edit:hover,
 .tstb-title-edit:focus-visible {
   background: var(--tstb-hover);
-}
-
-.tstb-title-edit:hover svg,
-.tstb-title-edit:focus-visible svg {
-  opacity: 1;
 }
 
 .tstb-icon-button {

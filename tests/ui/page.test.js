@@ -192,6 +192,8 @@ describe('categorias', () => {
     chip('Tech').click();
     const titleGroup = $('.tstb-title-group');
     expect(titleGroup.querySelector('.tstb-title-edit')).not.toBeNull();
+    // Sem lápis no nome: nada reserva espaço entre o nome e a contagem.
+    expect(titleGroup.querySelector('.tstb-title-edit svg')).toBeNull();
     expect(titleGroup.querySelector('[aria-label="Excluir categoria Tech"]')).not.toBeNull();
     expect($('.tstb-heading-actions').querySelector('[aria-label^="Excluir"]')).toBeNull();
     expect($('.tstb-heading-actions .tstb-sort-select')).not.toBeNull();
