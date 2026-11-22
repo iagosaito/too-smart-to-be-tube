@@ -216,10 +216,6 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   opacity: 0.85;
 }
 
-.tstb-button-danger:hover {
-  color: var(--tstb-danger);
-}
-
 .tstb-button-text {
   background: transparent;
 }
@@ -438,6 +434,75 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   font-weight: 400;
 }
 
+/* Zona da categoria: nome editável e excluir, colados ao título. */
+.tstb-title-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* O nome parece título, não botão; o hover revela que é editável. A margem
+   negativa compensa o padding para o texto ficar alinhado à grade. */
+.tstb-title-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: -8px;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: text;
+}
+
+.tstb-title-edit svg {
+  width: 18px;
+  height: 18px;
+  color: var(--tstb-muted);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.tstb-title-edit:hover,
+.tstb-title-edit:focus-visible {
+  background: var(--tstb-hover);
+}
+
+.tstb-title-edit:hover svg,
+.tstb-title-edit:focus-visible svg {
+  opacity: 1;
+}
+
+.tstb-icon-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--tstb-muted);
+  cursor: pointer;
+}
+
+.tstb-icon-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tstb-icon-button:hover {
+  background: var(--tstb-control);
+}
+
+/* Vermelho só no hover: avisa o perigo sem gritar o tempo todo. */
+.tstb-icon-button-danger:hover {
+  color: var(--tstb-danger);
+}
+
 .tstb-heading-actions {
   display: flex;
   flex-wrap: wrap;
@@ -467,7 +532,6 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   background: var(--tstb-control-hover);
 }
 
-.tstb-tools,
 .tstb-rename {
   display: flex;
   align-items: center;

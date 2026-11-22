@@ -120,7 +120,7 @@ describe('filtros e busca', () => {
     chip('Tech').click();
     expect(cardNames()).toEqual(['Alura']);
     expect($('.tstb-view-title').textContent).toBe('Tech · 1 canal');
-    expect(button('Renomear')).toBeDefined();
+    expect($('[aria-label="Renomear categoria Tech"]')).not.toBeNull();
   });
 
   it('a busca filtra mantendo o foco no campo', async () => {
@@ -177,7 +177,7 @@ describe('categorias', () => {
   it('renomeia no próprio título', async () => {
     await open();
     chip('Tech').click();
-    button('Renomear').click();
+    $('.tstb-title-edit').click();
     const input = $('.tstb-rename-input');
     expect(input.value).toBe('Tech');
     input.value = 'Tecnologia';
@@ -187,10 +187,29 @@ describe('categorias', () => {
     expect($('.tstb-view-title').textContent).toContain('Tecnologia');
   });
 
+  it('separa a zona da categoria (nome e excluir) da zona da lista (ordenar)', async () => {
+    await open();
+    chip('Tech').click();
+    const titleGroup = $('.tstb-title-group');
+    expect(titleGroup.querySelector('.tstb-title-edit')).not.toBeNull();
+    expect(titleGroup.querySelector('[aria-label="Excluir categoria Tech"]')).not.toBeNull();
+    expect($('.tstb-heading-actions').querySelector('[aria-label^="Excluir"]')).toBeNull();
+    expect($('.tstb-heading-actions .tstb-sort-select')).not.toBeNull();
+    expect(button('Renomear')).toBeUndefined();
+  });
+
+  it('"Todas" e "Sem categoria" não têm título editável nem excluir', async () => {
+    await open();
+    expect($('.tstb-title-edit')).toBeNull();
+    expect($('[aria-label^="Excluir categoria"]')).toBeNull();
+    chip('Sem categoria').click();
+    expect($('.tstb-title-edit')).toBeNull();
+  });
+
   it('cancelar a renomeação volta ao título', async () => {
     await open();
     chip('Tech').click();
-    button('Renomear').click();
+    $('.tstb-title-edit').click();
     button('Cancelar').click();
     expect($('.tstb-rename-input')).toBeNull();
   });
@@ -199,7 +218,7 @@ describe('categorias', () => {
     const confirm = vi.fn(() => true);
     await open({ confirm });
     chip('Tech').click();
-    button('Excluir').click();
+    $('[aria-label="Excluir categoria Tech"]').click();
     await flush();
     expect(confirm).toHaveBeenCalledWith('Excluir a categoria "Tech"? 1 canal volta para "Sem categoria".');
     expect(area.dump().categories).toEqual([]);
@@ -210,7 +229,7 @@ describe('categorias', () => {
   it('não exclui se o usuário cancelar a confirmação', async () => {
     await open({ confirm: () => false });
     chip('Tech').click();
-    button('Excluir').click();
+    $('[aria-label="Excluir categoria Tech"]').click();
     await flush();
     expect(area.dump().categories).toHaveLength(1);
   });
@@ -250,7 +269,7 @@ describe('desempenho', () => {
     await open();
     const alura = cardOf('Alura');
     chip('Tech').click();
-    button('Renomear').click();
+    $('.tstb-title-edit').click();
     $('.tstb-rename-input').value = 'Tecnologia';
     $('.tstb-rename-input').closest('form').requestSubmit();
     await flush();

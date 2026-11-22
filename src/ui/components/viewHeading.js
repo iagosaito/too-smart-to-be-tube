@@ -2,16 +2,63 @@ import { el, svgIcon } from '../elements.js';
 import { ICONS } from '../icons.js';
 import { FILTER_NONE, pluralize, SORT_NAME, SORT_RECENT } from '../view.js';
 
+// Duas zonas separadas pelo objeto em que agem: à esquerda, a categoria
+// (nome editável e excluir); à direita, a lista (ordenar). Excluir ao lado de
+// Ordenar misturava uma ação rara e destrutiva com um controle de uso frequente.
 export function renderViewHeading(state, view, actions, count) {
   const category = state.categories.find((item) => item.id === view.filter);
-  const title = category?.name ?? (view.filter === FILTER_NONE ? 'Sem categoria' : 'Todas as inscrições');
   return el('div', { className: 'tstb-view-heading' }, [
-    el('h2', { className: 'tstb-view-title' }, [title, el('span', { className: 'tstb-count' }, ` · ${pluralize(count, 'canal', 'canais')}`)]),
+    el('div', { className: 'tstb-title-group' }, [
+      renderTitle(category, view, count, actions),
+      category ? renderDeleteButton(category, actions) : null,
+    ]),
     el('div', { className: 'tstb-heading-actions' }, [
       renderSortSelect(view.sort, actions),
-      category ? renderCategoryTools(category, actions) : renderSelectionHint(),
+      category ? null : renderSelectionHint(),
     ]),
   ]);
+}
+
+function renderTitle(category, view, count, actions) {
+  const countLabel = el('span', { className: 'tstb-count' }, ` · ${pluralize(count, 'canal', 'canais')}`);
+  if (!category) {
+    const title = view.filter === FILTER_NONE ? 'Sem categoria' : 'Todas as inscrições';
+    return el('h2', { className: 'tstb-view-title' }, [title, countLabel]);
+  }
+  return el('h2', { className: 'tstb-view-title' }, [renderEditableName(category, actions), countLabel]);
+}
+
+function renderEditableName(category, actions) {
+  // Renomear clicando no próprio nome (como o título de um documento) dispensa
+  // um botão para uma ação rara. O lápis e o fundo no hover mostram que o
+  // texto é editável; sendo <button>, também funciona por Tab + Enter.
+  return el(
+    'button',
+    {
+      type: 'button',
+      className: 'tstb-title-edit',
+      title: 'Clique para renomear',
+      'aria-label': `Renomear categoria ${category.name}`,
+      onClick: (event) => startRename(event.currentTarget.closest('.tstb-view-heading'), category, actions),
+    },
+    [el('span', {}, category.name), svgIcon(ICONS.edit)],
+  );
+}
+
+function renderDeleteButton(category, actions) {
+  // Só ícone e discreto: excluir é raro. Continua explícito (nunca escondido
+  // num clique no título) e pede confirmação antes de apagar.
+  return el(
+    'button',
+    {
+      type: 'button',
+      className: 'tstb-icon-button tstb-icon-button-danger',
+      title: 'Excluir categoria',
+      'aria-label': `Excluir categoria ${category.name}`,
+      onClick: () => actions.remove(category),
+    },
+    svgIcon(ICONS.delete),
+  );
 }
 
 // Fica no título da visão porque ordena a lista que está sendo vista, não a coleção inteira.
@@ -31,19 +78,8 @@ function renderSelectionHint() {
   return el('p', { className: 'tstb-hint' }, 'Dica: marque vários canais (✓) para movê-los de uma vez.');
 }
 
-function renderCategoryTools(category, actions) {
-  return el('div', { className: 'tstb-tools' }, [
-    iconButton(ICONS.edit, 'Renomear', (event) => startRename(event.currentTarget.closest('.tstb-view-heading'), category, actions)),
-    iconButton(ICONS.delete, 'Excluir', () => actions.remove(category), 'tstb-button-danger'),
-  ]);
-}
-
-function iconButton(icon, label, onClick, extraClass = '') {
-  return el('button', { type: 'button', className: `tstb-button ${extraClass}`.trim(), onClick }, [svgIcon(icon), label]);
-}
-
 function startRename(heading, category, actions) {
-  // Edição no próprio título (em vez de window.prompt) mostra o resultado no lugar onde ele vai ficar.
+  // A edição acontece no lugar do título, onde o nome novo vai aparecer.
   const input = el('input', { type: 'text', className: 'tstb-rename-input', value: category.name, 'aria-label': 'Novo nome da categoria', maxlength: '40' });
   const onSubmit = (event) => {
     event.preventDefault();
