@@ -29,3 +29,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Configurações locais do Claude Code (permissões pessoais)
+.claude/settings.local.json
