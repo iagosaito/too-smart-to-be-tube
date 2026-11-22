@@ -42,6 +42,11 @@ All on-demand requests go through one queue per tab (`src/sync/requestQueue.js`)
 Network loads are **explicit** ("Load more"), never triggered by scrolling: each click is a deliberate, bounded
 batch of channels (Baymard/NN/g favour "Load more" when loads are costly).
 
+What is *shown* and what is *fetched* are separate: the feed displays **24 items per page** (4 rows of Shorts, 8
+rows of videos) and "Load more" reveals the next 24. A batch of **8 channels** is only fetched when the items
+already downloaded can't fill the next page — a channel's Shorts tab returns ~48 Shorts, so one batch yields
+several pages with no new requests.
+
 ## UX decisions and the research behind them
 
 1. **Categories in YouTube's sidebar.** The expanded sidebar gets a *Categories* section listing each category

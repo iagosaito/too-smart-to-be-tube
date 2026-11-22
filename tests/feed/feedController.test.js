@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createFeedController, modelOf } from '../../src/feed/feedController.js';
+import { createFeedController, modelOf, PAGE_SIZE } from '../../src/feed/feedController.js';
 import { createFeedSource } from '../../src/feed/feedSource.js';
 import { LocalizedError } from '../../src/i18n/errors.js';
 
@@ -68,6 +68,63 @@ describe('createFeedController', () => {
     const first = controller.sessionFor(category, 'videos', [channel(1)], {});
     expect(controller.sessionFor(category, 'videos', [channel(1)], {})).toBe(first);
     expect(controller.sessionFor(category, 'videos', [channel(1), channel(2)], {})).not.toBe(first);
+  });
+});
+
+describe('páginas do feed', () => {
+  const shortsOf = (item, count) => Array.from({ length: count }, (_, i) => ({ videoId: `${item.id}-s${i}`, channelId: item.id, title: 't' }));
+
+  it('Shorts: o primeiro lote rende várias páginas de 24 sem nenhuma requisição nova', async () => {
+    const source = fakeSource({ load: async (item) => shortsOf(item, 48) });
+    const controller = createFeedController({ source, onChange: () => {}, batchSize: 8 });
+    const session = controller.sessionFor(category, 'shorts', Array.from({ length: 20 }, (_, n) => channel(n)), {});
+    await flush();
+    expect(source.load).toHaveBeenCalledTimes(8);
+    expect(modelOf(session).items).toHaveLength(PAGE_SIZE);
+    expect(modelOf(session).hasMore).toBe(true);
+
+    controller.loadMore(session);
+    await flush();
+    expect(modelOf(session).items).toHaveLength(2 * PAGE_SIZE);
+    expect(source.load).toHaveBeenCalledTimes(8);
+  });
+
+  it('Shorts: só consulta o próximo lote quando o que foi baixado não enche a página', async () => {
+    const source = fakeSource({ load: async (item) => shortsOf(item, 5) });
+    const controller = createFeedController({ source, onChange: () => {}, batchSize: 2 });
+    const session = controller.sessionFor(category, 'shorts', Array.from({ length: 6 }, (_, n) => channel(n)), {});
+    await flush();
+    expect(modelOf(session).items).toHaveLength(10);
+    controller.loadMore(session);
+    await flush();
+    expect(source.load).toHaveBeenCalledTimes(4);
+    expect(modelOf(session).items).toHaveLength(20);
+  });
+
+  it('Shorts: se o cache já enche a primeira página, nada vai à rede', async () => {
+    const channels = Array.from({ length: 4 }, (_, n) => channel(n));
+    const source = fakeSource({ cached: Object.fromEntries(channels.map((item) => [item.id, shortsOf(item, 10)])) });
+    const controller = createFeedController({ source, onChange: () => {} });
+    const session = controller.sessionFor(category, 'shorts', channels, {});
+    await flush();
+    expect(source.load).not.toHaveBeenCalled();
+    expect(modelOf(session).items).toHaveLength(PAGE_SIZE);
+  });
+
+  it('Vídeos: pagina o feed já sincronizado e só consulta canais quando ele acaba', async () => {
+    const channels = [channel(1), channel(2)];
+    const feedItems = Array.from({ length: 30 }, (_, i) => ({ videoId: `v${i}`, channelId: channels[i % 2].id, publishedAt: 1_000 - i, title: 't' }));
+    const source = fakeSource({ load: async () => [] });
+    const controller = createFeedController({ source, onChange: () => {} });
+    const session = controller.sessionFor(category, 'videos', channels, {});
+    await flush();
+    expect(modelOf(session, feedItems).items).toHaveLength(PAGE_SIZE);
+    expect(source.load).not.toHaveBeenCalled();
+
+    controller.loadMore(session, feedItems);
+    await flush();
+    expect(modelOf(session, feedItems).items).toHaveLength(30);
+    expect(source.load).toHaveBeenCalledTimes(2);
   });
 });
 
