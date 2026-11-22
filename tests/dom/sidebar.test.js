@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ENTRY_ID, injectMiniGuideEntry, injectSidebarEntry, keepMiniGuideEntry, MINI_ENTRY_ID } from '../../src/dom/sidebar.js';
+import { ENTRY_ID, injectMiniGuideEntry, injectSidebarEntry, keepMiniGuideEntry, keepSidebarEntry, MINI_ENTRY_ID } from '../../src/dom/sidebar.js';
 import { GUIDE_HTML } from '../helpers/youtubeFixtures.js';
 
 const guide = () => document.querySelector('ytd-guide-renderer');
@@ -92,4 +92,29 @@ describe('injectMiniGuideEntry', () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
+});
+
+describe('keepSidebarEntry', () => {
+  beforeEach(() => {
+    document.body.innerHTML = GUIDE_HTML;
+  });
+
+  it('reinsere o item quando o YouTube redesenha as seções do menu expandido', async () => {
+    const observer = keepSidebarEntry(guide(), () => {});
+    const sections = guide().querySelector('#sections');
+    // Simula o YouTube recriando as seções ao expandir o menu: nosso item some.
+    const fresh = [...sections.querySelectorAll('ytd-guide-section-renderer')].map((node) => node.cloneNode(true));
+    sections.replaceChildren(...fresh);
+    expect(document.getElementById(ENTRY_ID)).toBeNull();
+    await Promise.resolve();
+    expect(document.querySelector('#main').nextElementSibling.id).toBe(ENTRY_ID);
+    observer.disconnect();
+  });
+
+  it('não empilha observers ao ser chamado de novo no mesmo menu', () => {
+    const first = keepSidebarEntry(guide(), () => {});
+    expect(keepSidebarEntry(guide(), () => {})).toBeNull();
+    expect(document.querySelectorAll(`#${ENTRY_ID}`)).toHaveLength(1);
+    first.disconnect();
+  });
 });

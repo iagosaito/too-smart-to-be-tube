@@ -1,9 +1,11 @@
 import { scrapeChannels } from '../dom/scraper.js';
 import { SELECTORS } from '../dom/selectors.js';
-import { injectSidebarEntry, keepMiniGuideEntry } from '../dom/sidebar.js';
+import { keepMiniGuideEntry, keepSidebarEntry } from '../dom/sidebar.js';
 import { waitFor } from '../dom/waitFor.js';
 import { createStore } from '../storage/store.js';
+import { showToast } from '../ui/components/feedback.js';
 import { closeCategoriesPage, openCategoriesPage } from '../ui/page.js';
+import { runIfAlive } from './extensionContext.js';
 import { fetchLatestUploads } from '../youtube/recentUploads.js';
 import { fetchAllSubscriptions } from '../youtube/subscriptions.js';
 
@@ -35,31 +37,54 @@ async function syncLatestUploads() {
 async function openCategories() {
   // A leitura do DOM é instantânea e já mostra algo enquanto a sincronização
   // completa (várias requisições) roda em segundo plano.
-  await syncFromDom();
-  await openCategoriesPage({ store, sync: syncAllSubscriptions });
+  await runIfAlive(async () => {
+    await syncFromDom();
+    await openCategoriesPage({ store, sync: syncAllSubscriptions });
+  }, warnOrphaned);
 }
 
-let miniGuideStarted = false;
+function warnOrphaned() {
+  // Só avisamos quando o usuário clica: em tarefas de fundo seria um alerta
+  // sem contexto a cada navegação.
+  closeCategoriesPage();
+  showToast('A extensão foi atualizada. Recarregue a página para continuar usando as Categorias.', {
+    duration: 15_000,
+    action: { label: 'Recarregar', onClick: () => window.location.reload() },
+  });
+}
 
-async function setupMiniGuide() {
-  // O menu recolhido só é montado quando o usuário o recolhe (ou a janela
-  // estreita), o que pode acontecer muito depois do carregamento: por isso a
-  // espera não tem timeout. Roda uma vez só: depois disso o observer de
-  // keepMiniGuideEntry cuida de manter o item no lugar.
-  if (miniGuideStarted) return;
-  miniGuideStarted = true;
-  const items = await waitFor(SELECTORS.miniGuideItems, { timeout: null });
-  keepMiniGuideEntry(items, openCategories);
+function stopBackgroundWork() {
+  // Script órfão: para de reagir às navegações. O próximo carregamento da
+  // página injeta o script novo da extensão.
+  document.removeEventListener('yt-navigate-finish', setup);
+}
+
+// Os menus podem só ser montados muito depois do carregamento (ex.: a página
+// abre com o menu recolhido e o usuário expande depois), por isso a espera
+// não tem timeout. Cada espera é iniciada uma vez; depois disso o observer
+// do menu mantém o item no lugar.
+const waiting = new Set();
+
+async function whenPresent(selector, keep) {
+  const current = document.querySelector(selector);
+  // Se o YouTube recriou o menu inteiro, este é um elemento novo: passa a ser observado.
+  if (current) return keep(current);
+  if (waiting.has(selector)) return;
+  waiting.add(selector);
+  keep(await waitFor(selector, { timeout: null }));
+  waiting.delete(selector);
+}
+
+function setupMenus() {
+  whenPresent(SELECTORS.miniGuideItems, (items) => keepMiniGuideEntry(items, openCategories));
+  // Espera uma seção, não só o ytd-guide-renderer, porque ele existe vazio
+  // antes de o YouTube preencher o menu.
+  whenPresent(SELECTORS.guideSection, (section) => keepSidebarEntry(section.closest(SELECTORS.guide) ?? section.parentElement, openCategories));
 }
 
 async function setup() {
-  setupMiniGuide();
-  // Espera uma seção, não só o ytd-guide-renderer, porque ele existe vazio
-  // antes de o YouTube preencher o menu.
-  const section = await waitFor(SELECTORS.guideSection).catch(() => null);
-  if (!section) return;
-  injectSidebarEntry(section.closest(SELECTORS.guide) ?? document, openCategories);
-  await syncFromDom();
+  setupMenus();
+  await runIfAlive(syncFromDom, stopBackgroundWork);
 }
 
 // O YouTube é SPA: o content script roda uma vez, mas a página muda sem

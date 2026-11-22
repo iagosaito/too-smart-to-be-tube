@@ -37,14 +37,31 @@ export function injectMiniGuideEntry(items, onClick) {
   return entry;
 }
 
-// O YouTube redesenha a lista do menu recolhido e remove nós que não são dele.
-// Observamos só os filhos diretos dessa lista (barato) e reinserimos o item
-// quando ele some. Inserir dispara o observer de novo, mas aí ele já existe.
-export function keepMiniGuideEntry(items, onClick) {
-  injectMiniGuideEntry(items, onClick);
-  const observer = new MutationObserver(() => injectMiniGuideEntry(items, onClick));
-  observer.observe(items, { childList: true });
+// O YouTube redesenha os menus (ao expandir/recolher, ao atualizar as
+// inscrições) e remove nós que não são dele. Um observer por menu reinsere o
+// item quando ele some; inserir dispara o observer de novo, mas aí o item já
+// existe e nada acontece. O WeakSet evita empilhar observers no mesmo menu a
+// cada navegação.
+const keptMenus = new WeakSet();
+
+function keepEntry(container, inject, options) {
+  inject();
+  if (keptMenus.has(container)) return null;
+  keptMenus.add(container);
+  const observer = new MutationObserver(inject);
+  observer.observe(container, options);
   return observer;
+}
+
+export function keepMiniGuideEntry(items, onClick) {
+  // Só os filhos diretos: a lista do menu recolhido é plana.
+  return keepEntry(items, () => injectMiniGuideEntry(items, onClick), { childList: true });
+}
+
+export function keepSidebarEntry(guide, onClick) {
+  // Subtree porque o YouTube recria as seções dentro de #sections, e não o
+  // guide inteiro. O callback só faz uma busca por id quando nada mudou.
+  return keepEntry(guide, () => injectSidebarEntry(guide, onClick), { childList: true, subtree: true });
 }
 
 function findMiniGuideSlot(items) {
