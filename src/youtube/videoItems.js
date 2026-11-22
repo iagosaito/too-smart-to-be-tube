@@ -125,7 +125,19 @@ export function shortFromLockup(lockup, channelId) {
   const title = textOf(lockup.overlayMetadata?.primaryText);
   if (!VIDEO_ID.test(videoId) || !title) return null;
   // Shorts não trazem data de publicação: a ordem vem da posição no canal.
-  return { videoId, title, channelId, viewCount: parseViewCount(textOf(lockup.overlayMetadata?.secondaryText)) };
+  return { videoId, title, channelId, viewCount: parseViewCount(textOf(lockup.overlayMetadata?.secondaryText)), thumbnail: verticalThumbnail(lockup) };
+}
+
+// O YouTube já manda a capa no tamanho do cartão (405×720, ~40 KB); a montada
+// pelo id tem 1080×1920 (~6× mais pixels para decodificar por cartão). Só
+// aceita imagens do i.ytimg.com: a URL vai direto para um <img>.
+function verticalThumbnail(lockup) {
+  const sources = lockup.thumbnailViewModel?.thumbnailViewModel?.image?.sources ?? [];
+  // 9:16 como o cartão (há também uma 2:3, que sairia cortada).
+  const vertical = sources.filter((source) => isNineBySixteen(source) && /^https:\/\/i\.ytimg\.com\//.test(source.url ?? ''));
+  vertical.sort((a, b) => a.width * a.height - b.width * b.height);
+  // A menor que ainda tem nitidez para o cartão (~200 px de largura em telas 2x).
+  return (vertical.find((source) => source.width >= 360) ?? vertical.at(-1))?.url ?? null;
 }
 
 // Página genérica (feed ou aba de canal) → vídeos, sem repetir o mesmo id.
@@ -144,6 +156,15 @@ export function shortsFromPage(data, channelId) {
 
 function uniqueById(items) {
   return [...new Map(items.map((item) => [item.videoId, item])).values()];
+}
+
+function isNineBySixteen({ width, height }) {
+  return width > 0 && Math.abs(height / width - 16 / 9) < 0.05;
+}
+
+// Itens em cache de versões anteriores não têm a capa: cai na URL pelo id.
+export function shortThumbnail(short) {
+  return short.thumbnail ?? thumbnailUrl(short.videoId, 'short');
 }
 
 export function thumbnailUrl(videoId, kind = 'video') {
