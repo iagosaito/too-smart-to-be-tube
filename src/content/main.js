@@ -56,7 +56,7 @@ async function syncLatestUploads() {
 // controla o ritmo das consultas públicas aos canais. A pausa e o teto da
 // fila ficam no storage, valendo para todas as abas do YouTube abertas.
 const feedSource = createFeedSource({
-  cache: createChannelTabCache({ load: store.loadChannelTabCache, save: store.saveChannelTabCache }),
+  cache: createChannelTabCache({ storage: store.channelTabStorage }),
   queue: createRequestQueue({ shared: { load: store.loadRequestBudget, save: store.saveRequestBudget } }),
   clientVersion: () => clientVersionFromDocument(document),
 });

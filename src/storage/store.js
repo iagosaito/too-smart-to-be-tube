@@ -4,7 +4,10 @@ const KEYS = ['channels', 'categories', 'lastSyncedAt', 'latestUploads', 'upload
 // Os vídeos mais recentes do feed de Inscrições (~150 bytes cada): o bastante
 // para várias semanas de feed por categoria sem pesar no storage.
 export const MAX_FEED_ITEMS = 800;
-const CHANNEL_TAB_CACHE_KEY = 'channelTabCache';
+// Cache das abas de canal: uma chave por canal e aba (tabCache:<ucid>:<aba>)
+// e um índice só com as datas.
+const TAB_CACHE_PREFIX = 'tabCache:';
+const TAB_CACHE_INDEX_KEY = 'tabCacheIndex';
 // Pausa e inícios recentes da fila de consultas, comuns a todas as abas.
 const REQUEST_BUDGET_KEY = 'requestBudget';
 
@@ -23,10 +26,23 @@ export function createStore(area) {
     // Gravado a cada tentativa de ler o feed, mesmo com falha: sem isso uma
     // falha persistente faria toda abertura da página sincronizar de novo.
     markFeedAttempt: (now = Date.now()) => area.set({ feedAttemptedAt: now }),
-    loadChannelTabCache: async () => (await area.get([CHANNEL_TAB_CACHE_KEY]))[CHANNEL_TAB_CACHE_KEY] ?? {},
-    saveChannelTabCache: (cache) => area.set({ [CHANNEL_TAB_CACHE_KEY]: cache }),
+    channelTabStorage: createChannelTabStorage(area),
     loadRequestBudget: async () => (await area.get([REQUEST_BUDGET_KEY]))[REQUEST_BUDGET_KEY] ?? null,
     saveRequestBudget: (budget) => area.set({ [REQUEST_BUDGET_KEY]: budget }),
+  };
+}
+
+function createChannelTabStorage(area) {
+  const storageKey = (key) => `${TAB_CACHE_PREFIX}${key}`;
+  return {
+    loadEntry: async (key) => (await area.get([storageKey(key)]))[storageKey(key)] ?? null,
+    saveEntries: (entries) => {
+      const items = Object.fromEntries(Object.entries(entries).map(([key, entry]) => [storageKey(key), entry]));
+      return Object.keys(items).length ? area.set(items) : Promise.resolve();
+    },
+    removeEntries: (keys) => area.remove(keys.map(storageKey)),
+    loadIndex: async () => (await area.get([TAB_CACHE_INDEX_KEY]))[TAB_CACHE_INDEX_KEY] ?? {},
+    saveIndex: (index) => area.set({ [TAB_CACHE_INDEX_KEY]: index }),
   };
 }
 

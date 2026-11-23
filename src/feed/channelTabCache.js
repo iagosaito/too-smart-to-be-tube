@@ -9,23 +9,40 @@ export const MAX_CACHED_CHANNELS = 150;
 const MAX_ITEMS_PER_ENTRY = 30;
 const PERSIST_DELAY_MS = 1000;
 
-export function createChannelTabCache({ load, save, now = Date.now }) {
-  let entries = null;
+// storage guarda cada canal e aba numa chave própria, mais um índice pequeno
+// (só as datas) para o LRU. Cada gravação leva só o que mudou: o
+// storage.onChanged de todas as abas do YouTube recebe alguns KB, não o cache
+// inteiro (~1 MB).
+export function createChannelTabCache({ storage, now = Date.now }) {
+  // Entradas já lidas nesta aba (null = não existe no storage).
+  const entries = new Map();
+  const changed = new Set();
+  const touched = new Set();
   let persistTimer = null;
   const keyOf = (channel, tab) => `${channel.ucid}:${tab}`;
 
-  async function ready() {
-    entries ??= await load().catch(() => ({}));
-    return entries;
+  async function entryFor(key) {
+    // Lida sob demanda: outra aba pode ter gravado este canal.
+    if (!entries.has(key) || !entries.get(key)) entries.set(key, await storage.loadEntry(key).catch(() => null));
+    return entries.get(key);
   }
 
   async function persist() {
-    // Outras abas do YouTube gravam no mesmo storage: relê e mescla antes de
-    // gravar, senão a última aba apagaria o que as outras salvaram.
-    const stored = await load().catch(() => ({}));
-    entries = mergeEntries(stored, entries);
-    evictOldest(entries);
-    await save(entries);
+    const keys = [...new Set([...changed, ...touched])].filter((key) => entries.get(key));
+    const local = Object.fromEntries(keys.map((key) => [key, summaryOf(entries.get(key))]));
+    const toSave = Object.fromEntries([...changed].filter((key) => entries.get(key)).map((key) => [key, entries.get(key)]));
+    changed.clear();
+    touched.clear();
+    // Outras abas gravam no mesmo storage: mescla o índice antes de gravar.
+    const index = mergeEntries(await storage.loadIndex().catch(() => ({})), local);
+    const evicted = evictOldest(index);
+    for (const key of evicted) {
+      entries.delete(key);
+      delete toSave[key];
+    }
+    await storage.saveEntries(toSave);
+    await storage.saveIndex(index);
+    if (evicted.length) await storage.removeEntries(evicted);
   }
 
   function persistSoon() {
@@ -36,18 +53,25 @@ export function createChannelTabCache({ load, save, now = Date.now }) {
 
   return {
     async get(channel, tab) {
-      const entry = (await ready())[keyOf(channel, tab)];
+      const key = keyOf(channel, tab);
+      const entry = await entryFor(key);
       if (!entry || now() - entry.fetchedAt > CACHE_TTL_MS[tab]) return null;
       entry.usedAt = now();
+      touched.add(key);
+      persistSoon();
       return entry.items;
     },
     async set(channel, tab, items) {
-      const cache = await ready();
-      cache[keyOf(channel, tab)] = { fetchedAt: now(), usedAt: now(), items: items.slice(0, MAX_ITEMS_PER_ENTRY) };
-      evictOldest(cache);
+      const key = keyOf(channel, tab);
+      entries.set(key, { fetchedAt: now(), usedAt: now(), items: items.slice(0, MAX_ITEMS_PER_ENTRY) });
+      changed.add(key);
       persistSoon();
     },
   };
+}
+
+function summaryOf(entry) {
+  return { fetchedAt: entry.fetchedAt, usedAt: entry.usedAt };
 }
 
 // Por chave, vale a consulta mais recente; o uso mais recente conta para o LRU.
@@ -61,15 +85,15 @@ export function mergeEntries(stored, local) {
   return merged;
 }
 
-function evictOldest(cache) {
-  // Remove os canais usados há mais tempo (com as duas abas) quando passa do limite (LRU).
+// Remove do índice os canais usados há mais tempo (com as duas abas) quando
+// passa do limite (LRU) e devolve as chaves removidas.
+function evictOldest(index) {
+  const channelOf = (key) => key.slice(0, key.lastIndexOf(':'));
   const lastUse = new Map();
-  for (const [key, entry] of Object.entries(cache)) {
-    const ucid = key.slice(0, key.lastIndexOf(':'));
-    lastUse.set(ucid, Math.max(lastUse.get(ucid) ?? 0, entry.usedAt));
-  }
-  if (lastUse.size <= MAX_CACHED_CHANNELS) return;
-  const oldest = [...lastUse.keys()].sort((a, b) => lastUse.get(a) - lastUse.get(b)).slice(0, lastUse.size - MAX_CACHED_CHANNELS);
-  const evicted = new Set(oldest);
-  for (const key of Object.keys(cache)) if (evicted.has(key.slice(0, key.lastIndexOf(':')))) delete cache[key];
+  for (const [key, entry] of Object.entries(index)) lastUse.set(channelOf(key), Math.max(lastUse.get(channelOf(key)) ?? 0, entry.usedAt));
+  if (lastUse.size <= MAX_CACHED_CHANNELS) return [];
+  const evicted = new Set([...lastUse.keys()].sort((a, b) => lastUse.get(a) - lastUse.get(b)).slice(0, lastUse.size - MAX_CACHED_CHANNELS));
+  const keys = Object.keys(index).filter((key) => evicted.has(channelOf(key)));
+  for (const key of keys) delete index[key];
+  return keys;
 }
