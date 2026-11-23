@@ -5,6 +5,8 @@ const KEYS = ['channels', 'categories', 'lastSyncedAt', 'latestUploads', 'upload
 // para várias semanas de feed por categoria sem pesar no storage.
 export const MAX_FEED_ITEMS = 800;
 const CHANNEL_TAB_CACHE_KEY = 'channelTabCache';
+// Pausa e inícios recentes da fila de consultas, comuns a todas as abas.
+const REQUEST_BUDGET_KEY = 'requestBudget';
 
 // storage.local em vez de storage.sync: o sync limita cada item a 8 KB, o que
 // estoura rápido com centenas de inscrições.
@@ -23,6 +25,8 @@ export function createStore(area) {
     markFeedAttempt: (now = Date.now()) => area.set({ feedAttemptedAt: now }),
     loadChannelTabCache: async () => (await area.get([CHANNEL_TAB_CACHE_KEY]))[CHANNEL_TAB_CACHE_KEY] ?? {},
     saveChannelTabCache: (cache) => area.set({ [CHANNEL_TAB_CACHE_KEY]: cache }),
+    loadRequestBudget: async () => (await area.get([REQUEST_BUDGET_KEY]))[REQUEST_BUDGET_KEY] ?? null,
+    saveRequestBudget: (budget) => area.set({ [REQUEST_BUDGET_KEY]: budget }),
   };
 }
 

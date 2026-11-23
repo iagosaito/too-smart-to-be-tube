@@ -2,6 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { createStore } from '../../src/storage/store.js';
 import { createFakeStorageArea } from '../helpers/fakeStorage.js';
 
+describe('limites da fila de consultas', () => {
+  it('guarda e lê a pausa e os inícios recentes, comuns a todas as abas', async () => {
+    const store = createStore(createFakeStorageArea());
+    expect(await store.loadRequestBudget()).toBeNull();
+    await store.saveRequestBudget({ pausedUntil: 5, starts: [{ at: 1, id: 'a:1' }] });
+    expect(await store.loadRequestBudget()).toEqual({ pausedUntil: 5, starts: [{ at: 1, id: 'a:1' }] });
+  });
+});
+
 describe('createStore', () => {
   it('retorna estado padrão quando o storage está vazio', async () => {
     const store = createStore(createFakeStorageArea());

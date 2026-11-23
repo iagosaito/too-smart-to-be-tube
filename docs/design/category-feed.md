@@ -27,17 +27,20 @@ Findings from real responses (Nov 2026):
   reading dates (fixed in a separate branch).
 - **Shorts carry no publish date.** The Shorts grid therefore orders channels by their latest known upload and
   interleaves their Shorts (newest first per channel), like YouTube's own Shorts shelf, which shows views only.
-- The vertical Shorts thumbnail is `i.ytimg.com/vi/<id>/oar2.jpg` (1080×1920, ~60 KB), loaded lazily.
+- The vertical Shorts thumbnail comes from the lockup itself: the 9:16 source sized for the card (405×720,
+  ~37 KB), loaded lazily; `i.ytimg.com/vi/<id>/oar2.jpg` (1080×1920) is only a fallback for old cache entries.
 
 ### Request safety
 
-All on-demand requests go through one queue per tab (`src/sync/requestQueue.js`):
+All on-demand requests go through a queue (`src/sync/requestQueue.js`). Its pause and per-window cap live in
+`chrome.storage.local`, so they hold **across all open YouTube tabs** and survive a page reload:
 
-- at most **2 concurrent** requests and **350 ms** between starts;
-- at most **60 channel requests per 10 minutes**; beyond that the UI asks the user to wait;
-- on **429/5xx**: truncated exponential backoff with jitter (2 retries), and a 429 pauses the queue for 10 minutes
-  ([Google Cloud retry strategy](https://docs.cloud.google.com/iam/docs/retry-strategy));
-- results cached per channel and tab for **3 h (videos) / 6 h (Shorts)**, capped at 150 channels (LRU).
+- at most **2 concurrent** requests and **350 ms** between starts (per tab);
+- at most **60 channel requests per 10 minutes, across tabs**; beyond that the UI asks the user to wait;
+- on **429/5xx**: truncated exponential backoff with jitter (2 retries), and a 429 pauses the queue in **every
+  tab** for 10 minutes ([Google Cloud retry strategy](https://docs.cloud.google.com/iam/docs/retry-strategy));
+- results cached per channel and tab for **3 h (videos) / 6 h (Shorts)**, capped at **150 channels** (both tabs
+  of a channel count as one; LRU). Tabs merge the stored cache before writing, so one tab doesn't erase another's.
 
 Network loads are **explicit** ("Load more"), never triggered by scrolling: each click is a deliberate, bounded
 batch of channels (Baymard/NN/g favour "Load more" when loads are costly).
