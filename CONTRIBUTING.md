@@ -56,6 +56,31 @@ The CSV format stays in English on purpose, so files work the same in every lang
 Every change ships with tests. For **bug fixes**, write a test that reproduces the bug first, check that it
 fails for the right reason, then fix the code and watch it pass. That test stays as a regression guard.
 
+## Checking on real YouTube
+
+Unit tests run on jsdom and fixtures. Some behavior only shows on the real site: YouTube's router rewriting
+URLs, its layout reacting to our DOM, its SPA navigation events. `npm run e2e:youtube` builds the extension and
+runs scenarios from `tests/e2e/youtube/scenarios/` on youtube.com in headless Chrome:
+
+```sh
+npm run e2e:youtube                 # every scenario
+npm run e2e:youtube -- category-url # just one
+```
+
+Each step prints ✓ or ✗; a failure saves a screenshot in `tests/e2e/youtube/output/` and exits non-zero. Set
+`CHROME_PATH` if Chrome isn't on your `PATH` as `google-chrome`.
+
+Limits to keep in mind:
+
+- The session is **logged out**, so anything that needs the account (the subscriptions sync) can't run here.
+- The extension is **injected**, not loaded (branded Chrome 137+ ignores `--load-extension`). It runs in the
+  page's main world with a fake `chrome.storage.local` seeded from `tests/e2e/youtube/seed.js`.
+- It talks to the real youtube.com, so it isn't part of CI.
+
+Run it after changing DOM selectors, SPA navigation, URLs and history, or how the feed loads and scrolls. A
+scenario is a file exporting `{ description, seed, steps }`, where each step has a `label`, an `action(browser)`
+and an `expect` with any of `url`, `open`, `tab`, `sidebarEntry` and `lastHistory` (see `harness.js`).
+
 ## Pull requests
 
 1. Create a branch from `main`.

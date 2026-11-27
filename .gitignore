@@ -33,3 +33,6 @@ Thumbs.db
 
 # Local Claude Code settings (personal permissions)
 .claude/settings.local.json
+
+# Screenshots from the real-YouTube checks (npm run e2e:youtube)
+tests/e2e/youtube/output/

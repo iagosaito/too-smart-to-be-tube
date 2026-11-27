@@ -20,7 +20,8 @@
     "watch": "node build.mjs --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "e2e:youtube": "npm run build && node tests/e2e/youtube/run.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
