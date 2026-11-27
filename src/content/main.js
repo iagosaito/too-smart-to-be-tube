@@ -62,12 +62,21 @@ const feedSource = createFeedSource({
   clientVersion: () => clientVersionFromDocument(document),
 });
 
+// Bumped on every navigation (YouTube's or Back/Forward). Opening waits on storage first, and a
+// navigation in that gap means the user has moved on: mounting then would cover the new page and
+// write a Categories entry over the history they just walked.
+let navigation = 0;
+const navigated = () => {
+  navigation += 1;
+};
+
 async function openCategories(options = {}) {
+  const started = navigation;
   // Reading the DOM is instant and shows something right away while the full sync (several
   // requests) runs in the background.
   await runIfAlive(async () => {
     await syncFromDom();
-    await openCategoriesPage({ store, sync: syncCoordinator, feedSource, ...options });
+    if (navigation === started) await openCategoriesPage({ store, sync: syncCoordinator, feedSource, ...options });
   }, warnOrphaned);
 }
 
@@ -80,8 +89,8 @@ async function refreshSidebarCategories(categories) {
 }
 
 function warnOrphaned() {
-  // We only warn when the user clicks: in background tasks it would be an alert with no context on
-  // every navigation.
+  // Only opening the page warns (a click or a Categories URL): in background tasks it would be an
+  // alert with no context on every navigation.
   closeCategoriesPage();
   showToast(t('toast.extensionUpdated'), {
     duration: 15_000,
@@ -133,20 +142,26 @@ function setupMenus() {
   whenPresent(SELECTORS.guideSection, (section) => keepSidebarEntry(section.closest(SELECTORS.guide) ?? section.parentElement, openCategories), SELECTORS.guideDrawer);
 }
 
-// A Categories URL (refresh, Back/Forward, a bookmark) reopens the view it names. The page manager
-// is awaited because on a fresh load the content script may run before YouTube mounts it.
-// Both a YouTube navigation and popstate may ask for the same opening; the first one wins.
+// A Categories URL (refresh, Back/Forward, a bookmark) reopens the view it names. Both a YouTube
+// navigation and popstate may ask for the same opening; the one in flight serves both.
 let openingFromUrl = null;
 
 function openFromUrl() {
   if (!routeFromUrl(window.location.href) || isCategoriesPageOpen() || openingFromUrl) return openingFromUrl;
-  openingFromUrl = openRoute().finally(() => {
-    openingFromUrl = null;
-  });
+  const started = navigation;
+  openingFromUrl = openRoute()
+    .catch((error) => console.warn('[Too Smart To Be Tube] Could not open the Categories URL:', error))
+    .finally(() => {
+      openingFromUrl = null;
+    })
+    // A navigation during the opening may have closed the page (or skipped it) while its own
+    // request to open was turned away by the one in flight: it gets its turn now.
+    .then(() => (navigation !== started ? openFromUrl() : null));
   return openingFromUrl;
 }
 
 async function openRoute() {
+  // On a fresh load the content script may run before YouTube mounts the page manager.
   await waitFor(SELECTORS.pageManager, { timeout: DOCUMENT_WAIT_MS }).catch(() => null);
   // Read again after waiting: the user may have left in the meantime.
   const route = routeFromUrl(window.location.href);
@@ -156,6 +171,7 @@ async function openRoute() {
 // Back/Forward between a Categories URL and the YouTube page underneath may not trigger a YouTube
 // navigation (the page underneath never changed), so history is followed here too.
 function followHistory() {
+  navigated();
   if (routeFromUrl(window.location.href)) openFromUrl();
   else closeCategoriesPage();
 }
@@ -167,10 +183,15 @@ async function setup() {
   await runIfAlive(syncFromDom, stopBackgroundWork);
 }
 
+function leavePage() {
+  navigated();
+  closeCategoriesPage();
+}
+
 // YouTube is an SPA: the content script runs once, but the page changes without reloading. These
 // are the events the site itself fires on every change; closing at the start of a navigation makes
 // the Categories page behave like any other YouTube page.
-document.addEventListener('yt-navigate-start', closeCategoriesPage);
+document.addEventListener('yt-navigate-start', leavePage);
 document.addEventListener('yt-navigate-finish', setup);
 window.addEventListener('popstate', followHistory);
 setup();

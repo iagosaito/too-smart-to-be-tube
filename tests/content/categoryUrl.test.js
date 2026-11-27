@@ -15,9 +15,15 @@ const go = async (url) => {
   window.dispatchEvent(new PopStateEvent('popstate'));
   await flush();
 };
+const traverse = async (delta) => {
+  window.history.go(delta);
+  await flush();
+};
 
 beforeAll(async () => {
-  window.history.replaceState(null, '', '/feed/subscriptions#tstb=prog&tab=channels');
+  // A YouTube page first, so Back has somewhere to go.
+  window.history.replaceState(null, '', '/watch?v=abc');
+  window.history.pushState(null, '', '/feed/subscriptions#tstb=prog&tab=channels');
   document.body.innerHTML = `<ytd-page-manager></ytd-page-manager>${GUIDE_HTML}`;
   window.scrollTo = vi.fn();
   // A recent sync: opening must not start one.
@@ -39,15 +45,16 @@ it('carregar uma URL de Categorias abre a categoria e a aba que ela indica', () 
   expect(globalThis.fetch).not.toHaveBeenCalled();
 });
 
-it('voltar para uma página comum do YouTube fecha a página de Categorias', async () => {
-  await go('/watch?v=abc');
+it('voltar para a página do YouTube anterior fecha a página de Categorias', async () => {
+  await traverse(-1);
+  expect(window.location.pathname + window.location.search).toBe('/watch?v=abc');
   expect(page()).toBeNull();
 });
 
 it('avançar de novo para a URL de Categorias reabre a mesma visão', async () => {
-  await go('/feed/subscriptions#tstb=prog');
-  expect(selectedTab()).toBe('Vídeos');
-  expect(window.location.hash).toBe('#tstb=prog');
+  await traverse(1);
+  expect(selectedTab()).toBe('Canais');
+  expect(window.location.hash).toBe('#tstb=prog&tab=channels');
 });
 
 it('a navegação do YouTube e o popstate juntos abrem a página uma vez só', async () => {

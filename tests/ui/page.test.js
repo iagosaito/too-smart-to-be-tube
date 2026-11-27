@@ -501,6 +501,59 @@ describe('sincronização', () => {
     expect($('.tstb-subtitle').textContent).toBe('3 inscrições · Sincronizado agora');
   });
 
+  it('numa aba em segundo plano, a sincronização automática espera a aba ficar visível', async () => {
+    // Opening from a URL needs no click: a restored browser session may open several Categories
+    // tabs at once, and each would start a full sync of dozens of authenticated requests.
+    let visibility = 'hidden';
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
+    try {
+      const sync = vi.fn(async () => store.replaceChannels(Object.values(channels), 2 * HOUR));
+      await open({ sync, now: () => 1_000 + 2 * HOUR });
+      await flush();
+      expect(sync).not.toHaveBeenCalled();
+
+      visibility = 'visible';
+      document.dispatchEvent(new Event('visibilitychange'));
+      document.dispatchEvent(new Event('visibilitychange'));
+      await flush();
+      expect(sync).toHaveBeenCalledOnce();
+    } finally {
+      delete document.visibilityState;
+    }
+  });
+
+  it('se outra aba sincronizou enquanto esta estava em segundo plano, não sincroniza de novo', async () => {
+    let visibility = 'hidden';
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
+    try {
+      const sync = vi.fn(async () => {});
+      await open({ sync, now: () => 1_000 + 2 * HOUR });
+      await store.replaceChannels(Object.values(channels), 1_000 + 2 * HOUR);
+      visibility = 'visible';
+      document.dispatchEvent(new Event('visibilitychange'));
+      await flush();
+      expect(sync).not.toHaveBeenCalled();
+    } finally {
+      delete document.visibilityState;
+    }
+  });
+
+  it('uma página fechada em segundo plano não sincroniza quando a aba fica visível', async () => {
+    let visibility = 'hidden';
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
+    try {
+      const sync = vi.fn(async () => {});
+      await open({ sync, now: () => 1_000 + 2 * HOUR });
+      closeCategoriesPage();
+      visibility = 'visible';
+      document.dispatchEvent(new Event('visibilitychange'));
+      await flush();
+      expect(sync).not.toHaveBeenCalled();
+    } finally {
+      delete document.visibilityState;
+    }
+  });
+
   it('mostra "Sincronizando…" e desabilita o botão enquanto roda', async () => {
     let finish;
     const sync = vi.fn(() => new Promise((resolve) => (finish = resolve)));

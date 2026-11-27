@@ -39,10 +39,40 @@ export async function openCategoriesPage(options) {
   // The previous page is only hidden (not destroyed), so a video would keep playing.
   document.querySelector('video')?.pause();
   await reload(page, context);
+  startAutoSync(page, context);
+  return page;
+}
+
+function startAutoSync(page, context) {
+  if (!context.sync) return;
   // Also follows a sync already in progress (started by another instance of the page), to show
   // "Syncing…" instead of offering another one.
-  if (context.sync && (context.sync.isRunning() || needsSync(context.state, context.now()))) runSync(page, context);
-  return page;
+  if (context.sync.isRunning()) return runSync(page, context);
+  if (!needsSync(context.state, context.now())) return;
+  if (isHidden()) onceVisible(() => syncIfStillNeeded(page, context));
+  else runSync(page, context);
+}
+
+// A Categories URL opens the page without a click: a restored browser session may open several
+// such tabs at once, and each would start a full sync of dozens of authenticated requests. Tabs in
+// the background wait until the user actually looks at them.
+const isHidden = () => document.visibilityState === 'hidden';
+
+function onceVisible(run) {
+  const onChange = () => {
+    if (isHidden()) return;
+    document.removeEventListener('visibilitychange', onChange);
+    run();
+  };
+  document.addEventListener('visibilitychange', onChange);
+}
+
+async function syncIfStillNeeded(page, context) {
+  // By the time a background tab is looked at, the page may be gone or another tab may have
+  // synced: storage, not the state read at opening, decides.
+  if (!page.isConnected) return;
+  const state = await context.store.load();
+  if (page.isConnected && needsSync(state, context.now())) runSync(page, context);
 }
 
 export function isCategoriesPageOpen() {
