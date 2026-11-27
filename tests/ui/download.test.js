@@ -7,7 +7,7 @@ afterEach(() => {
 });
 
 describe('downloadTextFile', () => {
-  it('clica num link temporário com o nome do arquivo e revoga a URL depois', () => {
+  it('clicks a temporary link with the file name and revokes the URL afterwards', () => {
     vi.useFakeTimers();
     // jsdom doesn't implement createObjectURL/revokeObjectURL.
     URL.createObjectURL = vi.fn(() => 'blob:fake');

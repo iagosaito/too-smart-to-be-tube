@@ -56,8 +56,8 @@ const videoTitles = () => $$('.tstb-video-title').map((node) => node.textContent
 const tablistKey = (key) => $('[role="tablist"]').dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
 const open = (options = {}) => openCategoriesPage({ store: createStore(area), feedSource: source, now: () => NOW, searchDelay: 0, ...options });
 
-describe('abas da categoria', () => {
-  it('abrir uma categoria mostra Vídeos · Shorts · Canais com Vídeos selecionada', async () => {
+describe('category tabs', () => {
+  it('opening a category shows Videos · Shorts · Channels with Videos selected', async () => {
     await open({ initialFilter: 'prog' });
     expect($$('[role="tab"]').map((node) => [node.textContent, node.getAttribute('aria-selected')])).toEqual([
       ['Vídeos', 'true'], ['Shorts', 'false'], ['Canais', 'false'],
@@ -65,13 +65,13 @@ describe('abas da categoria', () => {
     expect($('[role="tabpanel"]').getAttribute('aria-labelledby')).toBe('tstb-tab-videos');
   });
 
-  it('"Todas" e "Sem categoria" continuam sendo telas de organizar, sem abas', async () => {
+  it('"Todas" and "Sem categoria" are still organizing screens, without tabs', async () => {
     await open();
     expect($$('[role="tab"]')).toEqual([]);
     expect($('.tstb-grid')).not.toBeNull();
   });
 
-  it('as setas do teclado trocam de aba, com volta circular', async () => {
+  it('arrow keys switch tabs, wrapping around', async () => {
     await open({ initialFilter: 'prog' });
     tablistKey('ArrowRight');
     expect(tab('Shorts').getAttribute('aria-selected')).toBe('true');
@@ -80,7 +80,7 @@ describe('abas da categoria', () => {
     expect(tab('Canais').getAttribute('aria-selected')).toBe('true');
   });
 
-  it('na aba Canais aparecem a grade de canais e o seletor de ordem; no feed, não', async () => {
+  it("the Channels tab shows the channel grid and the sort control; the feed doesn't", async () => {
     await open({ initialFilter: 'prog' });
     expect($('.tstb-sort-select')).toBeNull();
     tab('Canais').click();
@@ -89,15 +89,15 @@ describe('abas da categoria', () => {
   });
 });
 
-describe('aba Vídeos', () => {
-  it('mostra na hora os vídeos da categoria vindos da sincronização, sem nenhuma requisição', async () => {
+describe('Videos tab', () => {
+  it("shows the category's videos from the sync right away, without any request", async () => {
     await open({ initialFilter: 'prog' });
     await flush();
     expect(source.load).not.toHaveBeenCalled();
     expect(videoTitles()).toEqual(['Vídeo feedRocket1', 'Vídeo feedAlura01']);
   });
 
-  it('cada cartão tem miniatura com duração, link, canal e "visualizações • tempo" no idioma', async () => {
+  it('each card has a thumbnail with duration, a link, the channel and "views • time" in the language', async () => {
     await open({ initialFilter: 'prog' });
     const card = $$('.tstb-video').find((node) => node.textContent.includes('feedAlura01'));
     expect(card.querySelector('.tstb-video-thumb img').getAttribute('src')).toBe('https://i.ytimg.com/vi/feedAlura01/mqdefault.jpg');
@@ -110,7 +110,7 @@ describe('aba Vídeos', () => {
     expect(card.querySelector('.tstb-video-meta').textContent.replace(/\s/g, ' ')).toBe('921 mil visualizações • há 2 dias');
   });
 
-  it('"Carregar vídeos mais antigos" busca os canais em lote e mistura por data', async () => {
+  it('"Carregar vídeos mais antigos" fetches the channels in a batch and merges them by date', async () => {
     await open({ initialFilter: 'prog' });
     button('Carregar vídeos mais antigos').click();
     await flush();
@@ -120,7 +120,7 @@ describe('aba Vídeos', () => {
     expect(page().textContent).toContain('Você chegou ao fim desta categoria.');
   });
 
-  it('a busca do cabeçalho filtra o feed por título ou canal', async () => {
+  it('the header search filters the feed by title or channel', async () => {
     await open({ initialFilter: 'prog' });
     const search = $('.tstb-search-input');
     search.value = 'rocketseat';
@@ -130,8 +130,8 @@ describe('aba Vídeos', () => {
   });
 });
 
-describe('aba Shorts', () => {
-  it('abrir a aba carrega o primeiro lote, mostra esqueletos enquanto isso e intercala os canais', async () => {
+describe('Shorts tab', () => {
+  it('opening the tab loads the first batch, shows skeletons meanwhile and interleaves the channels', async () => {
     const pending = [];
     const original = source.load.getMockImplementation();
     source.load.mockImplementation((channel, tabName) => new Promise((resolve) => pending.push(() => resolve(original(channel, tabName)))));
@@ -151,7 +151,7 @@ describe('aba Shorts', () => {
     expect($$('.tstb-skeleton')).toEqual([]);
   });
 
-  it('se o YouTube limitar as consultas, explica e deixa tentar de novo', async () => {
+  it('if YouTube limits the requests, explains it and allows a retry', async () => {
     source.load.mockRejectedValue(new LocalizedError('error.rateLimited'));
     await open({ initialFilter: 'prog', initialTab: 'shorts' });
     await flush();
@@ -164,10 +164,10 @@ describe('aba Shorts', () => {
 // recreated on every render and the card list left it for an instant, making the page short; the
 // focused button was removed and, on blur, YouTube measured the layout at that moment: the browser
 // adjusted the scroll to fit, at the top. Focus also fell to <body>.
-describe('"Carregar mais" mantém o lugar na página', () => {
+describe('"Carregar mais" keeps the place on the page', () => {
   const manyShorts = async (channel) => Array.from({ length: 30 }, (_, n) => ({ videoId: fakeId(channel, `s${String(n).padStart(2, '0')}`), channelId: channel.id, title: `Short ${n}`, viewCount: 10 }));
 
-  it('a lista de cartões nunca sai da página e o foco continua no botão', async () => {
+  it('the card list never leaves the page and the focus stays on the button', async () => {
     source.load = vi.fn(manyShorts);
     await open({ initialFilter: 'prog', initialTab: 'shorts' });
     await flush();
@@ -189,15 +189,15 @@ describe('"Carregar mais" mantém o lugar na página', () => {
   });
 });
 
-describe('estados vazios do feed', () => {
-  it('categoria sem canais convida a organizar e leva à aba Canais', async () => {
+describe('feed empty states', () => {
+  it('a category without channels invites organizing and leads to the Channels tab', async () => {
     await open({ initialFilter: 'vazia' });
     expect(page().textContent).toContain('Esta categoria ainda não tem canais');
     button('Organizar canais').click();
     expect(tab('Canais').getAttribute('aria-selected')).toBe('true');
   });
 
-  it('sem vídeos recentes, oferece carregar os mais antigos', async () => {
+  it('without recent videos, offers to load older ones', async () => {
     area = createFakeStorageArea({ channels, categories, feedItems: [], lastSyncedAt: NOW, uploadsSyncedAt: NOW, feedSyncedAt: NOW });
     await open({ initialFilter: 'prog' });
     expect(page().textContent).toContain('Nenhum vídeo recente');
@@ -205,12 +205,12 @@ describe('estados vazios do feed', () => {
   });
 });
 
-describe('URL da página de Categorias', () => {
+describe('Categories page URL', () => {
   const path = () => window.location.pathname + window.location.hash;
 
   beforeEach(() => window.history.replaceState(null, '', '/watch?v=abc'));
 
-  it('abrir cria uma entrada no histórico; trocar de categoria ou aba só a substitui', async () => {
+  it('opening adds a history entry; switching category or tab only replaces it', async () => {
     const before = window.history.length;
     await open({ initialFilter: 'prog' });
     expect(path()).toBe('/feed/subscriptions#tstb=prog');
@@ -223,13 +223,13 @@ describe('URL da página de Categorias', () => {
     expect(window.history.length).toBe(before + 1);
   });
 
-  it('a aba inicial vem das opções, como numa URL com tab', async () => {
+  it('the initial tab comes from the options, as in a URL with tab', async () => {
     await open({ initialFilter: 'prog', initialTab: 'channels' });
     expect(tab('Canais').getAttribute('aria-selected')).toBe('true');
     expect(path()).toBe('/feed/subscriptions#tstb=prog&tab=channels');
   });
 
-  it('uma categoria que não existe mais cai em Todas e corrige a URL', async () => {
+  it('a category that no longer exists falls back to Todas and fixes the URL', async () => {
     await open({ initialFilter: 'apagada' });
     expect(path()).toBe('/feed/subscriptions#tstb=all');
   });

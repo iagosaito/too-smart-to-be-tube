@@ -5,7 +5,7 @@ const alive = { runtime: { id: 'abc' } };
 const orphaned = { runtime: {} };
 
 describe('isExtensionAlive', () => {
-  it('fica falso quando runtime.id some ou o acesso lança', () => {
+  it('turns false when runtime.id disappears or reading it throws', () => {
     expect(isExtensionAlive(alive)).toBe(true);
     expect(isExtensionAlive(orphaned)).toBe(false);
     expect(isExtensionAlive(undefined)).toBe(false);
@@ -15,25 +15,25 @@ describe('isExtensionAlive', () => {
 });
 
 describe('isContextInvalidated', () => {
-  it('reconhece o erro do Chrome e ignora outros', () => {
+  it("recognizes Chrome's error and ignores others", () => {
     expect(isContextInvalidated(new Error('Extension context invalidated.'))).toBe(true);
     expect(isContextInvalidated(new Error('Network error'))).toBe(false);
   });
 });
 
 describe('runIfAlive', () => {
-  it('executa a tarefa quando a extensão está viva', async () => {
+  it('runs the task when the extension is alive', async () => {
     await expect(runIfAlive(async () => 42, vi.fn(), alive)).resolves.toBe(42);
   });
 
-  it('não executa e chama onOrphaned quando o contexto já foi perdido', async () => {
+  it("doesn't run and calls onOrphaned when the context is already lost", async () => {
     const task = vi.fn();
     const onOrphaned = vi.fn(() => 'órfão');
     await expect(runIfAlive(task, onOrphaned, orphaned)).resolves.toBe('órfão');
     expect(task).not.toHaveBeenCalled();
   });
 
-  it('chama onOrphaned se o contexto se perder no meio da tarefa', async () => {
+  it('calls onOrphaned if the context is lost in the middle of the task', async () => {
     const onOrphaned = vi.fn();
     await runIfAlive(async () => {
       throw new Error('Extension context invalidated.');
@@ -41,7 +41,7 @@ describe('runIfAlive', () => {
     expect(onOrphaned).toHaveBeenCalledOnce();
   });
 
-  it('deixa outros erros seguirem normalmente', async () => {
+  it('lets other errors through as usual', async () => {
     await expect(runIfAlive(async () => {
       throw new Error('outro problema');
     }, vi.fn(), alive)).rejects.toThrow('outro problema');

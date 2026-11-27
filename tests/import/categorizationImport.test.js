@@ -10,20 +10,20 @@ const HEADER = ['Canal', 'Categoria', 'URL', 'Identificador'];
 const entriesOf = (...rows) => readImport([HEADER, ...rows]).entries;
 
 describe('readImport', () => {
-  it('lê as colunas pelo nome, sem ligar para maiúsculas e acentos', () => {
+  it('reads the columns by name, ignoring case and accents', () => {
     const { entries } = readImport([['IDENTIFICADOR', 'categoria'], ['/@a', 'Tech']]);
     expect(entries).toEqual([{ id: '/@a', url: '', name: '', category: 'Tech' }]);
   });
 
-  it('aceita cabeçalhos em inglês', () => {
+  it('accepts English headers', () => {
     expect(readImport([['Channel', 'Category'], ['Alura', 'Tech']]).entries[0]).toMatchObject({ name: 'Alura', category: 'Tech' });
   });
 
-  it('"Sem categoria" e vazio viram categoria vazia', () => {
+  it('"Sem categoria" and empty become an empty category', () => {
     expect(entriesOf(['A', 'Sem Categoria', '', '/@a'], ['B', '  ', '', '/@b']).map((e) => e.category)).toEqual(['', '']);
   });
 
-  it('desfaz a proteção contra fórmula da exportação', () => {
+  it("undoes the export's formula protection", () => {
     expect(entriesOf(["'=Canal", "'+Mais", '', '/@a'])[0]).toMatchObject({ name: '=Canal', category: '+Mais' });
   });
 
@@ -32,49 +32,49 @@ describe('readImport', () => {
     [[['Category', 'Other'], ['Tech', 'x']], 'import.missingIdentifier'],
     [[HEADER], 'import.noRows'],
     [[], 'import.missingCategory'],
-  ])('explica o erro quando falta algo', (rows, message) => {
+  ])('explains the error when something is missing', (rows, message) => {
     expect(readImport(rows).error).toBe(message);
   });
 });
 
 describe('planImport', () => {
-  it('cria categorias novas, move canais e conta o impacto', () => {
+  it('creates new categories, moves channels and counts the impact', () => {
     const { categories, summary } = planImport(state, entriesOf(['', 'Música', '', '/@b'], ['', 'Tech', '', '/@a'], ['', 'Comida', '', '/@c']));
     expect(categories.map((c) => [c.name, c.channelIds])).toEqual([['Tech', ['/@a']], ['Música', ['/@b']], ['Comida', ['/@c']]]);
     expect(summary).toEqual({ matched: 3, moved: 2, created: ['Música', 'Comida'], unknown: [], categoryCount: 3 });
   });
 
-  it('reaproveita categoria existente ignorando acentos e maiúsculas', () => {
+  it('reuses an existing category, ignoring accents and case', () => {
     const { categories, summary } = planImport(state, entriesOf(['', 'TECH', '', '/@b']));
     expect(categories).toHaveLength(1);
     expect(categories[0].channelIds).toEqual(['/@a', '/@b']);
     expect(summary.created).toEqual([]);
   });
 
-  it('casa pelo identificador, depois pela URL e por último pelo nome', () => {
+  it('matches by identifier, then by URL and last by name', () => {
     const entries = entriesOf(['', 'X', '', '@b'], ['', 'X', 'https://www.youtube.com/@c/videos', ''], ['alura', 'X', '', '']);
     expect(planImport(state, entries).summary.matched).toBe(3);
   });
 
-  it('lista canais que não estão nas inscrições sem aplicá-los', () => {
+  it("lists channels that aren't in the subscriptions without applying them", () => {
     const { categories, summary } = planImport(state, entriesOf(['Desconhecido', 'Nova', '', '/@zzz']));
     expect(summary).toMatchObject({ matched: 0, unknown: ['Desconhecido'], created: [] });
     expect(categories).toBe(state.categories);
   });
 
-  it('categoria vazia tira o canal da categoria atual', () => {
+  it('an empty category takes the channel out of its current category', () => {
     const { categories, summary } = planImport(state, entriesOf(['', '', '', '/@a']));
     expect(categories[0].channelIds).toEqual([]);
     expect(summary.moved).toBe(1);
   });
 
-  it('canal já na categoria certa não conta como movido; fora do arquivo não muda', () => {
+  it("a channel already in the right category doesn't count as moved; one outside the file doesn't change", () => {
     const { categories, summary } = planImport(state, entriesOf(['', 'Tech', '', '/@a']));
     expect(summary.moved).toBe(0);
     expect(categories[0].channelIds).toEqual(['/@a']);
   });
 
-  it('linha repetida: a última vence, e voltar ao estado original não conta como movido', () => {
+  it("repeated row: the last one wins, and going back to the original state doesn't count as moved", () => {
     const { summary } = planImport(state, entriesOf(['', 'Outra', '', '/@a'], ['', 'Tech', '', '/@a']));
     expect(summary).toMatchObject({ matched: 1, moved: 0 });
   });
@@ -83,16 +83,16 @@ describe('planImport', () => {
 // Regression: the import had no limits. A CSV with thousands of rows for the same channel created
 // thousands of empty categories (saved forever), names could be any length and the plan had
 // quadratic cost, freezing the tab on the review screen.
-describe('limites da importação', () => {
+describe('import limits', () => {
   const many = (count, row) => Array.from({ length: count }, (_, index) => row(index));
 
-  it('linhas repetidas do mesmo canal criam só a categoria que vale (a última)', () => {
+  it('repeated rows for the same channel create only the category that counts (the last one)', () => {
     const { categories, summary } = planImport(state, entriesOf(...many(50, (i) => ['', `Cat ${i}`, '', '/@b'])));
     expect(categories.map((c) => c.name)).toEqual(['Tech', 'Cat 49']);
     expect(summary.created).toEqual(['Cat 49']);
   });
 
-  it('não limita o número de linhas (o tamanho do arquivo já limita)', () => {
+  it("doesn't limit the number of rows (the file size already does)", () => {
     const rows = [HEADER, ...many(60_000, (i) => ['', 'Tech', '', `/@c${i}`])];
     const { entries, error } = readImport(rows);
     expect(error).toBeNull();
@@ -102,19 +102,19 @@ describe('limites da importação', () => {
   const withChannels = (count) => ({ channels: Object.fromEntries(many(count, (i) => [`/@c${i}`, channel(`c${i}`, `C${i}`)])), categories: [] });
   const oneCategoryEach = (count) => entriesOf(...many(count, (i) => ['', `Nova ${i}`, '', `/@c${i}`]));
 
-  it(`aceita criar exatamente ${MAX_NEW_CATEGORIES} categorias novas`, () => {
+  it(`accepts creating exactly ${MAX_NEW_CATEGORIES} new categories`, () => {
     const result = planImport(withChannels(MAX_NEW_CATEGORIES), oneCategoryEach(MAX_NEW_CATEGORIES));
     expect(result.summary.error).toBeUndefined();
     expect(result.categories).toHaveLength(MAX_NEW_CATEGORIES);
   });
 
-  it(`recusa importações que criariam mais de ${MAX_NEW_CATEGORIES} categorias novas, sem alterar nada`, () => {
+  it(`rejects imports that would create more than ${MAX_NEW_CATEGORIES} new categories, changing nothing`, () => {
     const result = planImport(withChannels(MAX_NEW_CATEGORIES + 1), oneCategoryEach(MAX_NEW_CATEGORIES + 1));
     expect(result.summary.error).toBe('import.tooManyCategories');
     expect(result.categories).toEqual([]);
   });
 
-  it('reaproveita o plano enquanto arquivo e estado não mudam', () => {
+  it("reuses the plan while the file and the state don't change", () => {
     const entries = entriesOf(['', 'Música', '', '/@b']);
     const first = cachedPlanImport(state, entries);
     expect(cachedPlanImport({ ...state }, entries)).toBe(first);
@@ -124,12 +124,12 @@ describe('limites da importação', () => {
     expect(changed.summary).toEqual(planImport({ ...state, categories: [] }, entries).summary);
   });
 
-  it('corta nomes de categoria longos no mesmo limite da interface (60 caracteres)', () => {
+  it('cuts long category names at the same limit as the UI (60 characters)', () => {
     const { categories } = planImport(state, entriesOf(['', 'x'.repeat(5_000), '', '/@b']));
     expect(categories[1].name).toBe('x'.repeat(60));
   });
 
-  it('planeja 20 mil linhas e centenas de categorias em tempo aceitável', () => {
+  it('plans 20 thousand rows and hundreds of categories in acceptable time', () => {
     const channels = Object.fromEntries(many(1_000, (i) => [`/@c${i}`, channel(`c${i}`, `C${i}`)]));
     const entries = entriesOf(...many(20_000, (i) => ['', `Cat ${i % 150}`, '', `/@c${i % 1_000}`]));
     const start = performance.now();

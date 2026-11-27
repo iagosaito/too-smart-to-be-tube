@@ -7,30 +7,30 @@ beforeEach(() => {
 });
 
 describe('scrapeGuideChannels', () => {
-  it('lê apenas a seção de inscrições, incluindo itens colapsados', () => {
+  it('reads only the subscriptions section, including collapsed items', () => {
     document.body.innerHTML = GUIDE_HTML;
     expect(scrapeGuideChannels(document).map((c) => c.id)).toEqual(['/@alura', '/channel/UCabc', '/@escondido']);
   });
 
-  it('não inclui "Seu canal" nem links que não são de canal', () => {
+  it('doesn\'t include "Your channel" or links that aren\'t channels', () => {
     document.body.innerHTML = GUIDE_HTML;
     const ids = scrapeGuideChannels(document).map((c) => c.id);
     expect(ids).not.toContain('/channel/UCme');
     expect(ids).not.toContain('/feed/channels');
   });
 
-  it('captura nome e avatar', () => {
+  it('captures the name and avatar', () => {
     document.body.innerHTML = GUIDE_HTML;
     expect(scrapeGuideChannels(document)[0]).toMatchObject({ name: 'Alura', avatar: 'https://yt3.example/alura.jpg' });
   });
 
-  it('retorna lista vazia quando o menu ainda não carregou', () => {
+  it("returns an empty list when the menu hasn't loaded yet", () => {
     expect(scrapeGuideChannels(document)).toEqual([]);
   });
 });
 
 describe('scrapeFeedChannels', () => {
-  it('lê os canais da página /feed/channels', () => {
+  it('reads the channels from the /feed/channels page', () => {
     document.body.innerHTML = feedChannel('/@um', 'Um') + feedChannel('/@dois', 'Dois');
     expect(scrapeFeedChannels(document)).toEqual([
       { id: '/@um', name: 'Um', url: 'https://www.youtube.com/@um', avatar: 'https://yt3.example/@um.jpg' },
@@ -38,14 +38,14 @@ describe('scrapeFeedChannels', () => {
     ]);
   });
 
-  it('descarta renderers incompletos', () => {
+  it('discards incomplete renderers', () => {
     document.body.innerHTML = '<ytd-channel-renderer></ytd-channel-renderer>';
     expect(scrapeFeedChannels(document)).toEqual([]);
   });
 });
 
 describe('scrapeChannels', () => {
-  it('combina menu lateral e /feed/channels', () => {
+  it('combines the sidebar and /feed/channels', () => {
     document.body.innerHTML = GUIDE_HTML + feedChannel('/@feed', 'Feed');
     expect(scrapeChannels(document).map((c) => c.id)).toContain('/@feed');
     expect(scrapeChannels(document)).toHaveLength(4);

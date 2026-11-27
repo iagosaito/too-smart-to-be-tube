@@ -33,7 +33,7 @@ const pointerdownOn = (node) => node.dispatchEvent(new Event('pointerdown', { bu
 const key = (name) => document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true }));
 
 describe('openCategoryMenu', () => {
-  it('abre com as opções, marca a atual e já foca nela', () => {
+  it('opens with the options, marks the current one and focuses it', () => {
     open();
     expect(menu().getAttribute('role')).toBe('menu');
     expect([...menu().querySelectorAll('.tstb-menu-item')].map((item) => item.textContent)).toEqual(['Sem categoria', 'Jogos', 'Música']);
@@ -44,7 +44,7 @@ describe('openCategoryMenu', () => {
 
   // The reason this component exists: pressing and releasing the mouse button (without clicking an
   // option) never picks anything.
-  it('apertar e soltar o mouse sem clicar numa opção não escolhe nada', () => {
+  it('pressing and releasing the mouse without clicking an option picks nothing', () => {
     open();
     for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup']) {
       itemNamed('Música').dispatchEvent(new Event(type, { bubbles: true }));
@@ -53,7 +53,7 @@ describe('openCategoryMenu', () => {
     expect(menu()).not.toBeNull();
   });
 
-  it('clicar numa opção escolhe, fecha e devolve o foco ao gatilho', () => {
+  it('clicking an option picks it, closes and returns the focus to the trigger', () => {
     open();
     itemNamed('Música').click();
     expect(onSelect).toHaveBeenCalledWith('musica');
@@ -62,7 +62,7 @@ describe('openCategoryMenu', () => {
     expect(anchor.getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('Esc fecha sem escolher e devolve o foco', () => {
+  it('Esc closes without picking and returns the focus', () => {
     open();
     key('Escape');
     expect(menu()).toBeNull();
@@ -70,7 +70,7 @@ describe('openCategoryMenu', () => {
     expect(document.activeElement).toBe(anchor);
   });
 
-  it('clicar fora fecha sem escolher; clicar no gatilho não fecha por aqui', () => {
+  it("clicking outside closes without picking; clicking the trigger doesn't close it from here", () => {
     open();
     pointerdownOn(anchor);
     expect(menu()).not.toBeNull();
@@ -79,7 +79,7 @@ describe('openCategoryMenu', () => {
     expect(onSelect).not.toHaveBeenCalled();
   });
 
-  it('setas, Home e End navegam com volta circular', () => {
+  it('arrows, Home and End navigate, wrapping around', () => {
     open();
     key('ArrowDown');
     expect(document.activeElement).toBe(itemNamed('Música'));
@@ -93,7 +93,7 @@ describe('openCategoryMenu', () => {
     expect(document.activeElement).toBe(itemNamed('Música'));
   });
 
-  it('rolar a página ou redimensionar a janela fecha o menu', () => {
+  it('scrolling the page or resizing the window closes the menu', () => {
     open();
     window.dispatchEvent(new Event('scroll'));
     expect(menu()).toBeNull();
@@ -102,13 +102,13 @@ describe('openCategoryMenu', () => {
     expect(menu()).toBeNull();
   });
 
-  it('rolar a lista do próprio menu não o fecha', () => {
+  it("scrolling the menu's own list doesn't close it", () => {
     open();
     menu().dispatchEvent(new Event('scroll'));
     expect(menu()).not.toBeNull();
   });
 
-  it('abrir outro menu fecha o anterior', () => {
+  it('opening another menu closes the previous one', () => {
     open();
     const other = document.getElementById('fora');
     openCategoryMenu(other, { label: 'Outro', items, onSelect });
@@ -116,7 +116,7 @@ describe('openCategoryMenu', () => {
     expect(anchor.getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('fecha se o gatilho sumir num re-render', () => {
+  it('closes if the trigger disappears in a re-render', () => {
     open();
     anchor.remove();
     closeCategoryMenuIfDetached();
@@ -139,15 +139,15 @@ describe('positionMenu', () => {
 
   afterEach(() => vi.restoreAllMocks());
 
-  it('abre logo abaixo do gatilho, alinhado à esquerda dele', () => {
+  it('opens right below the trigger, aligned to its left edge', () => {
     expect(place({ rect: { top: 100, left: 300, width: 32, height: 32 } })).toEqual({ top: '136px', left: '300px' });
   });
 
-  it('abre para cima quando não cabe abaixo e há mais espaço acima', () => {
+  it("opens upward when it doesn't fit below and there is more room above", () => {
     expect(place({ rect: { top: 700, left: 300, width: 32, height: 32 } })).toEqual({ top: '496px', left: '300px' });
   });
 
-  it('não ultrapassa a borda direita da tela', () => {
+  it("doesn't go past the right edge of the screen", () => {
     expect(place({ rect: { top: 100, left: 900, width: 32, height: 32 } })).toEqual({ top: '136px', left: '772px' });
   });
 });

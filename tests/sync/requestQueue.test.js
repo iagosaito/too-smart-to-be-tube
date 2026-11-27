@@ -23,10 +23,10 @@ function sharedBudget() {
 // Regression (#3): the queue was per tab and in memory only. With N YouTube tabs the limit became N
 // × 60 requests per 10 min, a 429 in one tab didn't pause the others and reloading the page (F5)
 // reset the pause.
-describe('limites compartilhados entre abas', () => {
+describe('limits shared across tabs', () => {
   const queueFor = (clock, shared, options = {}) => createRequestQueue({ minIntervalMs: 0, now: () => clock.now, sleep: clock.sleep, shared, ...options });
 
-  it('um 429 numa aba pausa as outras', async () => {
+  it('a 429 in one tab pauses the others', async () => {
     const clock = fakeClock();
     const shared = sharedBudget();
     const tabA = queueFor(clock, shared);
@@ -37,7 +37,7 @@ describe('limites compartilhados entre abas', () => {
     expect(task).not.toHaveBeenCalled();
   });
 
-  it('recarregar a página (fila nova) não zera a pausa', async () => {
+  it("reloading the page (a new queue) doesn't reset the pause", async () => {
     const clock = fakeClock();
     const shared = sharedBudget();
     await expect(queueFor(clock, shared).run(async () => { throw httpError(429); })).rejects.toBeDefined();
@@ -46,7 +46,7 @@ describe('limites compartilhados entre abas', () => {
     expect(task).not.toHaveBeenCalled();
   });
 
-  it('o teto por janela soma as requisições de todas as abas', async () => {
+  it('the per-window cap adds up the requests of every tab', async () => {
     const clock = fakeClock();
     const shared = sharedBudget();
     const tabA = queueFor(clock, shared, { maxPerWindow: 3 });
@@ -59,7 +59,7 @@ describe('limites compartilhados entre abas', () => {
 });
 
 describe('createRequestQueue', () => {
-  it('roda no máximo N tarefas ao mesmo tempo', async () => {
+  it('runs at most N tasks at a time', async () => {
     const clock = fakeClock();
     const queue = createRequestQueue({ concurrency: 2, minIntervalMs: 0, now: () => clock.now, sleep: clock.sleep });
     let running = 0;
@@ -74,7 +74,7 @@ describe('createRequestQueue', () => {
     expect(peak).toBe(2);
   });
 
-  it('espaça o início das tarefas pelo intervalo mínimo', async () => {
+  it('spaces task starts by the minimum interval', async () => {
     const clock = fakeClock();
     const starts = [];
     const queue = createRequestQueue({ concurrency: 1, minIntervalMs: 350, now: () => clock.now, sleep: clock.sleep });
@@ -82,7 +82,7 @@ describe('createRequestQueue', () => {
     expect(starts).toEqual([0, 350, 700]);
   });
 
-  it('recusa novas tarefas acima do teto por janela', async () => {
+  it('rejects new tasks over the per-window cap', async () => {
     const clock = fakeClock();
     const queue = createRequestQueue({ minIntervalMs: 0, maxPerWindow: 2, windowMs: 1000, now: () => clock.now, sleep: clock.sleep });
     await queue.run(async () => 'a');
@@ -92,7 +92,7 @@ describe('createRequestQueue', () => {
     await expect(queue.run(async () => 'd')).resolves.toBe('d');
   });
 
-  it('tenta de novo erros temporários (5xx) com espera crescente e desiste depois do limite', async () => {
+  it('retries temporary errors (5xx) with a growing wait and gives up after the limit', async () => {
     const clock = fakeClock();
     const queue = createRequestQueue({ minIntervalMs: 0, retries: 2, now: () => clock.now, sleep: clock.sleep, random: () => 0 });
     const flaky = vi.fn().mockRejectedValueOnce(httpError(503)).mockRejectedValueOnce(httpError(500)).mockResolvedValue('ok');
@@ -104,7 +104,7 @@ describe('createRequestQueue', () => {
     expect(broken).toHaveBeenCalledTimes(3);
   });
 
-  it('não tenta de novo erros definitivos (4xx)', async () => {
+  it("doesn't retry permanent errors (4xx)", async () => {
     const clock = fakeClock();
     const queue = createRequestQueue({ minIntervalMs: 0, now: () => clock.now, sleep: clock.sleep });
     const notFound = vi.fn().mockRejectedValue(httpError(404));
@@ -112,7 +112,7 @@ describe('createRequestQueue', () => {
     expect(notFound).toHaveBeenCalledOnce();
   });
 
-  it('um 429 pausa a fila inteira até o fim do intervalo', async () => {
+  it('a 429 pauses the whole queue until the end of the interval', async () => {
     const clock = fakeClock();
     const queue = createRequestQueue({ minIntervalMs: 0, pauseOn429Ms: 60_000, now: () => clock.now, sleep: clock.sleep });
     await expect(queue.run(async () => { throw httpError(429); })).rejects.toMatchObject({ key: 'error.rateLimited' });
@@ -126,7 +126,7 @@ describe('createRequestQueue', () => {
 });
 
 describe('backoffDelay', () => {
-  it('cresce exponencialmente, soma o jitter e respeita o teto de 8 s', () => {
+  it('grows exponentially, adds jitter and respects the 8 s cap', () => {
     expect([0, 1, 2].map((retry) => backoffDelay(retry, () => 0))).toEqual([1000, 2000, 4000]);
     expect(backoffDelay(1, () => 0.5)).toBe(2500);
     expect(backoffDelay(5, () => 0.9)).toBe(8000);

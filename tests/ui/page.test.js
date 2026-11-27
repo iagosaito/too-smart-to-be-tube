@@ -59,26 +59,26 @@ function changeSelect(select, value) {
   select.dispatchEvent(new Event('change'));
 }
 
-describe('montagem', () => {
-  it('monta a página dentro do ytd-page-manager e marca o html como aberto', async () => {
+describe('mounting', () => {
+  it('mounts the page inside ytd-page-manager and marks the html as open', async () => {
     await open();
     expect(page().parentElement.tagName).toBe('YTD-PAGE-MANAGER');
     expect(document.documentElement.classList.contains(OPEN_CLASS)).toBe(true);
   });
 
-  it('cai no body quando não há ytd-page-manager', async () => {
+  it('falls back to the body when there is no ytd-page-manager', async () => {
     document.body.innerHTML = '';
     await open();
     expect(page().parentElement).toBe(document.body);
   });
 
-  it('não monta duas páginas ao mesmo tempo', async () => {
+  it("doesn't mount two pages at the same time", async () => {
     await open();
     await open();
     expect(document.querySelectorAll(`#${PAGE_ID}`)).toHaveLength(1);
   });
 
-  it('closeCategoriesPage remove a página e a marcação, mesmo se chamado sem página', async () => {
+  it('closeCategoriesPage removes the page and the marker, even when called without a page', async () => {
     await open();
     closeCategoriesPage();
     expect(page()).toBeNull();
@@ -87,27 +87,27 @@ describe('montagem', () => {
   });
 });
 
-describe('visão geral', () => {
-  it('abre em "Todas" com todos os canais e o total no subtítulo', async () => {
+describe('overview', () => {
+  it('opens on "Todas" with every channel and the total in the subtitle', async () => {
     await open();
     expect(chip('Todas').getAttribute('aria-pressed')).toBe('true');
     expect(cardNames()).toHaveLength(3);
     expect($('.tstb-subtitle').textContent).toBe('3 inscrições · Sincronizado agora');
   });
 
-  it('mostra um chip por categoria com contagem', async () => {
+  it('shows one chip per category with its count', async () => {
     await open();
     expect(chip('Tech').querySelector('.tstb-chip-count').textContent).toBe('1');
     expect(chip('Sem categoria').querySelector('.tstb-chip-count').textContent).toBe('2');
   });
 
-  it('renderiza nomes de canais como texto', async () => {
+  it('renders channel names as text', async () => {
     await open();
     expect($('img[src="x"]')).toBeNull();
     expect(page().textContent).toContain('<img src=x onerror=alert(1)>');
   });
 
-  it('cada cartão é um link para o canal e mostra a categoria atual', async () => {
+  it('each card is a link to the channel and shows its current category', async () => {
     await open();
     const card = $$('.tstb-card').find((node) => node.textContent.includes('Alura'));
     expect(card.querySelector('a').href).toBe('https://www.youtube.com/@alura');
@@ -115,7 +115,7 @@ describe('visão geral', () => {
   });
 });
 
-describe('ordem alfabética das categorias', () => {
+describe('alphabetical order of categories', () => {
   const unordered = [
     { id: 'v', name: 'Viagem', channelIds: [] },
     { id: 't', name: 'Tech', channelIds: ['/@alura'] },
@@ -124,7 +124,7 @@ describe('ordem alfabética das categorias', () => {
   const optionLabels = (select) => [...select.options].map((option) => option.textContent);
   afterEach(() => closeCategoryMenu());
 
-  it('chips, pílulas e "Mover para…" usam a mesma ordem A–Z', async () => {
+  it('chips, pills and "Mover para…" use the same A–Z order', async () => {
     await open({ store: createStore(createFakeStorageArea({ channels, categories: unordered, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 })) });
     expect($$('.tstb-chips [data-chip-id]:not(.tstb-chip-all):not(.tstb-chip-pending) .tstb-chip-label').map((node) => node.textContent)).toEqual(['Comida', 'Tech', 'Viagem']);
     $('.tstb-pill').click();
@@ -135,8 +135,8 @@ describe('ordem alfabética das categorias', () => {
   });
 });
 
-describe('filtros e busca', () => {
-  it('clicar num chip mostra só aquela categoria, com ferramentas de edição', async () => {
+describe('filters and search', () => {
+  it('clicking a chip shows only that category, with editing tools', async () => {
     await open();
     chip('Tech').click();
     expect(cardNames()).toEqual(['Alura']);
@@ -144,7 +144,7 @@ describe('filtros e busca', () => {
     expect($('[aria-label="Renomear categoria Tech"]')).not.toBeNull();
   });
 
-  it('a busca filtra mantendo o foco no campo', async () => {
+  it('the search filters while keeping the focus in the field', async () => {
     await open();
     const search = $('.tstb-search-input');
     search.focus();
@@ -155,7 +155,7 @@ describe('filtros e busca', () => {
     expect(document.activeElement).toBe($('.tstb-search-input'));
   });
 
-  it('busca sem resultado mostra estado vazio com "Limpar busca"', async () => {
+  it('a search without results shows an empty state with "Limpar busca"', async () => {
     await open();
     const search = $('.tstb-search-input');
     search.value = 'zzz';
@@ -166,7 +166,7 @@ describe('filtros e busca', () => {
     expect(cardNames()).toHaveLength(3);
   });
 
-  it('categoria vazia oferece atalho para "Sem categoria"', async () => {
+  it('an empty category offers a shortcut to "Sem categoria"', async () => {
     area = createFakeStorageArea({ channels, categories: [{ id: 'v', name: 'Vazia', channelIds: [] }], lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 });
     await open({ store: createStore(area) });
     chip('Vazia').click();
@@ -175,8 +175,8 @@ describe('filtros e busca', () => {
   });
 });
 
-describe('categorias', () => {
-  it('cria pelo chip "Nova categoria" e já abre a categoria criada', async () => {
+describe('categories', () => {
+  it('creates through the "Nova categoria" chip and opens the new category right away', async () => {
     await open();
     button('Nova categoria').click();
     const input = $('.tstb-chip-input');
@@ -187,7 +187,7 @@ describe('categorias', () => {
     expect(chip('Música').getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('Esc cancela a criação e devolve o chip', async () => {
+  it('Esc cancels the creation and brings the chip back', async () => {
     await open();
     button('Nova categoria').click();
     $('.tstb-chip-input').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -195,7 +195,7 @@ describe('categorias', () => {
     expect(button('Nova categoria')).toBeDefined();
   });
 
-  it('renomeia no próprio título', async () => {
+  it('renames in the title itself', async () => {
     await open();
     chip('Tech').click();
     $('.tstb-title-edit').click();
@@ -208,7 +208,7 @@ describe('categorias', () => {
     expect($('.tstb-view-title').textContent).toContain('Tecnologia');
   });
 
-  it('separa a zona da categoria (nome e excluir) da zona da lista (ordenar)', async () => {
+  it('separates the category zone (name and delete) from the list zone (sort)', async () => {
     await open();
     chip('Tech').click();
     const titleGroup = $('.tstb-title-group');
@@ -221,7 +221,7 @@ describe('categorias', () => {
     expect(button('Renomear')).toBeUndefined();
   });
 
-  it('"Todas" e "Sem categoria" não têm título editável nem excluir', async () => {
+  it('"Todas" and "Sem categoria" have no editable title or delete', async () => {
     await open();
     expect($('.tstb-title-edit')).toBeNull();
     expect($('[aria-label^="Excluir categoria"]')).toBeNull();
@@ -229,7 +229,7 @@ describe('categorias', () => {
     expect($('.tstb-title-edit')).toBeNull();
   });
 
-  it('cancelar a renomeação volta ao título', async () => {
+  it('cancelling the rename goes back to the title', async () => {
     await open();
     chip('Tech').click();
     $('.tstb-title-edit').click();
@@ -237,7 +237,7 @@ describe('categorias', () => {
     expect($('.tstb-rename-input')).toBeNull();
   });
 
-  it('exclui após confirmação, volta para "Todas" e avisa', async () => {
+  it('deletes after confirmation, goes back to "Todas" and shows a toast', async () => {
     const confirm = vi.fn(() => true);
     await open({ confirm });
     chip('Tech').click();
@@ -249,7 +249,7 @@ describe('categorias', () => {
     expect(document.getElementById(TOAST_ID).textContent).toBe('Categoria "Tech" excluída');
   });
 
-  it('não exclui se o usuário cancelar a confirmação', async () => {
+  it("doesn't delete if the user cancels the confirmation", async () => {
     await open({ confirm: () => false });
     chip('Tech').click();
     $('[aria-label="Excluir categoria Tech"]').click();
@@ -257,7 +257,7 @@ describe('categorias', () => {
     expect(area.dump().categories).toHaveLength(1);
   });
 
-  it('move um canal pela pílula de categoria', async () => {
+  it('moves a channel through the category pill', async () => {
     await open();
     const card = $$('.tstb-card').find((node) => node.textContent.includes('Bossa'));
     chooseInMenu(card.querySelector('.tstb-pill'), 'Tech');
@@ -266,10 +266,10 @@ describe('categorias', () => {
   });
 });
 
-describe('desempenho', () => {
+describe('performance', () => {
   const cardOf = (name) => $$('.tstb-card').find((node) => node.textContent.includes(name));
 
-  it('marcar um canal recria só o cartão dele; os outros são os mesmos nós', async () => {
+  it('selecting a channel recreates only its card; the others are the same nodes', async () => {
     await open();
     const alura = cardOf('Alura');
     const bossa = cardOf('Bossa');
@@ -278,7 +278,7 @@ describe('desempenho', () => {
     expect(cardOf('Bossa')).not.toBe(bossa);
   });
 
-  it('a busca espera a pausa na digitação antes de redesenhar', async () => {
+  it('the search waits for a pause in typing before redrawing', async () => {
     await open({ searchDelay: 50 });
     const search = $('.tstb-search-input');
     search.value = 'bossa';
@@ -288,7 +288,7 @@ describe('desempenho', () => {
     expect(cardNames()).toEqual(['Bossa Nova']);
   });
 
-  it('renomear uma categoria invalida os cartões (as opções do menu mudam)', async () => {
+  it('renaming a category invalidates the cards (the menu options change)', async () => {
     await open();
     const alura = cardOf('Alura');
     chip('Tech').click();
@@ -303,16 +303,16 @@ describe('desempenho', () => {
   });
 });
 
-describe('controle de categoria no cartão por visão', () => {
+describe('category control on the card per view', () => {
   const cardOf = (name) => $$('.tstb-card').find((node) => node.textContent.includes(name));
 
-  it('em "Todas" cada cartão mostra a pílula com a sua categoria', async () => {
+  it('in "Todas" each card shows the pill with its category', async () => {
     await open();
     expect(cardOf('Alura').querySelector('.tstb-pill').textContent).toBe('Tech');
     expect(cardOf('Alura').querySelector('.tstb-move')).toBeNull();
   });
 
-  it('dentro de uma categoria não repete a pílula; oferece o ícone de mover', async () => {
+  it("inside a category doesn't repeat the pill; offers the move icon", async () => {
     await open();
     chip('Tech').click();
     const card = cardOf('Alura');
@@ -324,7 +324,7 @@ describe('controle de categoria no cartão por visão', () => {
     closeCategoryMenu();
   });
 
-  it('o ícone de mover tira o canal da categoria aberta', async () => {
+  it('the move icon takes the channel out of the open category', async () => {
     await open();
     chip('Tech').click();
     chooseInMenu(cardOf('Alura').querySelector('.tstb-move'), 'Sem categoria');
@@ -333,7 +333,7 @@ describe('controle de categoria no cartão por visão', () => {
     expect($('.tstb-empty-state').textContent).toContain('Categoria vazia');
   });
 
-  it('em "Sem categoria" a pílula convida a escolher em vez de repetir "Sem categoria"', async () => {
+  it('in "Sem categoria" the pill invites choosing instead of repeating "Sem categoria"', async () => {
     await open();
     chip('Sem categoria').click();
     const pill = cardOf('Bossa').querySelector('.tstb-pill');
@@ -344,10 +344,10 @@ describe('controle de categoria no cartão por visão', () => {
   });
 });
 
-describe('menu de categoria do cartão', () => {
+describe('card category menu', () => {
   const cardOf = (name) => $$('.tstb-card').find((node) => node.textContent.includes(name));
 
-  it('clicar de novo na pílula fecha o menu sem mudar nada', async () => {
+  it('clicking the pill again closes the menu without changing anything', async () => {
     await open();
     const pill = cardOf('Alura').querySelector('.tstb-pill');
     pill.click();
@@ -359,7 +359,7 @@ describe('menu de categoria do cartão', () => {
     expect(area.dump().categories).toEqual(categories);
   });
 
-  it('escolher a categoria atual não grava nada', async () => {
+  it('choosing the current category saves nothing', async () => {
     const set = vi.spyOn(area, 'set');
     await open();
     chooseInMenu(cardOf('Alura').querySelector('.tstb-pill'), 'Tech');
@@ -367,7 +367,7 @@ describe('menu de categoria do cartão', () => {
     expect(set).not.toHaveBeenCalled();
   });
 
-  it('fechar a página de Categorias fecha o menu aberto', async () => {
+  it('closing the Categories page closes the open menu', async () => {
     await open();
     cardOf('Alura').querySelector('.tstb-pill').click();
     closeCategoriesPage();
@@ -375,8 +375,8 @@ describe('menu de categoria do cartão', () => {
   });
 });
 
-describe('seleção em lote', () => {
-  it('marcar canais mostra a barra com a contagem', async () => {
+describe('bulk selection', () => {
+  it('selecting channels shows the bar with the count', async () => {
     await open();
     checkFor('Bossa Nova').click();
     checkFor('Alura').click();
@@ -384,7 +384,7 @@ describe('seleção em lote', () => {
     expect($$('.tstb-card-selected')).toHaveLength(2);
   });
 
-  it('no modo de seleção, clicar no cartão seleciona em vez de navegar', async () => {
+  it('in selection mode, clicking the card selects it instead of navigating', async () => {
     await open();
     checkFor('Alura').click();
     const link = $$('.tstb-card-link').find((node) => node.textContent.includes('Bossa'));
@@ -394,7 +394,7 @@ describe('seleção em lote', () => {
     expect($('.tstb-bulkbar').textContent).toContain('2 canais selecionados');
   });
 
-  it('move todos os selecionados de uma vez, limpa a seleção e avisa', async () => {
+  it('moves every selected channel at once, clears the selection and shows a toast', async () => {
     await open();
     checkFor('Bossa Nova').click();
     checkFor('<img src=x onerror=alert(1)>').click();
@@ -405,7 +405,7 @@ describe('seleção em lote', () => {
     expect(document.getElementById(TOAST_ID).textContent).toBe('2 canais movidos para "Tech"');
   });
 
-  it('desmarcar e "Cancelar" limpam a seleção', async () => {
+  it('unchecking and "Cancelar" clear the selection', async () => {
     await open();
     checkFor('Alura').click();
     checkFor('Alura').click();
@@ -415,7 +415,7 @@ describe('seleção em lote', () => {
     expect($('.tstb-bulkbar')).toBeNull();
   });
 
-  it('trocar de filtro limpa a seleção', async () => {
+  it('switching filters clears the selection', async () => {
     await open();
     checkFor('Alura').click();
     chip('Tech').click();
@@ -426,13 +426,13 @@ describe('seleção em lote', () => {
 // Regression: selected channels that left the screen (moved individually or hidden by the search)
 // stayed selected, invisible, and were moved along by the bulk action, undoing what the user had
 // just done.
-describe('seleção só contém o que está na tela', () => {
+describe('the selection only holds what is on screen', () => {
   const storeWith = (categoriesList) =>
     createStore(createFakeStorageArea({ channels, categories: categoriesList, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 }));
   const cardOf = (name) => $$('.tstb-card').find((node) => node.textContent.includes(name));
   const channelIdsOf = (id) => area.dump().categories.find((category) => category.id === id).channelIds;
 
-  it('mover individualmente um canal selecionado o tira da seleção, e o lote não o move de novo', async () => {
+  it("moving a selected channel individually takes it out of the selection, and the batch doesn't move it again", async () => {
     area = createFakeStorageArea({
       channels,
       categories: [
@@ -458,7 +458,7 @@ describe('seleção só contém o que está na tela', () => {
     expect(channelIdsOf('livros')).toEqual(['/@bossa']);
   });
 
-  it('canais selecionados escondidos pela busca saem da seleção e não são movidos', async () => {
+  it("selected channels hidden by the search leave the selection and aren't moved", async () => {
     area = createFakeStorageArea({
       channels,
       categories: [{ id: 'livros', name: 'Livros', channelIds: [] }],
@@ -480,7 +480,7 @@ describe('seleção só contém o que está na tela', () => {
     expect(channelIdsOf('livros')).toEqual(['/@bossa']);
   });
 
-  it('a seleção visível continua intacta quando nada sai da tela', async () => {
+  it('the visible selection stays intact when nothing leaves the screen', async () => {
     await open({ store: storeWith(categories) });
     checkFor('Alura').click();
     checkFor('Bossa Nova').click();
@@ -492,8 +492,8 @@ describe('seleção só contém o que está na tela', () => {
   });
 });
 
-describe('sincronização', () => {
-  it('sincroniza automaticamente quando a última sincronização é antiga', async () => {
+describe('sync', () => {
+  it('syncs automatically when the last sync is old', async () => {
     const sync = vi.fn(async () => store.replaceChannels(Object.values(channels), 2 * HOUR));
     await open({ sync, now: () => 1_000 + 2 * HOUR });
     await flush();
@@ -501,7 +501,7 @@ describe('sincronização', () => {
     expect($('.tstb-subtitle').textContent).toBe('3 inscrições · Sincronizado agora');
   });
 
-  it('numa aba em segundo plano, a sincronização automática espera a aba ficar visível', async () => {
+  it('in a background tab, the automatic sync waits for the tab to become visible', async () => {
     // Opening from a URL needs no click: a restored browser session may open several Categories
     // tabs at once, and each would start a full sync of dozens of authenticated requests.
     let visibility = 'hidden';
@@ -522,7 +522,7 @@ describe('sincronização', () => {
     }
   });
 
-  it('se outra aba sincronizou enquanto esta estava em segundo plano, não sincroniza de novo', async () => {
+  it("if another tab synced while this one was in the background, doesn't sync again", async () => {
     let visibility = 'hidden';
     Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
     try {
@@ -538,7 +538,7 @@ describe('sincronização', () => {
     }
   });
 
-  it('uma página fechada em segundo plano não sincroniza quando a aba fica visível', async () => {
+  it("a page closed in the background doesn't sync when the tab becomes visible", async () => {
     let visibility = 'hidden';
     Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
     try {
@@ -554,7 +554,7 @@ describe('sincronização', () => {
     }
   });
 
-  it('mostra "Sincronizando…" e desabilita o botão enquanto roda', async () => {
+  it('shows "Sincronizando…" and disables the button while it runs', async () => {
     let finish;
     const sync = vi.fn(() => new Promise((resolve) => (finish = resolve)));
     await open({ sync });
@@ -565,7 +565,7 @@ describe('sincronização', () => {
     expect(button('Sincronizar').disabled).toBe(false);
   });
 
-  it('mostra o erro no subtítulo quando a sincronização falha', async () => {
+  it('shows the error in the subtitle when the sync fails', async () => {
     const sync = vi.fn(async () => {
       throw new Error('você precisa estar logado no YouTube');
     });
@@ -575,7 +575,7 @@ describe('sincronização', () => {
     expect($('.tstb-error').textContent).toBe('3 inscrições · Falha ao sincronizar: você precisa estar logado no YouTube');
   });
 
-  it('sem canais, o estado vazio oferece sincronizar', async () => {
+  it('without channels, the empty state offers to sync', async () => {
     const sync = vi.fn(async () => 0);
     await open({ store: createStore(createFakeStorageArea({ lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 })), sync });
     expect($('.tstb-empty-state').textContent).toContain('Nenhuma inscrição ainda');
@@ -583,14 +583,14 @@ describe('sincronização', () => {
     expect(sync).toHaveBeenCalledOnce();
   });
 
-  it('esconde o botão quando não há função de sincronização', async () => {
+  it('hides the button when there is no sync function', async () => {
     await open();
     expect(button('Sincronizar')).toBeUndefined();
   });
 });
 
-describe('exportar CSV', () => {
-  it('baixa todas as inscrições, mesmo com filtro e busca ativos, e avisa', async () => {
+describe('CSV export', () => {
+  it('downloads every subscription, even with an active filter and search, and shows a toast', async () => {
     const download = vi.fn();
     await open({ download, now: () => new Date(2026, 10, 22).getTime() });
     chip('Tech').click();
@@ -602,13 +602,13 @@ describe('exportar CSV', () => {
     expect(document.getElementById(TOAST_ID).textContent).toBe('3 inscrições exportadas');
   });
 
-  it('fica desabilitado sem inscrições', async () => {
+  it('is disabled without subscriptions', async () => {
     await open({ store: createStore(createFakeStorageArea({ lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 })) });
     expect(button('Exportar CSV').disabled).toBe(true);
   });
 });
 
-describe('importar CSV', () => {
+describe('CSV import', () => {
   const fakeFile = (text, { name = 'categorias.csv', size = text.length } = {}) => ({ name, size, text: async () => text });
   const CSV = 'Canal,Categoria,URL,Identificador\r\nAlura,Tech,,/@alura\r\nBossa Nova,Música,,/@bossa\r\nFantasma,Nada,,/@fantasma\r\n';
   const importFile = async (file, options = {}) => {
@@ -617,7 +617,7 @@ describe('importar CSV', () => {
     await flush();
   };
 
-  it('mostra a revisão com o impacto antes de aplicar, sem gravar nada', async () => {
+  it('shows the review with the impact before applying, saving nothing', async () => {
     await importFile(fakeFile(CSV));
     const review = $('.tstb-review');
     expect(review.textContent).toContain('2 canais serão organizados em 2 categorias');
@@ -628,7 +628,7 @@ describe('importar CSV', () => {
     expect(document.activeElement).toBe(review.querySelector('h3'));
   });
 
-  it('aplica, mostra o aviso com Desfazer e o Desfazer restaura a organização anterior', async () => {
+  it('applies, shows the toast with Desfazer, and Desfazer restores the previous organization', async () => {
     await importFile(fakeFile(CSV));
     button('Aplicar importação').click();
     await flush();
@@ -641,19 +641,19 @@ describe('importar CSV', () => {
     expect(area.dump().categories).toEqual(categories);
   });
 
-  it('cancelar fecha a revisão sem gravar', async () => {
+  it('cancelling closes the review without saving', async () => {
     await importFile(fakeFile(CSV));
     button('Cancelar').click();
     expect($('.tstb-review')).toBeNull();
     expect(area.dump().categories).toEqual(categories);
   });
 
-  it('não faz nada se o usuário fechar o seletor sem escolher arquivo', async () => {
+  it('does nothing if the user closes the picker without choosing a file', async () => {
     await importFile(null);
     expect($('.tstb-review')).toBeNull();
   });
 
-  it('explica o erro de formato e só oferece Fechar', async () => {
+  it('explains the format error and only offers Fechar', async () => {
     await importFile(fakeFile('Nome,Outra\r\nA,B'));
     expect($('.tstb-review-error').textContent).toContain('coluna "Category"');
     expect(button('Aplicar importação')).toBeUndefined();
@@ -661,12 +661,12 @@ describe('importar CSV', () => {
     expect($('.tstb-review')).toBeNull();
   });
 
-  it('avisa quando nenhuma linha corresponde às inscrições', async () => {
+  it('warns when no row matches the subscriptions', async () => {
     await importFile(fakeFile('Identificador,Categoria\r\n/@ninguem,Tech'));
     expect($('.tstb-review-error').textContent).toContain('Nenhuma linha do arquivo corresponde');
   });
 
-  it('mostra o erro e não deixa aplicar quando o arquivo criaria categorias demais', async () => {
+  it("shows the error and doesn't allow applying when the file would create too many categories", async () => {
     const rows = Array.from({ length: 1_001 }, (_, i) => `${i === 0 ? '/@alura' : `/@extra${i}`},Nova ${i}`);
     const many = Object.fromEntries(Array.from({ length: 1_001 }, (_, i) => [`/@extra${i}`, { id: `/@extra${i}`, name: `Extra ${i}`, url: '', avatar: '' }]));
     area = createFakeStorageArea({ channels: { ...channels, ...many }, categories, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000 });
@@ -676,39 +676,39 @@ describe('importar CSV', () => {
     expect(area.dump().categories).toEqual(categories);
   });
 
-  it('aceita um arquivo com exatamente o tamanho máximo (5 MB)', async () => {
+  it('accepts a file of exactly the maximum size (5 MB)', async () => {
     await importFile(fakeFile(CSV, { size: 5 * 1024 * 1024 }));
     expect($('.tstb-review-error')).toBeNull();
     expect(button('Aplicar importação')).toBeDefined();
   });
 
-  it('recusa, sem ler, um arquivo 1 byte acima do máximo', async () => {
+  it('rejects, without reading it, a file 1 byte over the maximum', async () => {
     const text = vi.fn();
     await importFile({ name: 'grande.csv', size: 5 * 1024 * 1024 + 1, text });
     expect($('.tstb-review-error').textContent).toContain('grande demais');
     expect(text).not.toHaveBeenCalled();
   });
 
-  it('recusa arquivos grandes demais sem lê-los', async () => {
+  it('rejects files that are too large without reading them', async () => {
     const text = vi.fn();
     await importFile({ name: 'video.mp4', size: 50 * 1024 * 1024, text });
     expect($('.tstb-review-error').textContent).toContain('grande demais');
     expect(text).not.toHaveBeenCalled();
   });
 
-  it('fica desabilitado sem inscrições', async () => {
+  it('is disabled without subscriptions', async () => {
     await open({ store: createStore(createFakeStorageArea({ lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 })) });
     expect(button('Importar CSV').disabled).toBe(true);
   });
 });
 
-describe('ordenar por vídeo mais recente', () => {
+describe('sort by latest video', () => {
   const NOW = 10 * 24 * 3_600_000;
   const withUploads = (extra = {}) =>
     createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: NOW, uploadsSyncedAt: NOW, feedSyncedAt: NOW, latestUploads: { '/@bossa': NOW - 2 * 24 * 3_600_000, '/@xss': NOW - 3_600_000 }, ...extra }));
   const sortSelect = () => $('.tstb-sort-select');
 
-  it('começa em A–Z e mostra a data do último vídeo no cartão', async () => {
+  it('starts in A–Z and shows the date of the latest video on the card', async () => {
     await open({ store: withUploads(), now: () => NOW });
     expect(sortSelect().value).toBe('name');
     expect(cardNames()).toEqual(['<img src=x onerror=alert(1)>', 'Alura', 'Bossa Nova']);
@@ -716,7 +716,7 @@ describe('ordenar por vídeo mais recente', () => {
     expect(bossa.querySelector('.tstb-card-meta').textContent).toBe('Vídeo há 2 dias');
   });
 
-  it('reordena pelo mais recente, marca quem não tem data e lembra a escolha', async () => {
+  it('reorders by the most recent, marks those without a date and remembers the choice', async () => {
     const store = withUploads();
     await open({ store, now: () => NOW });
     changeSelect(sortSelect(), 'recent');
@@ -727,21 +727,21 @@ describe('ordenar por vídeo mais recente', () => {
     expect((await store.load()).preferences.sortBy).toBe('recent');
   });
 
-  it('abre já na ordem salva', async () => {
+  it('opens in the saved order right away', async () => {
     await open({ store: withUploads({ preferences: { sortBy: 'recent' } }), now: () => NOW });
     expect(sortSelect().value).toBe('recent');
     expect(cardNames()[0]).toBe('<img src=x onerror=alert(1)>');
   });
 
-  it('sincroniza na hora quem ainda não tem datas de vídeos', async () => {
+  it("syncs right away for someone who doesn't have video dates yet", async () => {
     const sync = vi.fn(async () => 3);
     await open({ store: withUploads({ uploadsSyncedAt: undefined }), sync, now: () => NOW });
     expect(sync).toHaveBeenCalledOnce();
   });
 });
 
-describe('intervalo entre sincronizações', () => {
-  it('logo depois de sincronizar, o botão fica desabilitado com a explicação e reabilita sozinho', async () => {
+describe('interval between syncs', () => {
+  it('right after a sync, the button is disabled with an explanation and re-enables on its own', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
     try {
       vi.setSystemTime(10_000_000);
@@ -762,7 +762,7 @@ describe('intervalo entre sincronizações', () => {
     }
   });
 
-  it('ao abrir a página durante uma sincronização já em andamento, mostra "Sincronizando…" sem iniciar outra', async () => {
+  it('opening the page during a sync already in progress shows "Sincronizando…" without starting another', async () => {
     let finish;
     const run = vi.fn(() => new Promise((resolve) => (finish = resolve)));
     // The same clock as the page (now: () => 1_000), as in production, where both use Date.now.
@@ -778,7 +778,7 @@ describe('intervalo entre sincronizações', () => {
 });
 
 describe('isStale', () => {
-  it('considera antiga sem sincronização ou após uma hora', () => {
+  it('considers it stale without a sync or after one hour', () => {
     expect(isStale(null, 0)).toBe(true);
     expect(isStale(0, HOUR + 1)).toBe(true);
     expect(isStale(0, HOUR)).toBe(false);

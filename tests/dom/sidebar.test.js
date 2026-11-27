@@ -9,26 +9,26 @@ beforeEach(() => {
 });
 
 describe('injectSidebarEntry', () => {
-  it('insere o item logo após a primeira seção do menu', () => {
+  it("inserts the item right after the menu's first section", () => {
     const entry = injectSidebarEntry(guide(), () => {});
     expect(document.querySelector('#main').nextElementSibling).toBe(entry);
     expect(entry.textContent).toContain('Categorias');
   });
 
-  it('é idempotente entre navegações', () => {
+  it('is idempotent across navigations', () => {
     const first = injectSidebarEntry(guide(), () => {});
     const second = injectSidebarEntry(guide(), () => {});
     expect(second).toBe(first);
     expect(document.querySelectorAll(`#${ENTRY_ID}`)).toHaveLength(1);
   });
 
-  it('chama o callback ao clicar', () => {
+  it('calls the callback on click', () => {
     const onClick = vi.fn();
     injectSidebarEntry(guide(), onClick).querySelector('button').click();
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it('retorna null quando o menu ainda não tem seções', () => {
+  it('returns null when the menu has no sections yet', () => {
     document.body.innerHTML = '<ytd-guide-renderer></ytd-guide-renderer>';
     expect(injectSidebarEntry(guide(), () => {})).toBeNull();
   });
@@ -46,12 +46,12 @@ describe('injectMiniGuideEntry', () => {
     document.body.innerHTML = MINI_GUIDE;
   });
 
-  it('insere entre Shorts e Inscrições, dentro da lista nativa', () => {
+  it('inserts between Shorts and Subscriptions, inside the native list', () => {
     injectMiniGuideEntry(items(), () => {});
     expect(labels()).toEqual(['Início', 'Shorts', 'Categorias', 'Inscrições', 'Você']);
   });
 
-  it('funciona quando os itens estão aninhados numa camada extra', () => {
+  it('works when the items are nested in an extra layer', () => {
     document.body.innerHTML = `<ytd-mini-guide-renderer><div id="items"><div class="wrapper">
       ${miniEntry('/shorts', 'Shorts')}${miniEntry('/feed/subscriptions', 'Inscrições')}
     </div></div></ytd-mini-guide-renderer>`;
@@ -60,7 +60,7 @@ describe('injectMiniGuideEntry', () => {
     expect([...wrapper.children].map((node) => node.textContent.trim())).toEqual(['Shorts', 'Categorias', 'Inscrições']);
   });
 
-  it('keepMiniGuideEntry reinsere o item quando o YouTube redesenha a lista', async () => {
+  it('keepMiniGuideEntry reinserts the item when YouTube redraws the list', async () => {
     const observer = keepMiniGuideEntry(items(), () => {});
     // Simulates YouTube recreating the list with its own items.
     items().replaceChildren(...new DOMParser().parseFromString(
@@ -71,19 +71,19 @@ describe('injectMiniGuideEntry', () => {
     observer.disconnect();
   });
 
-  it('sem Inscrições, fica logo após o Shorts', () => {
+  it('without Subscriptions, goes right after Shorts', () => {
     items().querySelector('a[href="/feed/subscriptions"]').closest('ytd-mini-guide-entry-renderer').remove();
     injectMiniGuideEntry(items(), () => {});
     expect(labels()).toEqual(['Início', 'Shorts', 'Categorias', 'Você']);
   });
 
-  it('sem Shorts nem Inscrições, vai para o fim da lista', () => {
+  it('without Shorts or Subscriptions, goes to the end of the list', () => {
     document.body.innerHTML = `<ytd-mini-guide-renderer><div id="items">${miniEntry('/', 'Início')}</div></ytd-mini-guide-renderer>`;
     injectMiniGuideEntry(items(), () => {});
     expect(labels()).toEqual(['Início', 'Categorias']);
   });
 
-  it('é idempotente e chama o callback ao clicar', () => {
+  it('is idempotent and calls the callback on click', () => {
     const onClick = vi.fn();
     const first = injectMiniGuideEntry(items(), onClick);
     expect(injectMiniGuideEntry(items(), onClick)).toBe(first);
@@ -99,7 +99,7 @@ describe('keepSidebarEntry', () => {
     document.body.innerHTML = GUIDE_HTML;
   });
 
-  it('reinsere o item quando o YouTube redesenha as seções do menu expandido', async () => {
+  it("reinserts the item when YouTube redraws the expanded menu's sections", async () => {
     const observer = keepSidebarEntry(guide(), () => {});
     const sections = guide().querySelector('#sections');
     // Simulates YouTube recreating the sections when expanding the menu: our item disappears.
@@ -111,7 +111,7 @@ describe('keepSidebarEntry', () => {
     observer.disconnect();
   });
 
-  it('não empilha observers ao ser chamado de novo no mesmo menu', () => {
+  it("doesn't stack observers when called again on the same menu", () => {
     const first = keepSidebarEntry(guide(), () => {});
     expect(keepSidebarEntry(guide(), () => {})).toBeNull();
     expect(document.querySelectorAll(`#${ENTRY_ID}`)).toHaveLength(1);

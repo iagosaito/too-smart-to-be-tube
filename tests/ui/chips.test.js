@@ -17,7 +17,7 @@ const mount = (activeId = 'all') => root().replaceChildren(renderChips(chips, ac
 const nav = () => root().querySelector('nav');
 
 describe('renderChips', () => {
-  it('mostra todos os chips numa única barra: Todas, categorias, Sem categoria e Nova categoria', () => {
+  it('shows every chip in a single bar: Todas, categories, Sem categoria and Nova categoria', () => {
     mount();
     const children = [...nav().children];
     expect(children.map((node) => node.querySelector('.tstb-chip-label')?.textContent ?? node.textContent.trim())).toEqual([
@@ -27,14 +27,14 @@ describe('renderChips', () => {
     expect(nav().querySelector('.tstb-chips-track, .tstb-chips-arrow')).toBeNull();
   });
 
-  it('"Todas" tem ícone e "Sem categoria" estilo de fila; o destaque de cor é só do ativo', () => {
+  it('"Todas" has an icon and "Sem categoria" a queue style; the color highlight is only for the active one', () => {
     mount('b');
     expect(root().querySelector('.tstb-chip-all svg')).not.toBeNull();
     expect(root().querySelector('.tstb-chip-pending').textContent).toContain('Sem categoria');
     expect([...root().querySelectorAll('.tstb-chip-active')].map((node) => node.dataset.chipId)).toEqual(['b']);
   });
 
-  it('mostra a contagem e filtra ao clicar', () => {
+  it('shows the count and filters on click', () => {
     mount();
     const alfa = root().querySelector('[data-chip-id="a"]');
     expect(alfa.querySelector('.tstb-chip-count').textContent).toBe('3');

@@ -16,7 +16,7 @@ beforeEach(() => {
 const root = () => document.getElementById('root');
 
 describe('preserveFocus', () => {
-  it('devolve foco e cursor ao elemento com a mesma chave após re-renderizar', () => {
+  it('returns focus and cursor to the element with the same key after a re-render', () => {
     const before = keyedInput('search', 'abcdef');
     root().append(before);
     before.focus();
@@ -29,7 +29,7 @@ describe('preserveFocus', () => {
     expect(after.selectionStart).toBe(3);
   });
 
-  it('não rouba o foco quando ele estava fora da raiz', () => {
+  it("doesn't steal focus when it was outside the root", () => {
     const outside = keyedInput('search', '');
     document.body.append(outside);
     outside.focus();
@@ -38,7 +38,7 @@ describe('preserveFocus', () => {
     expect(document.activeElement).toBe(outside);
   });
 
-  it('não falha quando o elemento focado não tem chave', () => {
+  it("doesn't fail when the focused element has no key", () => {
     const plain = input();
     root().append(plain);
     plain.focus();

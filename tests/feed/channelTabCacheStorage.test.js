@@ -13,7 +13,7 @@ const channel = (n) => ({ id: `/@c${n}`, ucid: `UC${String(n).padStart(22, '0')}
 const items = (n) => Array.from({ length: 30 }, (_, i) => ({ videoId: `v${n}-${i}`, title: 'x'.repeat(150), channelId: `/@c${n}`, viewCount: 1 }));
 const bytes = (value) => JSON.stringify(value).length;
 
-it('gravar um canal não regrava o cache dos outros', async () => {
+it("writing one channel doesn't rewrite the others' cache", async () => {
   const area = createFakeStorageArea();
   const cache = createChannelTabCache({ storage: createStore(area).channelTabStorage });
   for (let n = 0; n < 100; n += 1) await cache.set(channel(n), 'shorts', items(n));
@@ -30,7 +30,7 @@ it('gravar um canal não regrava o cache dos outros', async () => {
   expect(written).toBeLessThan(40_000);
 });
 
-it('outra aba lê o canal que esta aba gravou', async () => {
+it('another tab reads the channel this tab wrote', async () => {
   const area = createFakeStorageArea();
   const tabA = createChannelTabCache({ storage: createStore(area).channelTabStorage, now: () => 1 });
   const tabB = createChannelTabCache({ storage: createStore(area).channelTabStorage, now: () => 2 });

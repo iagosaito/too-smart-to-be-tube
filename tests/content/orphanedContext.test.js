@@ -27,13 +27,13 @@ afterAll(() => {
   process.off('unhandledRejection', recordRejection);
 });
 
-it('navegar numa aba órfã não gera erro não tratado', async () => {
+it('navigating in an orphaned tab raises no unhandled error', async () => {
   document.dispatchEvent(new Event('yt-navigate-finish'));
   await flush();
   expect(rejections.map(String)).toEqual([]);
 });
 
-it('clicar em Categorias numa aba órfã orienta a recarregar a página', async () => {
+it('clicking Categories in an orphaned tab tells the user to reload the page', async () => {
   document.querySelector(`#${ENTRY_ID} button`).click();
   await flush();
   expect(rejections.map(String)).toEqual([]);

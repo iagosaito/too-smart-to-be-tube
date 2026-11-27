@@ -15,7 +15,7 @@ function fakeSource({ cached = {}, load } = {}) {
 }
 
 describe('createFeedController', () => {
-  it('Shorts: abrir a aba já carrega o primeiro lote (só ele)', async () => {
+  it('Shorts: opening the tab already loads the first batch (only that one)', async () => {
     const source = fakeSource();
     const controller = createFeedController({ source, onChange: () => {}, batchSize: 2 });
     const channels = [1, 2, 3, 4].map((n) => channel(n));
@@ -29,7 +29,7 @@ describe('createFeedController', () => {
     expect(modelOf(session).hasMore).toBe(false);
   });
 
-  it('Vídeos: abrir a aba não faz requisições; mostra o feed já sincronizado', async () => {
+  it('Videos: opening the tab makes no requests; shows the already synced feed', async () => {
     const source = fakeSource();
     const controller = createFeedController({ source, onChange: () => {} });
     const session = controller.sessionFor(category, 'videos', [channel(1)], {});
@@ -39,7 +39,7 @@ describe('createFeedController', () => {
     expect(modelOf(session, feed).items.map((video) => video.videoId)).toEqual(['f1']);
   });
 
-  it('canais com cache fresco aparecem sem requisição e não entram no lote', async () => {
+  it('channels with a fresh cache show without a request and stay out of the batch', async () => {
     const source = fakeSource({ cached: { '/@c1': [{ videoId: 's1', channelId: '/@c1' }] } });
     const controller = createFeedController({ source, onChange: () => {}, batchSize: 1 });
     const session = controller.sessionFor(category, 'shorts', [channel(1), channel(2)], { '/@c1': 10 });
@@ -49,7 +49,7 @@ describe('createFeedController', () => {
     expect(source.load.mock.calls.map(([item]) => item.id)).not.toContain('/@c1');
   });
 
-  it('falha de um canal mostra o motivo e libera o canal para nova tentativa', async () => {
+  it("a channel's failure shows the reason and frees the channel for a retry", async () => {
     const source = fakeSource({ load: async () => { throw new LocalizedError('error.rateLimited'); } });
     const controller = createFeedController({ source, onChange: () => {}, batchSize: 1 });
     const session = controller.sessionFor(category, 'shorts', [channel(1)], {});
@@ -57,13 +57,13 @@ describe('createFeedController', () => {
     expect(modelOf(session)).toMatchObject({ errorKey: 'error.rateLimited', hasMore: true, loading: 0 });
   });
 
-  it('conta canais sem ucid (sincronização antiga) para a interface orientar', () => {
+  it('counts channels without a ucid (old sync) so the UI can guide the user', () => {
     const controller = createFeedController({ source: fakeSource(), onChange: () => {} });
     const session = controller.sessionFor(category, 'videos', [channel(1), channel(2, false)], {});
     expect(modelOf(session).missingIds).toBe(1);
   });
 
-  it('a mesma categoria e aba reaproveitam a sessão; mudar os canais recria', () => {
+  it('the same category and tab reuse the session; changing the channels recreates it', () => {
     const controller = createFeedController({ source: fakeSource(), onChange: () => {} });
     const first = controller.sessionFor(category, 'videos', [channel(1)], {});
     expect(controller.sessionFor(category, 'videos', [channel(1)], {})).toBe(first);
@@ -71,10 +71,10 @@ describe('createFeedController', () => {
   });
 });
 
-describe('páginas do feed', () => {
+describe('feed pages', () => {
   const shortsOf = (item, count) => Array.from({ length: count }, (_, i) => ({ videoId: `${item.id}-s${i}`, channelId: item.id, title: 't' }));
 
-  it('Shorts: o primeiro lote rende várias páginas de 24 sem nenhuma requisição nova', async () => {
+  it('Shorts: the first batch yields several pages of 24 without any new request', async () => {
     const source = fakeSource({ load: async (item) => shortsOf(item, 48) });
     const controller = createFeedController({ source, onChange: () => {}, batchSize: 8 });
     const session = controller.sessionFor(category, 'shorts', Array.from({ length: 20 }, (_, n) => channel(n)), {});
@@ -89,7 +89,7 @@ describe('páginas do feed', () => {
     expect(source.load).toHaveBeenCalledTimes(8);
   });
 
-  it('Shorts: só consulta o próximo lote quando o que foi baixado não enche a página', async () => {
+  it("Shorts: only queries the next batch when what was downloaded doesn't fill the page", async () => {
     const source = fakeSource({ load: async (item) => shortsOf(item, 5) });
     const controller = createFeedController({ source, onChange: () => {}, batchSize: 2 });
     const session = controller.sessionFor(category, 'shorts', Array.from({ length: 6 }, (_, n) => channel(n)), {});
@@ -101,7 +101,7 @@ describe('páginas do feed', () => {
     expect(modelOf(session).items).toHaveLength(20);
   });
 
-  it('Shorts: se o cache já enche a primeira página, nada vai à rede', async () => {
+  it('Shorts: if the cache already fills the first page, nothing goes to the network', async () => {
     const channels = Array.from({ length: 4 }, (_, n) => channel(n));
     const source = fakeSource({ cached: Object.fromEntries(channels.map((item) => [item.id, shortsOf(item, 10)])) });
     const controller = createFeedController({ source, onChange: () => {} });
@@ -111,7 +111,7 @@ describe('páginas do feed', () => {
     expect(modelOf(session).items).toHaveLength(PAGE_SIZE);
   });
 
-  it('Vídeos: pagina o feed já sincronizado e só consulta canais quando ele acaba', async () => {
+  it('Videos: pages through the already synced feed and only queries channels when it runs out', async () => {
     const channels = [channel(1), channel(2)];
     const feedItems = Array.from({ length: 30 }, (_, i) => ({ videoId: `v${i}`, channelId: channels[i % 2].id, publishedAt: 1_000 - i, title: 't' }));
     const source = fakeSource({ load: async () => [] });
@@ -131,7 +131,7 @@ describe('páginas do feed', () => {
 describe('createFeedSource', () => {
   const cacheStub = (hit = null) => ({ get: vi.fn(async () => hit), set: vi.fn(async () => {}) });
 
-  it('usa o cache quando há; senão consulta pela fila e guarda o resultado', async () => {
+  it('uses the cache when there is one; otherwise queries through the queue and stores the result', async () => {
     const queue = { run: vi.fn((task) => task()) };
     const fetchTab = vi.fn(async () => ['novo']);
     const cache = cacheStub();
@@ -147,7 +147,7 @@ describe('createFeedSource', () => {
 
   // Regression: a new session (channel added to the category, page reopened) requested again
   // channels whose batch was still in flight.
-  it('pedidos simultâneos do mesmo canal e aba compartilham uma única consulta', async () => {
+  it('simultaneous requests for the same channel and tab share a single query', async () => {
     const release = {};
     const fetchTab = vi.fn(({ tab }) => new Promise((resolve) => { release[tab] = resolve; }));
     const source = createFeedSource({ cache: cacheStub(), queue: { run: (task) => task() }, clientVersion: () => '2.2026', fetchTab });
@@ -162,7 +162,7 @@ describe('createFeedSource', () => {
     expect(await otherTab).toEqual(['short']);
   });
 
-  it('uma consulta que falhou não fica presa: o próximo pedido consulta de novo', async () => {
+  it("a failed query doesn't get stuck: the next request queries again", async () => {
     const fetchTab = vi.fn().mockRejectedValueOnce(new Error('rede')).mockResolvedValueOnce(['ok']);
     const source = createFeedSource({ cache: cacheStub(), queue: { run: (task) => task() }, clientVersion: () => '2.2026', fetchTab });
     await expect(source.load(channel(1), 'videos')).rejects.toThrow('rede');
@@ -170,7 +170,7 @@ describe('createFeedSource', () => {
     expect(fetchTab).toHaveBeenCalledTimes(2);
   });
 
-  it('sem a versão do cliente na página, falha com erro traduzível em vez de consultar', async () => {
+  it('without the client version in the page, fails with a translatable error instead of querying', async () => {
     const source = createFeedSource({ cache: cacheStub(), queue: { run: vi.fn() }, clientVersion: () => null });
     await expect(source.load(channel(1), 'videos')).rejects.toMatchObject({ key: 'error.feedUnavailable' });
   });

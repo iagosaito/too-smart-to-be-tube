@@ -21,15 +21,15 @@ describe('detectLocale', () => {
     expect(detectLocale(fakeDoc(lang), fakeNav('en-US'))).toBe(expected);
   });
 
-  it('segue o idioma do YouTube mesmo com o navegador em outro idioma', () => {
+  it("follows YouTube's language even with the browser in another language", () => {
     expect(detectLocale(fakeDoc('es-419'), fakeNav('pt-BR'))).toBe('es');
   });
 
-  it('usa o idioma do navegador quando a página não declara lang', () => {
+  it("uses the browser's language when the page declares no lang", () => {
     expect(detectLocale(fakeDoc(''), fakeNav('pt-BR'))).toBe('pt');
   });
 
-  it('cai no inglês para idiomas sem tradução', () => {
+  it('falls back to English for languages without a translation', () => {
     expect(detectLocale(fakeDoc('fr-FR'), fakeNav('de-DE'))).toBe('en');
     // null (not undefined): undefined would trigger the defaults, which read the real page.
     expect(detectLocale(null, null)).toBe('en');
@@ -37,14 +37,14 @@ describe('detectLocale', () => {
 });
 
 describe('t', () => {
-  it('traduz no idioma ativo da página e interpola parâmetros', () => {
+  it("translates in the page's active language and interpolates parameters", () => {
     document.documentElement.lang = 'en';
     expect(t('heading.renameLabel', { name: 'Tech' })).toBe('Rename category Tech');
     document.documentElement.lang = 'es-419';
     expect(t('heading.renameLabel', { name: 'Tech' })).toBe('Renombrar categoría Tech');
   });
 
-  it('usa o inglês quando a chave falta no idioma e a própria chave se nem o inglês tiver', () => {
+  it('uses English when the key is missing in the language, and the key itself if English lacks it too', () => {
     const original = DICTIONARIES.es['chips.new'];
     delete DICTIONARIES.es['chips.new'];
     try {
@@ -55,7 +55,7 @@ describe('t', () => {
     expect(t('chave.inexistente', {}, 'pt')).toBe('chave.inexistente');
   });
 
-  it('mantém placeholders sem valor em vez de escrever "undefined"', () => {
+  it('keeps placeholders without a value instead of writing "undefined"', () => {
     expect(t('heading.renameLabel', {}, 'en')).toBe('Rename category {name}');
   });
 });
@@ -72,7 +72,7 @@ describe('plural', () => {
     expect(plural('heading.channels', count, {}, locale)).toBe(expected);
   });
 
-  it('zero vai para o plural em todos os idiomas (inclusive pt-BR, que o Unicode trata como singular)', () => {
+  it('zero goes to the plural in every language (including pt-BR, which Unicode treats as singular)', () => {
     expect(plural('heading.channels', 0, {}, 'pt')).toBe('0 canais');
     expect(plural('heading.channels', 0, {}, 'en')).toBe('0 channels');
     expect(plural('heading.channels', 0, {}, 'es')).toBe('0 canales');
@@ -100,29 +100,29 @@ describe('relativeTime', () => {
 });
 
 describe('localeTag', () => {
-  it('converte o idioma curto na tag completa para as APIs Intl', () => {
+  it('turns the short language into the full tag for the Intl APIs', () => {
     expect([localeTag('en'), localeTag('pt'), localeTag('es')]).toEqual(['en', 'pt-BR', 'es']);
   });
 });
 
 // Prevents shipping a language with a missing translation: every key must exist in every language,
 // with the same type (text or plural).
-describe('paridade dos dicionários', () => {
+describe('dictionary parity', () => {
   const shape = (dictionary) =>
     Object.fromEntries(Object.entries(dictionary).map(([key, value]) => [key, typeof value === 'string' ? 'text' : Object.keys(value).sort().join('/')]));
 
-  it.each(['pt', 'es'])('%s tem exatamente as mesmas chaves que o inglês', (locale) => {
+  it.each(['pt', 'es'])('%s has exactly the same keys as English', (locale) => {
     expect(shape(DICTIONARIES[locale])).toEqual(shape(DICTIONARIES.en));
   });
 
-  it.each(['en', 'pt', 'es'])('%s não tem textos vazios', (locale) => {
+  it.each(['en', 'pt', 'es'])('%s has no empty texts', (locale) => {
     const texts = Object.values(DICTIONARIES[locale]).flatMap((value) => (typeof value === 'string' ? [value] : Object.values(value)));
     expect(texts.filter((text) => !text.trim())).toEqual([]);
   });
 });
 
 describe('describeError', () => {
-  it('traduz erros localizados no idioma ativo e mantém a mensagem dos demais', () => {
+  it("translates localized errors in the active language and keeps other errors' messages", () => {
     document.documentElement.lang = 'en';
     expect(describeError(new LocalizedError('error.http', { status: 401 }))).toBe('YouTube responded 401');
     expect(describeError(new Error('falha qualquer'))).toBe('falha qualquer');

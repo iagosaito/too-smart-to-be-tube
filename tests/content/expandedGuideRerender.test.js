@@ -15,7 +15,7 @@ function simulateYouTubeRerenderingSections() {
   sections.replaceChildren(...fresh);
 }
 
-it('o item Categorias volta ao menu expandido depois que o YouTube redesenha as seções', async () => {
+it('the Categories item comes back to the expanded menu after YouTube redraws the sections', async () => {
   document.body.innerHTML = GUIDE_HTML;
   globalThis.chrome = { runtime: { id: 'test' }, storage: { local: createFakeStorageArea(), onChanged: { addListener: () => {} } } };
   await import('../../src/content/main.js');

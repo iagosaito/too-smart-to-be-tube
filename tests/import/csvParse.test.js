@@ -9,33 +9,33 @@ describe('detectDelimiter', () => {
     ['a\tb\n1\t2', '\t'],
     ['sozinho', ','],
     ['a;b\rc,d,e,f', ';'],
-  ])('detecta o separador de %j', (text, expected) => {
+  ])('detects the separator of %j', (text, expected) => {
     expect(detectDelimiter(text)).toBe(expected);
   });
 });
 
 describe('parseCsv', () => {
-  it('lê linhas com \\n ou \\r\\n e ignora linhas em branco', () => {
+  it('reads rows with \\n or \\r\\n and ignores blank lines', () => {
     expect(parseCsv('a,b\r\n1,2\n\n3,4\r\n')).toEqual([['a', 'b'], ['1', '2'], ['3', '4']]);
   });
 
-  it('remove o BOM do início', () => {
+  it('removes the BOM at the start', () => {
     expect(parseCsv('﻿Canal,Categoria\nA,B')[0]).toEqual(['Canal', 'Categoria']);
   });
 
-  it('entende aspas com separador, aspas escapadas e quebra de linha', () => {
+  it('understands quotes with a separator, escaped quotes and line breaks', () => {
     expect(parseCsv('"a, b","diz ""oi""","duas\nlinhas"')).toEqual([['a, b', 'diz "oi"', 'duas\nlinhas']]);
   });
 
-  it('aceita ponto e vírgula (Excel em português)', () => {
+  it('accepts semicolons (Excel in Portuguese)', () => {
     expect(parseCsv('Canal;Categoria\r\n"Nome; com ponto";Tech')).toEqual([['Canal', 'Categoria'], ['Nome; com ponto', 'Tech']]);
   });
 
-  it('mantém células vazias', () => {
+  it('keeps empty cells', () => {
     expect(parseCsv('a,,c')).toEqual([['a', '', 'c']]);
   });
 
-  it('faz o caminho de volta do que a exportação gera', () => {
+  it('round-trips what the export generates', () => {
     const rows = [['Canal', 'Categoria'], ['A, "B"', 'Música'], ['Linha\nquebrada', '']];
     expect(parseCsv(toCsv(rows))).toEqual(rows);
   });
@@ -44,12 +44,12 @@ describe('parseCsv', () => {
 // Regression (ReDoS): a long cell followed by a lone "\r" made the parser's regex backtrack through
 // every possible length, in quadratic time: a malicious 5 MB CSV would freeze the YouTube tab for
 // hours.
-describe('parseCsv com entradas hostis', () => {
-  it('trata "\\r" sozinho como quebra de linha', () => {
+describe('parseCsv with hostile input', () => {
+  it('treats a lone "\\r" as a line break', () => {
     expect(parseCsv('a,b\rc,d\r')).toEqual([['a', 'b'], ['c', 'd']]);
   });
 
-  it('lê uma célula longa terminada em "\\r" sozinho em tempo linear', () => {
+  it('reads a long cell ending in a lone "\\r" in linear time', () => {
     const text = 'Channel,Category\n' + 'a'.repeat(30_000) + '\rx';
     const start = performance.now();
     const rows = parseCsv(text);
@@ -57,7 +57,7 @@ describe('parseCsv com entradas hostis', () => {
     expect(rows).toEqual([['Channel', 'Category'], ['a'.repeat(30_000)], ['x']]);
   });
 
-  it('lê um arquivo de ~5 MB em menos de 1 segundo', () => {
+  it('reads a ~5 MB file in under 1 second', () => {
     const line = 'Some Channel Name,Category,https://www.youtube.com/@channel,/@channel\r\n';
     const text = 'Channel,Category,URL,Identifier\r\n' + line.repeat(Math.floor(5_000_000 / line.length));
     const start = performance.now();

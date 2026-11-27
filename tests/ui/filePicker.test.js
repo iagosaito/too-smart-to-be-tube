@@ -15,7 +15,7 @@ function captureInput() {
 }
 
 describe('pickFile', () => {
-  it('abre um input de arquivo CSV e resolve com o arquivo escolhido', async () => {
+  it('opens a CSV file input and resolves with the chosen file', async () => {
     const getInput = captureInput();
     const promise = pickFile();
     const input = getInput();
@@ -28,7 +28,7 @@ describe('pickFile', () => {
     expect(input.isConnected).toBe(false);
   });
 
-  it('resolve null e remove o input quando o usuário cancela', async () => {
+  it('resolves null and removes the input when the user cancels', async () => {
     const getInput = captureInput();
     const promise = pickFile();
     getInput().dispatchEvent(new Event('cancel'));
