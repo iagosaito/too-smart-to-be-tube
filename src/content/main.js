@@ -10,7 +10,8 @@ import { clientVersionFromDocument } from '../youtube/pageData.js';
 import { waitFor } from '../dom/waitFor.js';
 import { createStore } from '../storage/store.js';
 import { showToast } from '../ui/components/feedback.js';
-import { closeCategoriesPage, openCategoriesPage } from '../ui/page.js';
+import { routeFromUrl } from '../ui/categoryRoute.js';
+import { closeCategoriesPage, isCategoriesPageOpen, openCategoriesPage } from '../ui/page.js';
 import { t } from '../i18n/i18n.js';
 import { createSyncCoordinator } from '../sync/syncCoordinator.js';
 import { runIfAlive } from './extensionContext.js';
@@ -92,6 +93,7 @@ function stopBackgroundWork() {
   // Orphaned script: stop reacting to navigations. The next page load injects the extension's new
   // script.
   document.removeEventListener('yt-navigate-finish', setup);
+  window.removeEventListener('popstate', followHistory);
 }
 
 // The menus may only be mounted long after the page loads (e.g. in a narrow window the expanded
@@ -131,8 +133,36 @@ function setupMenus() {
   whenPresent(SELECTORS.guideSection, (section) => keepSidebarEntry(section.closest(SELECTORS.guide) ?? section.parentElement, openCategories), SELECTORS.guideDrawer);
 }
 
+// A Categories URL (refresh, Back/Forward, a bookmark) reopens the view it names. The page manager
+// is awaited because on a fresh load the content script may run before YouTube mounts it.
+// Both a YouTube navigation and popstate may ask for the same opening; the first one wins.
+let openingFromUrl = null;
+
+function openFromUrl() {
+  if (!routeFromUrl(window.location.href) || isCategoriesPageOpen() || openingFromUrl) return openingFromUrl;
+  openingFromUrl = openRoute().finally(() => {
+    openingFromUrl = null;
+  });
+  return openingFromUrl;
+}
+
+async function openRoute() {
+  await waitFor(SELECTORS.pageManager, { timeout: DOCUMENT_WAIT_MS }).catch(() => null);
+  // Read again after waiting: the user may have left in the meantime.
+  const route = routeFromUrl(window.location.href);
+  if (route && !isCategoriesPageOpen()) await openCategories({ initialFilter: route.filter, initialTab: route.tab });
+}
+
+// Back/Forward between a Categories URL and the YouTube page underneath may not trigger a YouTube
+// navigation (the page underneath never changed), so history is followed here too.
+function followHistory() {
+  if (routeFromUrl(window.location.href)) openFromUrl();
+  else closeCategoriesPage();
+}
+
 async function setup() {
   setupMenus();
+  openFromUrl();
   runIfAlive(refreshSidebarCategories, stopBackgroundWork);
   await runIfAlive(syncFromDom, stopBackgroundWork);
 }
@@ -142,6 +172,7 @@ async function setup() {
 // the Categories page behave like any other YouTube page.
 document.addEventListener('yt-navigate-start', closeCategoriesPage);
 document.addEventListener('yt-navigate-finish', setup);
+window.addEventListener('popstate', followHistory);
 setup();
 
 // Keeps the sidebar list up to date when categories change (including from another YouTube tab open

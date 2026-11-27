@@ -17,6 +17,7 @@ import { preserveFocus } from './focus.js';
 import { renderPage, SLOTS } from './render.js';
 import { describeError } from '../i18n/errors.js';
 import { plural, t } from '../i18n/i18n.js';
+import { routeFromUrl, urlForView } from './categoryRoute.js';
 import { FILTER_ALL, pruneSelection, resolveFilter, SORT_NAME, visibleChannels } from './view.js';
 
 export const PAGE_ID = 'tstb-page';
@@ -42,6 +43,10 @@ export async function openCategoriesPage(options) {
   // "Syncing…" instead of offering another one.
   if (context.sync && (context.sync.isRunning() || needsSync(context.state, context.now()))) runSync(page, context);
   return page;
+}
+
+export function isCategoriesPageOpen() {
+  return Boolean(document.getElementById(PAGE_ID));
 }
 
 export function closeCategoriesPage() {
@@ -129,9 +134,22 @@ function render(page, context) {
   const now = context.now();
   const env = { now, cardCache: context.cardCache, feed: feedEnvFor(context, now) };
   const parts = renderPage(context.state, context.view, createActions(page, context), env);
-  markActiveSidebarCategory(context.state.categories.some((category) => category.id === context.view.filter) ? context.view.filter : null);
+  const isCategory = context.state.categories.some((category) => category.id === context.view.filter);
+  markActiveSidebarCategory(isCategory ? context.view.filter : null);
+  updateUrl(context.view, isCategory);
   preserveFocus(page, () => fillSlots(page, parts));
   closeCategoryMenuIfDetached();
+}
+
+function updateUrl(view, isCategory) {
+  // Tabs only exist inside a category; "All" and "No category" keep a single URL each.
+  const href = urlForView({ filter: view.filter, tab: isCategory ? view.tab : FEED_TAB.VIDEOS }, window.location.href);
+  if (href === window.location.href) return;
+  // Opening the page is a new history entry, so Back returns to the YouTube page underneath.
+  // Switching category or tab inside it replaces the entry: Back leaves the page instead of
+  // walking through every category visited.
+  if (routeFromUrl(window.location.href)) window.history.replaceState(window.history.state, '', href);
+  else window.history.pushState(null, '', href);
 }
 
 function fillSlots(page, parts) {
