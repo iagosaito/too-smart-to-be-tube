@@ -6,8 +6,9 @@ third-party requests (fonts, analytics or CDNs), matching the extension's privac
 - Preview: open `site/index.html` in a browser.
 - Deploy: published to GitHub Pages by `.github/workflows/pages.yml` on every change to `site/` on `main`
   (https://iagosaito.github.io/too-smart-to-be-tube/). Being plain files, it also works on any static host.
-- Design: borrows YouTube's dark palette, type and shapes (a watch page with chapters, video cards, chips), because
-  the extension lives inside YouTube. It never uses YouTube's logo or name as its own.
+- Design: a product page for a browser extension. A red hero (the color of the platform it lives in) says what it
+  is, "Free Chrome extension for YouTube", next to the real screenshot inside a browser window with the extension's
+  icon in the toolbar; the light body below uses short icon cards. It never uses YouTube's logo or name as its own.
 
 ## Screenshots
 
