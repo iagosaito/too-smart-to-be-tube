@@ -36,9 +36,15 @@ purpose: judge the code as it is.
      crashes.
    - YouTube enforces Trusted Types, and the project forbids `innerHTML`.
    - New extension permissions need a justification.
+   - Check the change against Chrome's official extension guidance, summarized in `CLAUDE.md` under "Chrome
+     extension best practices": least privilege, no remote code or `eval`, page data treated as untrusted in
+     content scripts, a single purpose, user data kept local.
 3. **Quality.**
-   - CONTRIBUTING's rules: small functions, comments that explain why, YouTube selectors only in
-     `src/dom/selectors.js`, pure logic without DOM or `chrome.*`.
+   - CONTRIBUTING's rules:
+     - functions of 20 lines at most;
+     - comments that explain why rather than how (flag comments that only narrate the code);
+     - YouTube selectors only in `src/dom/selectors.js`;
+     - pure logic without DOM or `chrome.*`.
    - Everything in the repo in English (comments, test names); dead code; legacy or migration code (not wanted
      while the extension is unpublished).
 

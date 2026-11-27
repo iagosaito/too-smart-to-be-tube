@@ -32,6 +32,49 @@ Categories section in the sidebar and a page with a feed per category (Videos ·
 Run lint, tests and build before every commit. Run `npm run e2e:youtube` after changing DOM selectors, SPA
 navigation, URLs and history, or how the feed loads and scrolls.
 
+## Code
+
+- **Small functions: aim for 20 lines at most.** One responsibility each. When a function grows past that,
+  extract the steps into well-named helpers. When you touch an existing longer function, split it as part of
+  the change if that stays readable.
+- **Comments explain why, never how.** The code already says what it does and how. A comment records the
+  reason behind it: a YouTube quirk, a browser limitation, a UX trade-off, a risk being avoided. Don't comment
+  obvious code, and don't narrate steps.
+
+## Chrome extension best practices
+
+Follow Chrome's official guidance for extensions:
+[Stay secure](https://developer.chrome.com/docs/extensions/develop/security-privacy/stay-secure),
+[Protect user privacy](https://developer.chrome.com/docs/extensions/develop/security-privacy/user-privacy),
+[Content scripts](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts) and the
+[Chrome Web Store program policies](https://developer.chrome.com/docs/webstore/program-policies/policies).
+When in doubt, read the current page: it wins over this summary. In this project that means:
+
+- **Manifest V3 only:** no MV2 APIs or patterns.
+- **Least privilege:**
+  - Today the extension asks only for `storage` and a content script on `https://www.youtube.com/*`.
+  - A new permission, host or manifest key must be essential and justified in the PR. Prefer optional or
+    narrower alternatives.
+  - Leave out unused manifest fields.
+- **No remote code:**
+  - Everything that runs ships in the package.
+  - No `eval`, `new Function` or code loaded from the network.
+  - Keep the default extension CSP.
+- **Content scripts are exposed:** they share the page's renderer process.
+  - Treat everything from the page as untrusted: the DOM, channel names, URL fragments.
+  - Build DOM safely with `el()`, never with `innerHTML`.
+  - Never let page data choose a request URL.
+- **Messaging, if it's ever added** (for example a service worker): validate the sender and the shape of every
+  message, and never send secrets to the content script.
+- **Single purpose:** every feature must serve organizing and watching YouTube subscriptions. Unrelated
+  features belong in another extension.
+- **User data stays local:**
+  - Data lives in `chrome.storage.local`. No analytics, no third-party servers.
+  - The only network requests go to YouTube itself, and they are paced (see below).
+  - Any new data collection must be necessary for that purpose and disclosed to the user.
+- **Shipping:** keep the extension working as YouTube changes, because broken functionality violates the Store
+  policies. The checks for that are `npm run e2e:youtube` and the selectors kept in one file.
+
 ## Workflow
 
 - **Bug fixes are test-first.** Reproduce the bug in a test and watch it fail for the right reason. Fix it.
