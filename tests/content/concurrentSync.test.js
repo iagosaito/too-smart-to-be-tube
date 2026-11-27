@@ -9,7 +9,7 @@ import { GUIDE_HTML } from '../helpers/youtubeFixtures.js';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-it('cliques repetidos em Categorias compartilham uma única sincronização', async () => {
+it('repeated clicks on Categories share a single sync', async () => {
   document.body.innerHTML = `<ytd-page-manager></ytd-page-manager>${GUIDE_HTML}`;
   window.scrollTo = vi.fn();
   globalThis.chrome = { runtime: { id: 'test' }, storage: { local: createFakeStorageArea(), onChanged: { addListener: () => {} } } };

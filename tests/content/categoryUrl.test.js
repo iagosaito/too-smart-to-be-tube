@@ -39,25 +39,25 @@ beforeAll(async () => {
   await flush();
 });
 
-it('carregar uma URL de Categorias abre a categoria e a aba que ela indica', () => {
+it('loading a Categories URL opens the category and the tab it names', () => {
   expect(page()).not.toBeNull();
   expect(selectedTab()).toBe('Canais');
   expect(globalThis.fetch).not.toHaveBeenCalled();
 });
 
-it('voltar para a página do YouTube anterior fecha a página de Categorias', async () => {
+it('going back to the previous YouTube page closes the Categories page', async () => {
   await traverse(-1);
   expect(window.location.pathname + window.location.search).toBe('/watch?v=abc');
   expect(page()).toBeNull();
 });
 
-it('avançar de novo para a URL de Categorias reabre a mesma visão', async () => {
+it('going forward to the Categories URL again reopens the same view', async () => {
   await traverse(1);
   expect(selectedTab()).toBe('Canais');
   expect(window.location.hash).toBe('#tstb=prog&tab=channels');
 });
 
-it('a navegação do YouTube e o popstate juntos abrem a página uma vez só', async () => {
+it("YouTube's navigation and popstate together open the page only once", async () => {
   await go('/watch?v=abc');
   const mounts = [];
   const observer = new MutationObserver((records) => records.forEach((record) => mounts.push(...[...record.addedNodes].filter((node) => node.id === PAGE_ID))));

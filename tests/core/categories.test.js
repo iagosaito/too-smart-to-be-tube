@@ -15,20 +15,20 @@ const music = { id: 'm', name: 'Música', channelIds: ['/@a'] };
 const tech = { id: 't', name: 'Tech', channelIds: [] };
 
 describe('createCategory', () => {
-  it('adiciona uma categoria vazia com o nome limpo', () => {
+  it('adds an empty category with the trimmed name', () => {
     expect(createCategory([], '  Games ', makeId)).toEqual([{ id: 'id-1', name: 'Games', channelIds: [] }]);
   });
 
-  it('ignora nome vazio', () => {
+  it('ignores an empty name', () => {
     const categories = [tech];
     expect(createCategory(categories, '   ', makeId)).toBe(categories);
   });
 
-  it('ignora nome duplicado sem diferenciar maiúsculas', () => {
+  it('ignores a duplicate name, case-insensitively', () => {
     expect(createCategory([music], 'música', makeId)).toEqual([music]);
   });
 
-  it('não muta o array original', () => {
+  it("doesn't mutate the original array", () => {
     const categories = [tech];
     createCategory(categories, 'Nova', makeId);
     expect(categories).toEqual([tech]);
@@ -36,66 +36,66 @@ describe('createCategory', () => {
 });
 
 describe('renameCategory', () => {
-  it('renomeia a categoria alvo', () => {
+  it('renames the target category', () => {
     expect(renameCategory([music, tech], 't', 'Tecnologia')[1].name).toBe('Tecnologia');
   });
 
-  it('ignora nome vazio, null (prompt cancelado) ou já usado por outra', () => {
+  it('ignores an empty name, null (prompt cancelled) or one already used by another category', () => {
     const categories = [music, tech];
     expect(renameCategory(categories, 't', '')).toBe(categories);
     expect(renameCategory(categories, 't', null)).toBe(categories);
     expect(renameCategory(categories, 't', 'MÚSICA')).toBe(categories);
   });
 
-  it('permite mudar só a capitalização da própria categoria', () => {
+  it("allows changing only the capitalization of the category's own name", () => {
     expect(renameCategory([tech], 't', 'TECH')[0].name).toBe('TECH');
   });
 });
 
 describe('removeCategory', () => {
-  it('remove pelo id e ignora id inexistente', () => {
+  it('removes by id and ignores an unknown id', () => {
     expect(removeCategory([music, tech], 'm')).toEqual([tech]);
     expect(removeCategory([music], 'x')).toEqual([music]);
   });
 });
 
 describe('assignChannel', () => {
-  it('move o canal para a nova categoria, tirando da anterior', () => {
+  it('moves the channel to the new category, taking it out of the previous one', () => {
     const result = assignChannel([music, tech], '/@a', 't');
     expect(result[0].channelIds).toEqual([]);
     expect(result[1].channelIds).toEqual(['/@a']);
   });
 
-  it('com categoria null deixa o canal sem categoria', () => {
+  it('with a null category leaves the channel uncategorized', () => {
     const result = assignChannel([music, tech], '/@a', null);
     expect(result.every((c) => c.channelIds.length === 0)).toBe(true);
   });
 
-  it('não duplica ao atribuir à mesma categoria', () => {
+  it("doesn't duplicate when assigning to the same category", () => {
     expect(assignChannel([music], '/@a', 'm')[0].channelIds).toEqual(['/@a']);
   });
 
-  it('não muta as categorias originais', () => {
+  it("doesn't mutate the original categories", () => {
     assignChannel([music, tech], '/@a', 't');
     expect(music.channelIds).toEqual(['/@a']);
   });
 });
 
 describe('assignChannels', () => {
-  it('move vários canais de uma vez, tirando-os das categorias anteriores', () => {
+  it('moves several channels at once, taking them out of their previous categories', () => {
     const result = assignChannels([music, tech], ['/@a', '/@b'], 't');
     expect(result[0].channelIds).toEqual([]);
     expect(result[1].channelIds).toEqual(['/@a', '/@b']);
   });
 
-  it('com lista vazia devolve as categorias sem mudança', () => {
+  it('with an empty list returns the categories unchanged', () => {
     const categories = [music];
     expect(assignChannels(categories, [], 't')).toBe(categories);
   });
 });
 
 describe('findCategoryOf', () => {
-  it('encontra a categoria do canal ou retorna null', () => {
+  it("finds the channel's category or returns null", () => {
     expect(findCategoryOf([music, tech], '/@a')).toBe(music);
     expect(findCategoryOf([music, tech], '/@z')).toBeNull();
   });
@@ -108,29 +108,29 @@ describe('groupChannels', () => {
     '/@c': { id: '/@c', name: 'Alfa' },
   };
 
-  it('agrupa por categoria e separa os sem categoria em ordem alfabética', () => {
+  it('groups by category and keeps the uncategorized ones apart, in alphabetical order', () => {
     const { groups, uncategorized } = groupChannels([music, tech], channels);
     expect(groups[0].channels.map((c) => c.id)).toEqual(['/@a']);
     expect(groups[1].channels).toEqual([]);
     expect(uncategorized.map((c) => c.name)).toEqual(['Alfa', 'Zeta']);
   });
 
-  it('ignora ids de canais que não existem mais', () => {
+  it('ignores ids of channels that no longer exist', () => {
     const ghost = { id: 'g', name: 'G', channelIds: ['/@sumiu'] };
     expect(groupChannels([ghost], channels).groups[0].channels).toEqual([]);
   });
 });
 
 describe('sortCategoriesByName', () => {
-  it('ordena ignorando acentos e maiúsculas, sem mutar a entrada', () => {
+  it('sorts ignoring accents and case, without mutating the input', () => {
     const input = [{ name: 'viagem' }, { name: 'Ábaco' }, { name: 'Música' }, { name: 'livros' }];
     expect(sortCategoriesByName(input).map((c) => c.name)).toEqual(['Ábaco', 'livros', 'Música', 'viagem']);
     expect(input[0].name).toBe('viagem');
   });
 });
 
-describe('tamanho do nome da categoria', () => {
-  it('createCategory e renameCategory cortam nomes acima de 60 caracteres', () => {
+describe('category name length', () => {
+  it('createCategory and renameCategory cut names longer than 60 characters', () => {
     expect(createCategory([], 'y'.repeat(100), makeId)[0].name).toBe('y'.repeat(60));
     expect(renameCategory([tech], 't', 'z'.repeat(100))[0].name).toBe('z'.repeat(60));
   });

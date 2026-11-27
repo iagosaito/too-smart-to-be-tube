@@ -61,17 +61,17 @@ describe('parseRelativeTime', () => {
     ['2y ago', NOW - 730 * DAY],
     ['Transmitido há 1 mês', NOW - 30 * DAY],
     ['há 2 meses', NOW - 60 * DAY],
-  ])('converte %j', (text, expected) => {
+  ])('converts %j', (text, expected) => {
     expect(parseRelativeTime(text, NOW)).toBe(expected);
   });
 
-  it.each(['Premieres in 2 hours', 'Scheduled for 12/25', '1K views', ''])('ignora %j', (text) => {
+  it.each(['Premieres in 2 hours', 'Scheduled for 12/25', '1K views', ''])('ignores %j', (text) => {
     expect(parseRelativeTime(text, NOW)).toBeNull();
   });
 });
 
 describe('parseFeedPage', () => {
-  it('lê canal e data nos dois formatos do feed', () => {
+  it('reads the channel and date in both feed formats', () => {
     const data = { contents: [videoRenderer('alura', '2 hours ago'), lockup('fireship', '3 days ago')] };
     expect(parseFeedPage(data, NOW)).toEqual([
       { channelId: '/@alura', publishedAt: NOW - 2 * HOUR },
@@ -79,17 +79,17 @@ describe('parseFeedPage', () => {
     ]);
   });
 
-  it('lê o formato real abreviado com o rótulo de acessibilidade', () => {
+  it('reads the real abbreviated format with the accessibility label', () => {
     const data = { contents: [lockup('Fireship', '1d ago', 'Some video', '1 day ago')] };
     expect(parseFeedPage(data, NOW)).toEqual([{ channelId: '/@Fireship', publishedAt: NOW - DAY }]);
   });
 
-  it('nunca usa o título como data', () => {
+  it('never uses the title as a date', () => {
     const data = { contents: [lockup('a', 'Scheduled', 'What I did 3 days ago'), videoRenderer('b', 'Premiere', '5 hours ago lol')] };
     expect(parseFeedPage(data, NOW)).toEqual([]);
   });
 
-  it('descarta itens sem canal (ex.: Shorts sem autor)', () => {
+  it('discards items without a channel (e.g. Shorts without an author)', () => {
     expect(parseFeedPage({ contents: [{ videoRenderer: { publishedTimeText: { simpleText: '1 day ago' } } }] }, NOW)).toEqual([]);
   });
 });
@@ -97,7 +97,7 @@ describe('parseFeedPage', () => {
 // Regression: the channel name comes before the date in metadataRows. A channel called "1 second
 // ago" (or containing "5m ago") was read as the publish date and always stayed at the top of
 // "Latest video".
-describe('nome do canal não é lido como data', () => {
+describe('the channel name is not read as a date', () => {
   function lockupWithAuthorName(authorName, published) {
     const node = lockup('spoofer', published);
     const parts = node.lockupViewModel.metadata.lockupMetadataViewModel.metadata.contentMetadataViewModel.metadataRows[0].metadataParts;
@@ -105,7 +105,7 @@ describe('nome do canal não é lido como data', () => {
     return node;
   }
 
-  it.each(['1 second ago', 'Canal 5m ago', 'há 1 minuto'])('canal chamado %j continua com a data real do vídeo', (authorName) => {
+  it.each(['1 second ago', 'Canal 5m ago', 'há 1 minuto'])("a channel called %j keeps the video's real date", (authorName) => {
     expect(parseFeedPage({ contents: [lockupWithAuthorName(authorName, '3 days ago')] }, NOW)).toEqual([
       { channelId: '/@spoofer', publishedAt: NOW - 3 * DAY },
     ]);
@@ -113,7 +113,7 @@ describe('nome do canal não é lido como data', () => {
 });
 
 describe('latestByChannel', () => {
-  it('fica com a data mais recente de cada canal', () => {
+  it('keeps the most recent date of each channel', () => {
     const items = [
       { channelId: '/@a', publishedAt: 10 },
       { channelId: '/@a', publishedAt: 30 },
@@ -127,7 +127,7 @@ describe('fetchLatestUploads', () => {
   const textResponse = (text) => ({ ok: true, text: async () => text });
   const jsonResponse = (json) => ({ ok: true, json: async () => json });
 
-  it('lê o feed em inglês, segue as continuações e junta por canal', async () => {
+  it('reads the feed in English, follows the continuations and groups by channel', async () => {
     const firstHtml = channelsPageHtml({ contents: [videoRenderer('a', '1 day ago'), continuationItem('T1')] });
     const fetchFn = vi.fn()
       .mockResolvedValueOnce(textResponse(firstHtml))
@@ -140,7 +140,7 @@ describe('fetchLatestUploads', () => {
     expect(JSON.parse(fetchFn.mock.calls[1][1].body).context.client.hl).toBe('en');
   });
 
-  it('falha com mensagem clara quando o feed não pode ser lido', async () => {
+  it("fails with a clear message when the feed can't be read", async () => {
     const fetchFn = vi.fn().mockResolvedValue(textResponse('<html>login</html>'));
     await expect(fetchLatestUploads({ fetchFn, cookie: '' })).rejects.toMatchObject({ key: 'error.feedUnavailable' });
   });

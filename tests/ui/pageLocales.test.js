@@ -69,8 +69,8 @@ describe.each([
     upload: 'Video hace 2 días',
     pill: 'Sin categoría',
   },
-])('página de Categorias com o YouTube em $lang', (expected) => {
-  it('mostra título, status, chips e título da visão no idioma do YouTube', async () => {
+])('Categories page with YouTube in $lang', (expected) => {
+  it("shows the title, status, chips and view title in YouTube's language", async () => {
     const page = await openIn(expected.lang);
     expect(text(page, 'h1')).toBe(expected.title);
     expect(text(page, '.tstb-subtitle')).toBe(expected.subtitle);
@@ -79,7 +79,7 @@ describe.each([
     expect([...page.querySelectorAll('.tstb-header-actions button')].map((node) => node.textContent)).toContain(expected.sync);
   });
 
-  it('traduz a data do último vídeo e o menu de categoria do cartão', async () => {
+  it("translates the latest video date and the card's category menu", async () => {
     const page = await openIn(expected.lang);
     expect(text(card(page, 'Bossa'), '.tstb-card-meta')).toBe(expected.upload);
     card(page, 'Bossa').querySelector('.tstb-pill').click();
@@ -87,12 +87,12 @@ describe.each([
   });
 });
 
-describe('item do menu lateral', () => {
+describe('sidebar item', () => {
   it.each([
     ['en', 'Categories'],
     ['pt-BR', 'Categorias'],
     ['es', 'Categorías'],
-  ])('com o YouTube em %s mostra "%s"', (lang, label) => {
+  ])('with YouTube in %s shows "%s"', (lang, label) => {
     document.documentElement.lang = lang;
     document.body.innerHTML = GUIDE_HTML;
     const entry = injectSidebarEntry(document.querySelector('ytd-guide-renderer'), () => {});
@@ -100,8 +100,8 @@ describe('item do menu lateral', () => {
   });
 });
 
-describe('CSV sempre em inglês', () => {
-  it.each(['en', 'pt-BR', 'es'])('com a interface em %s o arquivo exportado é o mesmo', async (lang) => {
+describe('CSV always in English', () => {
+  it.each(['en', 'pt-BR', 'es'])('with the UI in %s the exported file is the same', async (lang) => {
     const page = await openIn(lang);
     [...page.querySelectorAll('.tstb-header-actions button')].at(-1).click();
     const [fileName, csv] = download.mock.calls[0];
@@ -114,14 +114,14 @@ describe('CSV sempre em inglês', () => {
     );
   });
 
-  it('importa o formato em inglês, com "No category" ou célula vazia como sem categoria', () => {
+  it('imports the English format, with "No category" or an empty cell as uncategorized', () => {
     const csv = 'Channel,Category,URL,Identifier\r\nAlura,No category,,/@alura\r\nBossa Nova,Music,,/@bossa\r\n';
     const { categories: next, summary } = planImport({ channels, categories }, readImport(parseCsv(csv)).entries);
     expect(next.map((category) => [category.name, category.channelIds])).toEqual([['Tech', []], ['Music', ['/@bossa']]]);
     expect(summary).toMatchObject({ matched: 2, created: ['Music'] });
   });
 
-  it('continua importando arquivos exportados pela versão anterior, em português', () => {
+  it('still imports files exported by the earlier version, in Portuguese', () => {
     const csv = 'Canal,Categoria,URL,Identificador\r\nAlura,Sem categoria,,/@alura\r\nBossa Nova,Música,,/@bossa\r\n';
     const { categories: next } = planImport({ channels, categories }, readImport(parseCsv(csv)).entries);
     expect(next.map((category) => [category.name, category.channelIds])).toEqual([['Tech', []], ['Música', ['/@bossa']]]);

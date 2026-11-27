@@ -18,8 +18,8 @@ const fixture = (name) => JSON.parse(readFileSync(`tests/fixtures/youtube/${name
 const NOW = 1_800_000_000_000;
 const DAY = 86_400_000;
 
-describe('videosFromPage com dados reais', () => {
-  it('lê os vídeos do feed (com autor) com id, título, canal, data, duração e visualizações', () => {
+describe('videosFromPage with real data', () => {
+  it('reads the feed videos (with an author) with id, title, channel, date, duration and views', () => {
     const [first] = videosFromPage(fixture('feed-lockups'), NOW);
     expect(first).toEqual({
       videoId: 'rMaMe32qQkA',
@@ -31,7 +31,7 @@ describe('videosFromPage com dados reais', () => {
     });
   });
 
-  it('na aba de um canal (sem autor nos metadados) usa o canal informado', () => {
+  it('on a channel tab (no author in the metadata) uses the given channel', () => {
     const videos = videosFromPage(fixture('channel-video-lockups'), NOW, '/@Fireship');
     expect(videos.map((video) => [video.videoId, video.channelId, video.viewCount])).toEqual([
       ['rMaMe32qQkA', '/@Fireship', 921_000],
@@ -39,26 +39,26 @@ describe('videosFromPage com dados reais', () => {
     ]);
   });
 
-  it('descarta itens sem canal quando nenhum canal é informado', () => {
+  it('discards items without a channel when no channel is given', () => {
     expect(videosFromPage(fixture('channel-video-lockups'), NOW)).toEqual([]);
   });
 });
 
-describe('shortsFromPage com dados reais', () => {
-  it('lê id, título e visualizações dos Shorts (que não trazem data)', () => {
+describe('shortsFromPage with real data', () => {
+  it('reads id, title and views of the Shorts (which carry no date)', () => {
     expect(shortsFromPage(fixture('channel-short-lockups'), '/@Fireship')).toEqual([
       { videoId: 'fwBIZRq-vzY', title: '5 life-changing Linux tips', channelId: '/@Fireship', viewCount: 1_700_000, thumbnail: expect.stringMatching(/^https:\/\/i\.ytimg\.com\/vi\/fwBIZRq-vzY\/oardefault\.jpg\?/) },
       { videoId: 'oRBvLbdMKM0', title: 'This rubber duck can debug your code', channelId: '/@Fireship', viewCount: 490_000, thumbnail: expect.stringMatching(/^https:\/\/i\.ytimg\.com\/vi\/oRBvLbdMKM0\/oar3\.jpg\?/) },
     ]);
   });
 
-  it('usa a capa vertical 9:16 que o YouTube já dimensionou (405×720), não a de 1080×1920', () => {
+  it('uses the 9:16 vertical cover YouTube already sized (405×720), not the 1080×1920 one', () => {
     const [first] = shortsFromPage(fixture('channel-short-lockups'), '/@Fireship');
     const sources = fixture('channel-short-lockups').items[0].shortsLockupViewModel.thumbnailViewModel.thumbnailViewModel.image.sources;
     expect(first.thumbnail).toBe(sources.find((source) => source.width === 405 && source.height === 720).url);
   });
 
-  it('ignora capas fora do i.ytimg.com', () => {
+  it('ignores covers outside i.ytimg.com', () => {
     const lockup = fixture('channel-short-lockups').items[0].shortsLockupViewModel;
     const hostile = structuredClone(lockup);
     for (const source of hostile.thumbnailViewModel.thumbnailViewModel.image.sources) source.url = 'https://evil.example/x.jpg';
@@ -74,11 +74,11 @@ describe('videoFromLockup', () => {
     ...extra,
   });
 
-  it('ignora playlists e outros conteúdos que não são vídeo', () => {
+  it("ignores playlists and other content that isn't a video", () => {
     expect(videoFromLockup(lockup({ contentType: 'LOCKUP_CONTENT_TYPE_PLAYLIST' }), NOW, '/@x')).toBeNull();
   });
 
-  it('ignora itens sem data (estreias e lives) e ids inválidos', () => {
+  it('ignores items without a date (premieres and live streams) and invalid ids', () => {
     const noDate = lockup();
     noDate.metadata.lockupMetadataViewModel.metadata.contentMetadataViewModel.metadataRows[0].metadataParts[0].text.content = 'Premieres in 2 hours';
     expect(videoFromLockup(noDate, NOW, '/@x')).toBeNull();
@@ -101,15 +101,15 @@ describe('parseViewCount', () => {
   });
 });
 
-describe('links e miniaturas', () => {
-  it('monta URLs de vídeo e de Short a partir do id', () => {
+describe('links and thumbnails', () => {
+  it('builds video and Short URLs from the id', () => {
     expect(videoUrl('abcdefghijk')).toBe('https://www.youtube.com/watch?v=abcdefghijk');
     expect(videoUrl('abcdefghijk', 'short')).toBe('https://www.youtube.com/shorts/abcdefghijk');
     expect(thumbnailUrl('abcdefghijk')).toBe('https://i.ytimg.com/vi/abcdefghijk/mqdefault.jpg');
     expect(thumbnailUrl('abcdefghijk', 'short')).toBe('https://i.ytimg.com/vi/abcdefghijk/oar2.jpg');
   });
 
-  it('a capa do Short vem dos dados; sem ela (cache antigo), cai na URL montada pelo id', () => {
+  it("the Short's cover comes from the data; without it (old cache), falls back to the URL built from the id", () => {
     expect(shortThumbnail({ videoId: 'abcdefghijk', thumbnail: 'https://i.ytimg.com/vi/abcdefghijk/oar3.jpg?sqp=x' })).toBe('https://i.ytimg.com/vi/abcdefghijk/oar3.jpg?sqp=x');
     expect(shortThumbnail({ videoId: 'abcdefghijk' })).toBe('https://i.ytimg.com/vi/abcdefghijk/oar2.jpg');
   });

@@ -44,7 +44,7 @@ beforeAll(async () => {
   await flush();
 });
 
-it('voltar enquanto a página ainda está abrindo pela URL não a abre nem cria entrada no histórico', async () => {
+it('going back while the page is still opening from the URL neither opens it nor adds a history entry', async () => {
   const length = window.history.length;
   window.history.back();
   await flush();
@@ -57,7 +57,7 @@ it('voltar enquanto a página ainda está abrindo pela URL não a abre nem cria 
   expect(window.history.length).toBe(length);
 });
 
-it('se o YouTube fecha a página enquanto ela abre, a navegação dele reabre a categoria', async () => {
+it("if YouTube closes the page while it opens, YouTube's navigation reopens the category", async () => {
   // Held only once the page is mounted: the state is loading when YouTube navigates.
   holding = () => Boolean(page());
   window.history.forward();

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { createStore } from '../../src/storage/store.js';
 import { createFakeStorageArea } from '../helpers/fakeStorage.js';
 
-describe('limites da fila de consultas', () => {
-  it('guarda e lê a pausa e os inícios recentes, comuns a todas as abas', async () => {
+describe('request queue limits', () => {
+  it('stores and reads the pause and the recent starts, shared by every tab', async () => {
     const store = createStore(createFakeStorageArea());
     expect(await store.loadRequestBudget()).toBeNull();
     await store.saveRequestBudget({ pausedUntil: 5, starts: [{ at: 1, id: 'a:1' }] });
@@ -12,33 +12,33 @@ describe('limites da fila de consultas', () => {
 });
 
 describe('createStore', () => {
-  it('retorna estado padrão quando o storage está vazio', async () => {
+  it('returns the default state when storage is empty', async () => {
     const store = createStore(createFakeStorageArea());
     expect(await store.load()).toEqual({ channels: {}, categories: [], lastSyncedAt: null, latestUploads: {}, uploadsSyncedAt: null, preferences: {}, feedItems: [], feedSyncedAt: null, feedAttemptedAt: null });
   });
 
-  it('salva e recarrega categorias', async () => {
+  it('saves and reloads categories', async () => {
     const store = createStore(createFakeStorageArea());
     const categories = [{ id: '1', name: 'Tech', channelIds: [] }];
     await store.saveCategories(categories);
     expect((await store.load()).categories).toEqual(categories);
   });
 
-  it('mescla canais novos com os já salvos', async () => {
+  it('merges new channels with the saved ones', async () => {
     const area = createFakeStorageArea({ channels: { '/@a': { id: '/@a', name: 'A', url: 'a', avatar: 'a.jpg' } } });
     const store = createStore(area);
     await store.mergeChannels([{ id: '/@b', name: 'B', url: 'b', avatar: '' }]);
     expect(Object.keys(area.dump().channels)).toEqual(['/@a', '/@b']);
   });
 
-  it('não apaga categorias ao mesclar canais', async () => {
+  it("doesn't erase categories when merging channels", async () => {
     const categories = [{ id: '1', name: 'Tech', channelIds: ['/@a'] }];
     const store = createStore(createFakeStorageArea({ categories }));
     await store.mergeChannels([{ id: '/@a', name: 'A', url: 'a', avatar: '' }]);
     expect((await store.load()).categories).toEqual(categories);
   });
 
-  it('replaceChannels substitui a lista inteira e registra a data', async () => {
+  it('replaceChannels replaces the whole list and records the date', async () => {
     const area = createFakeStorageArea({ channels: { '/@velho': { id: '/@velho', name: 'Velho', url: 'v', avatar: '' } } });
     const store = createStore(area);
     await store.replaceChannels([{ id: '/@novo', name: 'Novo', url: 'n', avatar: '' }], 123);
@@ -47,7 +47,7 @@ describe('createStore', () => {
     expect(state.lastSyncedAt).toBe(123);
   });
 
-  it('saveUploads mantém a data mais nova por canal e registra quando sincronizou', async () => {
+  it('saveUploads keeps the newest date per channel and records when it synced', async () => {
     const store = createStore(createFakeStorageArea({ latestUploads: { '/@a': 50, '/@b': 10 } }));
     await store.saveUploads({ '/@a': 20, '/@b': 40, '/@c': 30 }, 999);
     const state = await store.load();
@@ -55,13 +55,13 @@ describe('createStore', () => {
     expect(state.uploadsSyncedAt).toBe(999);
   });
 
-  it('savePreferences mescla com as preferências existentes', async () => {
+  it('savePreferences merges with the existing preferences', async () => {
     const store = createStore(createFakeStorageArea({ preferences: { outra: true } }));
     await store.savePreferences({ sortBy: 'recent' });
     expect((await store.load()).preferences).toEqual({ outra: true, sortBy: 'recent' });
   });
 
-  it('saveFeed guarda só os vídeos mais recentes até o limite e registra a data', async () => {
+  it('saveFeed keeps only the newest videos up to the limit and records the date', async () => {
     const store = createStore(createFakeStorageArea());
     const items = Array.from({ length: 900 }, (_, index) => ({ videoId: `v${index}` }));
     await store.saveFeed(items, 77);
@@ -71,7 +71,7 @@ describe('createStore', () => {
     expect(state.feedSyncedAt).toBe(77);
   });
 
-  it('guarda o cache das abas de canal numa chave por canal e aba, mais um índice', async () => {
+  it('stores the channel tab cache in one key per channel and tab, plus an index', async () => {
     const area = createFakeStorageArea();
     const { channelTabStorage: storage } = createStore(area);
     expect(await storage.loadEntry('UCx:videos')).toBeNull();

@@ -13,7 +13,7 @@ const flush = async () => {
 
 afterEach(() => vi.useRealTimers());
 
-it('com o feed de Inscrições falhando, reabrir Categorias não refaz a sincronização completa', async () => {
+it("with the subscriptions feed failing, reopening Categories doesn't redo the full sync", async () => {
   // Only the clock is fake: the flush setTimeouts stay real.
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(1_000_000_000_000);

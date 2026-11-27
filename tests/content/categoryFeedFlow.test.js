@@ -23,7 +23,7 @@ const channelRenderer = {
   },
 };
 
-it('sincroniza o feed e o ucid; clicar na categoria do menu abre o feed dela', async () => {
+it('syncs the feed and the ucid; clicking a category in the menu opens its feed', async () => {
   document.body.innerHTML = `<ytd-page-manager></ytd-page-manager>${GUIDE_HTML}`;
   window.scrollTo = vi.fn();
   const area = createFakeStorageArea({ categories: [{ id: 'dev', name: 'Programação', channelIds: ['/@Fireship'] }] });

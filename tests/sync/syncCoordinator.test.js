@@ -12,7 +12,7 @@ function deferred() {
 }
 
 describe('createSyncCoordinator', () => {
-  it('pedidos durante uma sincronização recebem a mesma promise (uma execução só)', async () => {
+  it('requests during a sync get the same promise (a single run)', async () => {
     const pending = deferred();
     const run = vi.fn(() => pending.promise);
     const coordinator = createSyncCoordinator(run);
@@ -26,7 +26,7 @@ describe('createSyncCoordinator', () => {
     expect(coordinator.isRunning()).toBe(false);
   });
 
-  it('depois de um sucesso, ignora novos pedidos até o fim do intervalo', async () => {
+  it('after a success, ignores new requests until the end of the interval', async () => {
     let now = 1_000;
     const run = vi.fn(async () => 'ok');
     const coordinator = createSyncCoordinator(run, { now: () => now });
@@ -42,7 +42,7 @@ describe('createSyncCoordinator', () => {
     expect(run).toHaveBeenCalledTimes(2);
   });
 
-  it('falhas não iniciam o intervalo: dá para tentar de novo na hora', async () => {
+  it("failures don't start the interval: retrying right away works", async () => {
     const run = vi.fn().mockRejectedValueOnce(new Error('rede')).mockResolvedValueOnce('ok');
     const coordinator = createSyncCoordinator(run, { now: () => 1_000 });
     await expect(coordinator.sync()).rejects.toThrow('rede');
@@ -50,7 +50,7 @@ describe('createSyncCoordinator', () => {
     await expect(coordinator.sync()).resolves.toBe('ok');
   });
 
-  it('o intervalo padrão é de 1 minuto', () => {
+  it('the default interval is 1 minute', () => {
     expect(SYNC_COOLDOWN_MS).toBe(60_000);
   });
 });

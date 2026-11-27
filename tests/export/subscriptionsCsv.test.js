@@ -16,7 +16,7 @@ const state = {
 };
 
 describe('subscriptionRows', () => {
-  it('cabeçalho em inglês, categorias na ordem do usuário, nomes em ordem e sem categoria no fim', () => {
+  it("English header, categories in the user's order, names sorted and uncategorized last", () => {
     expect(subscriptionRows(state)).toEqual([
       ['Channel', 'Category', 'URL', 'Identifier'],
       ['Alfa', 'Tech', 'https://www.youtube.com/@a', '/@a'],
@@ -26,26 +26,26 @@ describe('subscriptionRows', () => {
     ]);
   });
 
-  it('ignora ids de canais que não existem mais e não perde nenhum canal', () => {
+  it('ignores ids of channels that no longer exist and loses no channel', () => {
     const rows = subscriptionRows(state).slice(1);
     expect(rows).toHaveLength(Object.keys(state.channels).length);
     expect(rows.flat()).not.toContain('/@sumiu');
   });
 
-  it('só cabeçalho quando não há inscrições', () => {
+  it('only the header when there are no subscriptions', () => {
     expect(subscriptionRows({ channels: {}, categories: [] })).toHaveLength(1);
   });
 });
 
 describe('subscriptionsCsv', () => {
-  it('gera o texto CSV final', () => {
+  it('generates the final CSV text', () => {
     const csv = subscriptionsCsv({ channels: { '/@a': channel('a', 'Alfa') }, categories: [] });
     expect(csv).toBe('\uFEFFChannel,Category,URL,Identifier\r\nAlfa,,https://www.youtube.com/@a,/@a\r\n');
   });
 });
 
 describe('csvFileName', () => {
-  it('usa a data local no formato AAAA-MM-DD', () => {
+  it('uses the local date in YYYY-MM-DD format', () => {
     expect(csvFileName(new Date(2026, 0, 5, 23, 30).getTime())).toBe('youtube-subscriptions-2026-01-05.csv');
   });
 });

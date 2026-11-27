@@ -13,7 +13,7 @@ const flush = async () => {
 
 afterEach(() => vi.restoreAllMocks());
 
-it('espera o menu expandido observando só o contêiner dele, não o documento', async () => {
+it('waits for the expanded menu by observing only its container, not the document', async () => {
   // Like narrow YouTube: the collapsed menu is ready, the expanded menu's drawer is empty.
   document.body.innerHTML = `
     <ytd-mini-guide-renderer><div id="items"></div></ytd-mini-guide-renderer>

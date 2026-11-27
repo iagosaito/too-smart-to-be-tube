@@ -27,6 +27,6 @@ function elementsCreatedByFeedRender(count) {
   return created;
 }
 
-it('na aba Vídeos, o custo do render não cresce com o número de canais da categoria', () => {
+it("on the Videos tab, the render cost doesn't grow with the category's number of channels", () => {
   expect(elementsCreatedByFeedRender(500)).toBe(elementsCreatedByFeedRender(1));
 });

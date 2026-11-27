@@ -22,7 +22,7 @@ beforeAll(async () => {
   await flush();
 });
 
-it('quem sai antes de o YouTube montar a página não recebe a página de Categorias depois', async () => {
+it("someone who leaves before YouTube mounts the page doesn't get the Categories page afterwards", async () => {
   window.history.back();
   await flush();
   document.body.prepend(document.createElement('ytd-page-manager'));

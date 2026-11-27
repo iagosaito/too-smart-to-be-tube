@@ -13,7 +13,7 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
 describe('createChannelTabCache', () => {
-  it('devolve itens frescos e expira depois do TTL de cada aba', async () => {
+  it("returns fresh items and expires them after each tab's TTL", async () => {
     let now = 0;
     const cache = cacheOn(createFakeStorageArea(), () => now);
     await cache.set(channel(1), 'videos', [{ videoId: 'a' }]);
@@ -25,7 +25,7 @@ describe('createChannelTabCache', () => {
     expect(await cache.get(channel(1), 'shorts')).toEqual([{ videoId: 'b' }]);
   });
 
-  it('lê o que foi persistido e agrupa as gravações de um lote numa só', async () => {
+  it("reads what was persisted and groups a batch's writes into one", async () => {
     const area = createFakeStorageArea({ [`tabCache:${channel(9).ucid}:videos`]: { fetchedAt: 0, usedAt: 0, items: [1] } });
     const cache = cacheOn(area, () => 0);
     expect(await cache.get(channel(9), 'videos')).toEqual([1]);
@@ -40,7 +40,7 @@ describe('createChannelTabCache', () => {
 
   // Regression (#6): the limit was 150 entries and each channel takes two (Videos and Shorts): a
   // 100-channel category already lost part of its cache.
-  it(`guarda ${MAX_CACHED_CHANNELS} canais com as duas abas`, async () => {
+  it(`keeps ${MAX_CACHED_CHANNELS} channels with both tabs`, async () => {
     let now = 0;
     const cache = cacheOn(createFakeStorageArea(), () => now);
     for (let n = 0; n < MAX_CACHED_CHANNELS; n += 1) {
@@ -53,7 +53,7 @@ describe('createChannelTabCache', () => {
     expect(await cache.get(channel(0), 'shorts')).toEqual([]);
   });
 
-  it('acima do limite descarta o canal usado há mais tempo, com as duas abas', async () => {
+  it('over the limit, evicts the least recently used channel, with both tabs', async () => {
     let now = 0;
     const area = createFakeStorageArea();
     const cache = cacheOn(area, () => now);
@@ -71,7 +71,7 @@ describe('createChannelTabCache', () => {
 
   // Regression (#5): each tab loaded the cache once and wrote the whole object; the last one to
   // write erased what the others had saved.
-  it('duas abas gravando no mesmo storage não apagam o que a outra salvou', async () => {
+  it("two tabs writing to the same storage don't erase what the other saved", async () => {
     const area = createFakeStorageArea();
     const tabA = cacheOn(area, () => 1);
     const tabB = cacheOn(area, () => 2);
@@ -84,7 +84,7 @@ describe('createChannelTabCache', () => {
     expect(Object.keys(area.dump().tabCacheIndex).sort()).toEqual([`${channel(1).ucid}:videos`, `${channel(2).ucid}:videos`]);
   });
 
-  it('guarda no máximo 30 itens por canal', async () => {
+  it('keeps at most 30 items per channel', async () => {
     const cache = cacheOn(createFakeStorageArea(), () => 0);
     await cache.set(channel(1), 'shorts', Array.from({ length: 48 }, (_, index) => index));
     expect(await cache.get(channel(1), 'shorts')).toHaveLength(30);

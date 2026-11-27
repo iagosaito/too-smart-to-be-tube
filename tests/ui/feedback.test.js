@@ -12,7 +12,7 @@ afterEach(() => {
 describe('renderBulkBar', () => {
   const categories = [{ id: 'tech', name: 'Tech', channelIds: [] }];
 
-  it('mostra a contagem e começa em "Mover para…"', () => {
+  it('shows the count and starts at "Mover para…"', () => {
     const bar = renderBulkBar(categories, 3, { moveSelected: vi.fn(), clearSelection: vi.fn() });
     expect(bar.textContent).toContain('3 canais selecionados');
     expect(bar.querySelector('select').value).toBe('');
@@ -21,7 +21,7 @@ describe('renderBulkBar', () => {
   it.each([
     ['tech', 'tech'],
     [MOVE_TO_NONE, null],
-  ])('ao escolher %s move para %s', (value, expected) => {
+  ])('choosing %s moves to %s', (value, expected) => {
     const actions = { moveSelected: vi.fn(), clearSelection: vi.fn() };
     const select = renderBulkBar(categories, 1, actions).querySelector('select');
     select.value = value;
@@ -31,7 +31,7 @@ describe('renderBulkBar', () => {
 });
 
 describe('renderEmptyState', () => {
-  it('mostra título, texto e a ação sugerida', () => {
+  it('shows the title, the text and the suggested action', () => {
     const onClick = vi.fn();
     const node = renderEmptyState({ title: 'Vazio', text: 'Faça algo', action: { label: 'Fazer', onClick } });
     node.querySelector('button').click();
@@ -39,13 +39,13 @@ describe('renderEmptyState', () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it('não mostra botão sem ação', () => {
+  it('shows no button without an action', () => {
     expect(renderEmptyState({ title: 'T', text: 'x' }).querySelector('button')).toBeNull();
   });
 });
 
 describe('showToast', () => {
-  it('mostra uma mensagem por vez e some depois do tempo', () => {
+  it('shows one message at a time and disappears after the timeout', () => {
     vi.useFakeTimers();
     showToast('primeira');
     showToast('segunda', { duration: 1000 });
@@ -55,7 +55,7 @@ describe('showToast', () => {
     expect(document.getElementById(TOAST_ID)).toBeNull();
   });
 
-  it('mostra uma ação que executa e fecha o aviso', () => {
+  it('shows an action that runs and closes the toast', () => {
     const onClick = vi.fn();
     const toast = showToast('Feito', { action: { label: 'Desfazer', onClick } });
     toast.querySelector('button').click();

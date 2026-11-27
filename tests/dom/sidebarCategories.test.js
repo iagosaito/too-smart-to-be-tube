@@ -17,8 +17,8 @@ const categories = (count) => Array.from({ length: count }, (_, index) => ({ id:
 const labels = () => [...document.querySelectorAll('.tstb-sidebar-categories .tstb-sidebar-label')].map((node) => node.textContent);
 const toggle = () => document.querySelector('.tstb-sidebar-toggle');
 
-describe('categorias no menu lateral', () => {
-  it('mostra as 7 primeiras e um "Mostrar mais" que expande e recolhe', () => {
+describe('categories in the sidebar', () => {
+  it('shows the first 7 and a "Show more" that expands and collapses', () => {
     sidebar.injectSidebarEntry(guide(), () => {});
     sidebar.setSidebarCategories(categories(9), () => {});
     expect(labels()).toEqual([...categories(7).map((c) => c.name), 'Mostrar mais']);
@@ -30,14 +30,14 @@ describe('categorias no menu lateral', () => {
     expect(labels()).toHaveLength(8);
   });
 
-  it('sem passar do limite, não mostra o "Mostrar mais"', () => {
+  it('within the limit, doesn\'t show "Show more"', () => {
     sidebar.injectSidebarEntry(guide(), () => {});
     sidebar.setSidebarCategories(categories(3), () => {});
     expect(toggle()).toBeNull();
     expect(labels()).toHaveLength(3);
   });
 
-  it('clicar numa categoria abre o feed dela', () => {
+  it('clicking a category opens its feed', () => {
     const open = vi.fn();
     sidebar.injectSidebarEntry(guide(), () => {});
     sidebar.setSidebarCategories(categories(2), open);
@@ -45,7 +45,7 @@ describe('categorias no menu lateral', () => {
     expect(open).toHaveBeenCalledWith('c1');
   });
 
-  it('destaca a categoria aberta e tira o destaque do título "Categorias"', () => {
+  it('highlights the open category and removes the highlight from the "Categories" title', () => {
     sidebar.injectSidebarEntry(guide(), () => {});
     sidebar.setSidebarCategories(categories(3), () => {});
     sidebar.markActiveSidebarCategory('c2');
@@ -59,13 +59,13 @@ describe('categorias no menu lateral', () => {
     expect(document.documentElement.classList.contains('tstb-category-open')).toBe(false);
   });
 
-  it('nomes longos ficam inteiros no title (o CSS corta com reticências)', () => {
+  it('long names stay whole in the title attribute (CSS cuts them with an ellipsis)', () => {
     sidebar.injectSidebarEntry(guide(), () => {});
     sidebar.setSidebarCategories([{ id: 'x', name: 'Um nome de categoria bem comprido mesmo' }], () => {});
     expect(document.querySelector('.tstb-sidebar-category').title).toBe('Um nome de categoria bem comprido mesmo');
   });
 
-  it('a lista volta igual (inclusive expandida) quando o YouTube recria o menu', async () => {
+  it('the list comes back the same (expanded included) when YouTube recreates the menu', async () => {
     const observer = sidebar.keepSidebarEntry(guide(), () => {});
     sidebar.setSidebarCategories(categories(9), () => {});
     toggle().click();

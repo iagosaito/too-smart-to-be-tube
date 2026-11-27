@@ -3,19 +3,19 @@ import { extractConfig, extractInitialData } from '../../src/youtube/pageData.js
 import { channelsPageHtml } from '../helpers/innertubeFixtures.js';
 
 describe('extractInitialData', () => {
-  it('lê o objeto ytInitialData do HTML', () => {
+  it('reads the ytInitialData object from the HTML', () => {
     const html = channelsPageHtml({ a: 1, texto: '</script> não engana' });
     expect(extractInitialData(html)).toEqual({ a: 1, texto: '</script> não engana' });
   });
 
-  it('retorna null quando não há dados ou o JSON é inválido', () => {
+  it('returns null when there is no data or the JSON is invalid', () => {
     expect(extractInitialData('<html></html>')).toBeNull();
     expect(extractInitialData('<script>var ytInitialData = {quebrado};</script>')).toBeNull();
   });
 });
 
 describe('extractConfig', () => {
-  it('lê versão do cliente, chave e sessão', () => {
+  it('reads the client version, key and session', () => {
     const html = channelsPageHtml({}, { SESSION_INDEX: 2, DELEGATED_SESSION_ID: '123' });
     expect(extractConfig(html)).toEqual({
       clientVersion: '2.20261120.00.00',
@@ -25,7 +25,7 @@ describe('extractConfig', () => {
     });
   });
 
-  it('usa a sessão 0 e nenhuma conta de marca por padrão', () => {
+  it('uses session 0 and no brand account by default', () => {
     const config = extractConfig('<html></html>');
     expect(config.sessionIndex).toBe('0');
     expect(config.delegatedSessionId).toBeNull();
