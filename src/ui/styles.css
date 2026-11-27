@@ -1,9 +1,9 @@
-/* Prefixo tstb- evita colisão com as classes do YouTube. */
+/* The tstb- prefix avoids clashing with YouTube's classes. */
 
-/* Paleta própria em vez das variáveis --yt-spec-*: elas não chegam de forma
-   confiável aos nós injetados e o fallback (tema claro) deixava o texto
-   invisível no tema escuro. O atributo html[dark] é o sinal estável que o
-   YouTube usa para o tema escuro. Os valores copiam a paleta do YouTube. */
+/* Our own palette instead of the --yt-spec-* variables: they don't reliably
+   reach injected nodes and the fallback (light theme) made text invisible
+   in the dark theme. The html[dark] attribute is the stable signal YouTube
+   uses for the dark theme. The values copy YouTube's palette. */
 :root {
   --tstb-bg: #ffffff;
   --tstb-text: #0f0f0f;
@@ -18,7 +18,7 @@
   --tstb-accent: #065fd4;
   --tstb-accent-soft: rgba(6, 95, 212, 0.1);
   --tstb-danger: #cc0000;
-  /* O aviso tem cores invertidas, então seu destaque usa o azul do tema oposto. */
+  /* The toast has inverted colors, so its accent uses the opposite theme's blue. */
   --tstb-toast-accent: #3ea6ff;
 }
 
@@ -39,7 +39,7 @@ html[dark] {
   --tstb-toast-accent: #065fd4;
 }
 
-/* ---------- Item no menu lateral ---------- */
+/* ---------- Sidebar item ---------- */
 
 .tstb-sidebar-entry {
   padding: 12px;
@@ -66,7 +66,7 @@ html[dark] {
   background: var(--tstb-hover);
 }
 
-/* Tamanho explícito: sem ele o SVG ocupava o botão inteiro. */
+/* Explicit size: without it the SVG filled the whole button. */
 .tstb-sidebar-button svg,
 .tstb-mini-button svg {
   width: 24px;
@@ -75,10 +75,10 @@ html[dark] {
   fill: currentColor;
 }
 
-/* Menu recolhido: ícone em cima e rótulo pequeno embaixo, medidas copiadas
-   dos itens nativos (Início, Shorts...). */
-/* Ocupa a mesma largura dos itens nativos da lista em vez de uma medida fixa,
-   assim acompanha o espaçamento que o YouTube definir. */
+/* Collapsed menu: icon on top and a small label below, measurements copied
+   from the native items (Home, Shorts...). */
+/* Takes the same width as the list's native items instead of a fixed size,
+   so it follows whatever spacing YouTube sets. */
 .tstb-mini-button {
   box-sizing: border-box;
   display: flex;
@@ -100,23 +100,23 @@ html[dark] {
   background: var(--tstb-hover);
 }
 
-/* Destaca o item enquanto a página está aberta, como o YouTube faz com a página atual. */
+/* Highlights the item while the page is open, like YouTube does with the current page. */
 html.tstb-page-open:not(.tstb-category-open) .tstb-sidebar-button,
 html.tstb-page-open .tstb-mini-button {
   background: var(--tstb-hover);
   font-weight: 500;
 }
 
-/* ---------- Estrutura da página ---------- */
+/* ---------- Page structure ---------- */
 
-/* As regiões existem só para o JavaScript; display: contents as remove do
-   layout, mantendo o chip sticky relativo à página e não à região. */
+/* The regions exist only for JavaScript; display: contents removes them from
+   the layout, keeping the sticky chips relative to the page, not the region. */
 .tstb-slot {
   display: contents;
 }
 
-/* A página anterior só é ocultada (não removida) porque o YouTube controla o
-   ciclo de vida dela; destruí-la quebraria a navegação de volta. */
+/* The previous page is only hidden (not removed) because YouTube controls its
+   lifecycle; destroying it would break back navigation. */
 html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   display: none !important;
 }
@@ -125,7 +125,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   box-sizing: border-box;
   max-width: 1284px;
   margin: 0 auto;
-  /* Espaço extra no fim para a barra de seleção não cobrir a última linha. */
+  /* Extra space at the end so the selection bar doesn't cover the last row. */
   padding: 24px 24px 120px;
   color: var(--tstb-text);
   font: 400 1.4rem Roboto, Arial, sans-serif;
@@ -175,9 +175,9 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   gap: 8px;
 }
 
-/* ---------- Controles ---------- */
+/* ---------- Controls ---------- */
 
-/* Pílulas com fundo sutil e sem borda, como os botões nativos do YouTube. */
+/* Pills with a subtle background and no border, like YouTube's native buttons. */
 .tstb-button {
   display: inline-flex;
   align-items: center;
@@ -268,10 +268,10 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   font: inherit;
 }
 
-/* ---------- Revisão da importação ---------- */
+/* ---------- Import review ---------- */
 
-/* Cartão destacado (borda de destaque), não um modal: o usuário pode rolar e
-   conferir as categorias atuais antes de decidir. */
+/* A highlighted card (accent border), not a modal: the user can scroll and
+   check the current categories before deciding. */
 .tstb-review {
   display: flex;
   flex-direction: column;
@@ -324,8 +324,8 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
 
 /* ---------- Chips ---------- */
 
-/* Fixa sob o cabeçalho do YouTube para trocar de categoria sem rolar para cima.
-   Quebra linha de propósito: todas as categorias visíveis de uma vez. */
+/* Pinned under YouTube's header to switch categories without scrolling up.
+   Wraps on purpose: every category visible at once. */
 .tstb-chips {
   position: sticky;
   top: var(--ytd-masthead-height, 56px);
@@ -364,14 +364,14 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   height: 18px;
 }
 
-/* "Todas" se destaca pelo ícone e pela posição fixa, não pela cor: o fundo
-   escuro é reservado ao chip ativo, senão pareceria sempre selecionado. */
+/* "All" stands out through its icon and fixed position, not color: the dark
+   background is reserved for the active chip, otherwise it would always look selected. */
 .tstb-chip-all {
   padding-left: 10px;
 }
 
-/* "Sem categoria" é fila de trabalho, não destino: contorno tracejado, no
-   mesmo espírito da pílula "Sem categoria" dos cartões. */
+/* "No category" is a work queue, not a destination: dashed outline, in the
+   same spirit as the cards' "No category" pill. */
 .tstb-chip-pending {
   border: 1px dashed var(--tstb-muted);
   background: transparent;
@@ -411,7 +411,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   outline: none !important;
 }
 
-/* ---------- Título da visão atual ---------- */
+/* ---------- Current view title ---------- */
 
 .tstb-view-heading {
   display: flex;
@@ -434,7 +434,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   font-weight: 400;
 }
 
-/* Zona da categoria: nome editável e excluir, colados ao título. */
+/* Category zone: editable name and delete, next to the title. */
 .tstb-title-group {
   display: flex;
   align-items: center;
@@ -442,8 +442,8 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   min-width: 0;
 }
 
-/* O nome parece título, não botão; o fundo no hover revela que é editável.
-   A margem negativa compensa o padding para o texto ficar alinhado à grade. */
+/* The name looks like a title, not a button; the hover background reveals it's editable.
+   The negative margin offsets the padding so the text lines up with the grid. */
 .tstb-title-edit {
   margin-left: -8px;
   padding: 2px 8px;
@@ -482,7 +482,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   background: var(--tstb-control);
 }
 
-/* Vermelho só no hover: avisa o perigo sem gritar o tempo todo. */
+/* Red only on hover: it warns of the danger without shouting all the time. */
 .tstb-icon-button-danger:hover {
   color: var(--tstb-danger);
 }
@@ -533,7 +533,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   outline: none !important;
 }
 
-/* ---------- Grade de canais ---------- */
+/* ---------- Channel grid ---------- */
 
 .tstb-grid {
   display: grid;
@@ -554,9 +554,9 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   border-radius: 12px;
   text-align: center;
   transition: background-color 0.15s;
-  /* O navegador pula layout e pintura dos cartões fora da tela; com centenas
-     de inscrições é a maior economia ao abrir e rolar. A altura estimada
-     mantém a barra de rolagem estável. */
+  /* The browser skips layout and paint for off-screen cards; with hundreds
+     of subscriptions this is the biggest saving when opening and scrolling.
+     The estimated height keeps the scrollbar stable. */
   content-visibility: auto;
   contain-intrinsic-size: auto 196px;
 }
@@ -600,7 +600,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   font-weight: 500;
 }
 
-/* Linha de apoio discreta, como a data abaixo do título dos vídeos no YouTube. */
+/* Discreet supporting line, like the date under a video title on YouTube. */
 .tstb-card-meta {
   margin-top: -6px;
   color: var(--tstb-muted);
@@ -608,7 +608,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   line-height: 1.6rem;
 }
 
-/* Limita a duas linhas para nomes longos não desalinharem a grade. */
+/* Limited to two lines so long names don't misalign the grid. */
 .tstb-card-name {
   display: -webkit-box;
   overflow: hidden;
@@ -619,8 +619,8 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   line-height: 2rem;
 }
 
-/* A caixa de seleção só aparece no hover/foco para não poluir a grade, mas
-   fica sempre visível no modo de seleção, quando ela é a ação principal. */
+/* The checkbox only shows on hover/focus so it doesn't clutter the grid, but
+   it is always visible in selection mode, when it is the main action. */
 .tstb-check {
   position: absolute;
   top: 8px;
@@ -656,8 +656,8 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   color: var(--tstb-on-strong);
 }
 
-/* Ícone de mover (dentro de uma categoria): canto superior direito, simétrico
-   ao ✓ da esquerda, e só no hover/foco, para a grade ficar limpa. */
+/* Move icon (inside a category): top right corner, mirroring the ✓ on the
+   left, and only on hover/focus, so the grid stays clean. */
 .tstb-move {
   position: absolute;
   top: 8px;
@@ -681,7 +681,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   height: 18px;
 }
 
-/* Continua visível enquanto o menu dele está aberto, mesmo sem hover. */
+/* Stays visible while its menu is open, even without hover. */
 .tstb-card:hover .tstb-move,
 .tstb-move:focus-visible,
 .tstb-move[aria-expanded='true'] {
@@ -735,18 +735,18 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   color: var(--tstb-muted);
 }
 
-/* Sem isso as opções do select herdam fundo transparente e ficam ilegíveis. */
+/* Without this the select's options inherit a transparent background and become unreadable. */
 .tstb-page option,
 .tstb-bulkbar option {
   background: var(--tstb-surface);
   color: var(--tstb-text);
 }
 
-/* ---------- Menu de categoria ---------- */
+/* ---------- Category menu ---------- */
 
-/* Mesma aparência dos menus do YouTube: superfície elevada, cantos
-   arredondados e o item atual marcado com ✓. Fica no <body> com posição
-   fixa calculada a partir do gatilho. */
+/* Same look as YouTube's menus: elevated surface, rounded corners and the
+   current item marked with ✓. It lives in <body> with a fixed position
+   computed from the trigger. */
 .tstb-menu {
   position: fixed;
   z-index: 2400;
@@ -787,7 +787,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   font-weight: 500;
 }
 
-/* Coluna fixa para o ✓: os nomes ficam alinhados com ou sem marca. */
+/* A fixed column for the ✓: names stay aligned with or without the mark. */
 .tstb-menu-check {
   display: grid;
   place-items: center;
@@ -802,7 +802,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   fill: currentColor;
 }
 
-/* ---------- Estados vazios ---------- */
+/* ---------- Empty states ---------- */
 
 .tstb-empty-state {
   display: flex;
@@ -823,9 +823,9 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   color: var(--tstb-muted);
 }
 
-/* ---------- Barra de seleção e toast ---------- */
+/* ---------- Selection bar and toast ---------- */
 
-/* Cores invertidas (escuro no tema claro e vice-versa), como o snackbar do YouTube. */
+/* Inverted colors (dark in the light theme and vice versa), like YouTube's snackbar. */
 .tstb-bulkbar,
 .tstb-toast {
   position: fixed;
@@ -882,7 +882,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   animation: tstb-toast-in 0.2s ease-out;
 }
 
-/* Botão de texto na cor de destaque, como o "Desfazer" do snackbar do YouTube. */
+/* Text button in the accent color, like the "Undo" in YouTube's snackbar. */
 .tstb-toast-action {
   flex: none;
   padding: 6px 8px;
@@ -912,7 +912,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   }
 }
 
-/* Em telas estreitas a busca ocupa a linha toda em vez de espremer o título. */
+/* On narrow screens the search takes the whole row instead of squeezing the title. */
 @media (max-width: 656px) {
   .tstb-header-actions,
   .tstb-search {
@@ -920,10 +920,10 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   }
 }
 
-/* ---------- Categorias no menu lateral ---------- */
+/* ---------- Categories in the sidebar ---------- */
 
-/* Título de seção, como "Inscrições ›" do YouTube: texto maior em destaque e
-   seta, sem ícone à esquerda. */
+/* Section title, like YouTube's "Subscriptions ›": larger, emphasized text and
+   an arrow, with no icon on the left. */
 .tstb-sidebar-header {
   gap: 4px;
   font-size: 1.6rem;
@@ -936,8 +936,8 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
 }
 
 
-/* Mesmas medidas dos itens nativos do menu (40px, ícone 24px, cantos 10px),
-   para a lista parecer parte do YouTube. */
+/* Same measurements as the menu's native items (40px, 24px icon, 10px corners),
+   so the list looks like part of YouTube. */
 .tstb-sidebar-categories {
   margin: 4px 0 0;
   padding: 0;
@@ -966,7 +966,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   height: 24px;
 }
 
-/* Nomes longos são cortados com reticências, nunca quebram linha (Material). */
+/* Long names are cut with an ellipsis, never wrapped (Material). */
 .tstb-sidebar-category .tstb-sidebar-label {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -984,7 +984,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   font-weight: 500;
 }
 
-/* ---------- Abas da categoria ---------- */
+/* ---------- Category tabs ---------- */
 
 .tstb-view-header {
   margin: 12px 0 24px;
@@ -994,7 +994,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   margin: 0 0 4px;
 }
 
-/* Sublinhado na aba ativa, como as abas da página de um canal. */
+/* Underline on the active tab, like the tabs on a channel page. */
 .tstb-tabs {
   display: flex;
   gap: 24px;
@@ -1028,7 +1028,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   content: '';
 }
 
-/* ---------- Feed: vídeos ---------- */
+/* ---------- Feed: videos ---------- */
 
 .tstb-video-grid,
 .tstb-shorts-grid {
@@ -1048,7 +1048,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   flex-direction: column;
   gap: 12px;
   min-width: 0;
-  /* Pula layout e pintura dos cartões fora da tela (centenas de vídeos). */
+  /* Skips layout and paint for off-screen cards (hundreds of videos). */
   content-visibility: auto;
   contain-intrinsic-size: auto 320px;
 }
@@ -1098,7 +1098,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   min-width: 0;
 }
 
-/* Duas linhas no máximo, como no YouTube: a grade não desalinha com títulos longos. */
+/* Two lines at most, like on YouTube: the grid doesn't misalign with long titles. */
 .tstb-video-title,
 .tstb-short-title {
   display: -webkit-box;
@@ -1131,7 +1131,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
 
 /* ---------- Feed: Shorts ---------- */
 
-/* Capas verticais 9:16, nunca encaixadas em espaços 16:9. */
+/* Vertical 9:16 covers, never squeezed into 16:9 slots. */
 .tstb-shorts-grid {
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 24px 8px;
@@ -1161,7 +1161,7 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   margin: 0;
 }
 
-/* ---------- Feed: carregamento, rodapé ---------- */
+/* ---------- Feed: loading, footer ---------- */
 
 .tstb-skeleton {
   display: flex;
@@ -1206,10 +1206,11 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   align-items: center;
   gap: 12px;
   margin: 32px 0 8px;
-  /* O rodapé nunca é a âncora de rolagem: se fosse, ao "Carregar mais" o
-     Chrome o manteria no mesmo lugar da tela e a página desceria até o fim
-     dos cartões novos, pulando-os (visto num teste sem o resto deste CSS).
-     A página deve ficar parada, com os cartões novos entrando abaixo. */
+  /* The footer is never the scroll anchor: if it were, on "Load more"
+     Chrome would keep it at the same spot on screen and the page would scroll
+     down to the end of the new cards, skipping them (seen in a test without
+     the rest of this CSS). The page must stay still, with the new cards
+     coming in below. */
   overflow-anchor: none;
 }
 

@@ -1,12 +1,12 @@
 import { el } from '../elements.js';
 import { plural, t } from '../../i18n/i18n.js';
 
-// Quantos nomes de linhas ignoradas listar: o suficiente para reconhecer o
-// problema sem transformar o cartão numa parede de texto.
+// How many names of skipped rows to list: enough to recognize the problem without turning the card
+// into a wall of text.
 const MAX_UNKNOWN_LISTED = 15;
 
-// Revisão antes de aplicar: importar sobrescreve organização manual, então o
-// usuário vê o impacto e decide. Fica logo abaixo do cabeçalho, perto do botão que o abriu.
+// Review before applying: importing overwrites manual organization, so the user sees the impact and
+// decides. It sits right below the header, close to the button that opened it.
 export function renderImportReview(pending, summary, actions) {
   if (pending.error || summary?.error || !summary?.matched) return renderImportError(pending, summary, actions);
   return el('section', { className: 'tstb-review', role: 'region', 'aria-label': t('import.reviewTitle') }, [
@@ -28,7 +28,7 @@ function summaryLines({ matched, categoryCount, created, moved }) {
 }
 
 function renderUnknown(unknown) {
-  // <details> mantém o cartão curto; só quem quer investigar abre a lista.
+  // <details> keeps the card short; only those who want to investigate open the list.
   const listed = unknown.slice(0, MAX_UNKNOWN_LISTED);
   const rest = unknown.length - listed.length;
   return el('details', { className: 'tstb-review-unknown' }, [
@@ -38,7 +38,7 @@ function renderUnknown(unknown) {
 }
 
 function renderImportError(pending, summary, actions) {
-  // pending.error guarda a chave de tradução, traduzida só na hora de mostrar.
+  // pending.error holds the translation key, translated only at display time.
   const message = t(pending.error ?? summary?.error ?? 'import.noMatch');
   return el('section', { className: 'tstb-review tstb-review-error', role: 'alert' }, [
     el('h3', { tabindex: '-1' }, t('import.errorTitle')),
@@ -50,7 +50,7 @@ function renderImportError(pending, summary, actions) {
 }
 
 function renderButtons(actions, applyLabel) {
-  // A ação principal fica à direita e em destaque; sem ela, o único botão é "Fechar".
+  // The main action sits on the right, emphasized; without it, the only button is "Close".
   return el('div', { className: 'tstb-review-actions' }, [
     el('button', { type: 'button', className: 'tstb-button', onClick: actions.cancelImport }, applyLabel ? t('common.cancel') : t('common.close')),
     applyLabel ? el('button', { type: 'button', className: 'tstb-button tstb-button-primary', onClick: actions.applyImport }, applyLabel) : null,

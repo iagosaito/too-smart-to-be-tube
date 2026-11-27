@@ -6,10 +6,10 @@ const NOW = 1_000_000_000_000;
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
-// Ids de vídeo têm 11 caracteres; derivados dos dados para serem estáveis e únicos.
+// Video ids are 11 characters long; derived from the data so they are stable and unique.
 const fakeVideoId = (...parts) => parts.join('').replace(/[^\w-]/g, '').padEnd(11, 'x').slice(0, 11);
 
-// Formato clássico do feed: videoRenderer com autor e publishedTimeText.
+// Classic feed format: videoRenderer with author and publishedTimeText.
 const videoRenderer = (handle, published, title = 'Um vídeo') => ({
   videoRenderer: {
     videoId: fakeVideoId(handle, published, title),
@@ -20,8 +20,8 @@ const videoRenderer = (handle, published, title = 'Um vídeo') => ({
   },
 });
 
-// Formato novo, copiado de uma página real do YouTube: lockupViewModel com a
-// data abreviada no texto ("1d ago") e por extenso no accessibilityLabel.
+// New format, copied from a real YouTube page: lockupViewModel with the abbreviated date in the
+// text ("1d ago") and the spelled-out one in accessibilityLabel.
 const lockup = (handle, published, title = 'Outro vídeo', label = undefined) => ({
   lockupViewModel: {
     contentType: 'LOCKUP_CONTENT_TYPE_VIDEO',
@@ -94,9 +94,9 @@ describe('parseFeedPage', () => {
   });
 });
 
-// Regressão: o nome do canal vem antes da data nas metadataRows. Um canal
-// chamado "1 second ago" (ou contendo "5m ago") era lido como data de
-// publicação e ficava sempre no topo de "Vídeo mais recente".
+// Regression: the channel name comes before the date in metadataRows. A channel called "1 second
+// ago" (or containing "5m ago") was read as the publish date and always stayed at the top of
+// "Latest video".
 describe('nome do canal não é lido como data', () => {
   function lockupWithAuthorName(authorName, published) {
     const node = lockup('spoofer', published);

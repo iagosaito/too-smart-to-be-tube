@@ -1,11 +1,10 @@
 import { channelIdFromHref } from '../core/channels.js';
 import { findAll } from './innertube.js';
 
-// Converte os formatos de vídeo do YouTube (videoRenderer clássico,
-// lockupViewModel novo e shortsLockupViewModel) num item compacto, o mesmo
-// para o feed de Inscrições e para as abas dos canais. Guardamos só o
-// necessário para desenhar o cartão: o resto (miniatura em outros tamanhos,
-// link) é derivado do id do vídeo.
+// Converts YouTube's video formats (classic videoRenderer, the new lockupViewModel and
+// shortsLockupViewModel) into a compact item, the same for the subscriptions feed and the channel
+// tabs. We keep only what's needed to draw the card: the rest (thumbnail in other sizes, link) is
+// derived from the video id.
 
 const MINUTE = 60_000;
 const UNIT_MS = {
@@ -14,12 +13,12 @@ const UNIT_MS = {
 };
 const PT_UNITS = { segundo: 'second', minuto: 'minute', hora: 'hour', dia: 'day', semana: 'week', mes: 'month', mês: 'month', meses: 'month', ano: 'year' };
 const EN_PATTERN = /(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago/i;
-// O layout novo mostra a forma curta ("1d ago", "2mo ago"); "mo" vem antes de "m" de propósito.
+// The new layout shows the short form ("1d ago", "2mo ago"); "mo" comes before "m" on purpose.
 const SHORT_PATTERN = /(\d+)\s*(mo|y|w|d|h|m|s)\s+ago/i;
 const SHORT_UNITS = { s: 'second', m: 'minute', h: 'hour', d: 'day', w: 'week', mo: 'month', y: 'year' };
 const PT_PATTERN = /há\s+(\d+)\s+(segundo|minuto|hora|dia|semana|mês|mes|meses|ano)/i;
-// O feed mostra só "911K" (com um ícone de olho) e põe "911 thousand views"
-// no rótulo de acessibilidade; por isso as palavras por extenso também valem.
+// The feed shows only "911K" (with an eye icon) and puts "911 thousand views" in the accessibility
+// label; that's why the spelled-out words also count.
 const VIEWS_PATTERN = /([\d.,]+)\s*(K|M|B|thousand|million|billion)?\s*(views?|visualiza|vistas?)/i;
 const VIEW_MULTIPLIERS = { k: 1e3, m: 1e6, b: 1e9, thousand: 1e3, million: 1e6, billion: 1e9 };
 const VIDEO_ID = /^[\w-]{11}$/;
@@ -35,8 +34,8 @@ export function parseRelativeTime(text, now) {
 }
 
 export function parseViewCount(text) {
-  // "921K views", "1.7M views", "12,345 views": vira número para ser
-  // formatado no idioma da interface, em vez de mostrar o texto em inglês.
+  // "921K views", "1.7M views", "12,345 views": becomes a number so it can be formatted in the UI
+  // language, instead of showing the English text.
   const match = String(text ?? '').match(VIEWS_PATTERN);
   if (!match) return null;
   const base = Number(match[2] ? match[1].replace(/,/g, '.') : match[1].replace(/[.,]/g, ''));
@@ -44,22 +43,22 @@ export function parseViewCount(text) {
 }
 
 export function channelOf(node) {
-  // O link do canal aparece no autor/avatar do vídeo; o do próprio vídeo é um
-  // watchEndpoint, então o primeiro canonicalBaseUrl encontrado é o do canal.
+  // The channel link appears in the video's author/avatar; the video's own link is a watchEndpoint,
+  // so the first canonicalBaseUrl found is the channel's.
   const [baseUrl] = findAll(node, 'canonicalBaseUrl');
   return channelIdFromHref(baseUrl);
 }
 
-// O nome do canal também fica nas metadataRows, antes da data. Um canal
-// chamado "1 second ago" seria lido como data de publicação, então partes que
-// representam o autor (avatar ou link para um canal) nunca são consideradas.
+// The channel name also sits in the metadataRows, before the date. A channel called "1 second ago"
+// would be read as the publish date, so parts that represent the author (an avatar or a link to a
+// channel) are never considered.
 function isNotAuthor(part) {
   return Boolean(part) && !part.avatarStack && findAll(part, 'browseEndpoint').length === 0;
 }
 
 function metadataTexts(node) {
-  // Só campos de metadados, nunca o título: um vídeo chamado "3 days ago" não
-  // pode virar data. accessibilityLabel traz a forma por extenso ("1 day ago").
+  // Metadata fields only, never the title: a video called "3 days ago" must not become a date.
+  // accessibilityLabel carries the spelled-out form ("1 day ago").
   const sources = [node.publishedTimeText, node.viewCountText, ...findAll(node, 'metadataParts').flat().filter(isNotAuthor)];
   const keys = ['simpleText', 'content', 'text', 'accessibilityLabel'];
   return sources.flatMap((source) => keys.flatMap((key) => findAll(source, key))).filter((text) => typeof text === 'string');
@@ -99,7 +98,7 @@ export function videoFromRenderer(renderer, now, fallbackChannelId = null) {
 }
 
 export function videoFromLockup(lockup, now, fallbackChannelId = null) {
-  // Playlists, mixes e canais também usam lockupViewModel; só vídeos interessam.
+  // Playlists, mixes and channels also use lockupViewModel; only videos matter.
   if (lockup.contentType && lockup.contentType !== 'LOCKUP_CONTENT_TYPE_VIDEO') return null;
   const metadata = lockup.metadata?.lockupMetadataViewModel ?? {};
   const [badge] = findAll(lockup.contentImage ?? {}, 'thumbnailBadgeViewModel');
@@ -114,8 +113,8 @@ export function videoFromLockup(lockup, now, fallbackChannelId = null) {
 }
 
 function finishVideo(video) {
-  // Sem id válido, título ou data o cartão não tem como ser mostrado nem ordenado
-  // (ex.: estreias e lives ainda sem data).
+  // Without a valid id, title or date the card can't be shown or sorted (e.g. premieres and live
+  // streams with no date yet).
   if (!VIDEO_ID.test(video.videoId ?? '') || !video.title || video.publishedAt === null) return null;
   return { ...video, duration: video.duration || '' };
 }
@@ -124,23 +123,23 @@ export function shortFromLockup(lockup, channelId) {
   const videoId = lockup.onTap?.innertubeCommand?.reelWatchEndpoint?.videoId ?? String(lockup.entityId ?? '').replace('shorts-shelf-item-', '');
   const title = textOf(lockup.overlayMetadata?.primaryText);
   if (!VIDEO_ID.test(videoId) || !title) return null;
-  // Shorts não trazem data de publicação: a ordem vem da posição no canal.
+  // Shorts carry no publish date: the order comes from the position in the channel.
   return { videoId, title, channelId, viewCount: parseViewCount(textOf(lockup.overlayMetadata?.secondaryText)), thumbnail: verticalThumbnail(lockup) };
 }
 
-// O YouTube já manda a capa no tamanho do cartão (405×720, ~40 KB); a montada
-// pelo id tem 1080×1920 (~6× mais pixels para decodificar por cartão). Só
-// aceita imagens do i.ytimg.com: a URL vai direto para um <img>.
+// YouTube already sends the cover at the card's size (405×720, ~40 KB); the one built from the id
+// is 1080×1920 (~6× more pixels to decode per card). Only accepts images from i.ytimg.com: the URL
+// goes straight into an <img>.
 function verticalThumbnail(lockup) {
   const sources = lockup.thumbnailViewModel?.thumbnailViewModel?.image?.sources ?? [];
-  // 9:16 como o cartão (há também uma 2:3, que sairia cortada).
+  // 9:16 like the card (there is also a 2:3 one, which would come out cropped).
   const vertical = sources.filter((source) => isNineBySixteen(source) && /^https:\/\/i\.ytimg\.com\//.test(source.url ?? ''));
   vertical.sort((a, b) => a.width * a.height - b.width * b.height);
-  // A menor que ainda tem nitidez para o cartão (~200 px de largura em telas 2x).
+  // The smallest one that is still sharp for the card (~200 px wide on 2x screens).
   return (vertical.find((source) => source.width >= 360) ?? vertical.at(-1))?.url ?? null;
 }
 
-// Página genérica (feed ou aba de canal) → vídeos, sem repetir o mesmo id.
+// A generic page (feed or channel tab) → videos, without repeating the same id.
 export function videosFromPage(data, now, fallbackChannelId = null) {
   const videos = [
     ...findAll(data, 'videoRenderer').map((renderer) => videoFromRenderer(renderer, now, fallbackChannelId)),
@@ -162,13 +161,13 @@ function isNineBySixteen({ width, height }) {
   return width > 0 && Math.abs(height / width - 16 / 9) < 0.05;
 }
 
-// Itens em cache de versões anteriores não têm a capa: cai na URL pelo id.
+// Items cached by earlier versions don't have the cover: fall back to the URL built from the id.
 export function shortThumbnail(short) {
   return short.thumbnail ?? thumbnailUrl(short.videoId, 'short');
 }
 
 export function thumbnailUrl(videoId, kind = 'video') {
-  // mqdefault é 16:9 e leve; oar2 é a capa vertical dos Shorts (9:16).
+  // mqdefault is 16:9 and light; oar2 is the vertical Shorts cover (9:16).
   return kind === 'short' ? `https://i.ytimg.com/vi/${videoId}/oar2.jpg` : `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
 }
 

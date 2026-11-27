@@ -2,9 +2,9 @@ import { FEED_TAB } from '../../feed/categoryFeed.js';
 import { t } from '../../i18n/i18n.js';
 import { el } from '../elements.js';
 
-// Vídeos · Shorts · Canais, como as abas da página de um canal no YouTube.
-// Ordem por relevância (assistir vem antes de organizar), rótulos de uma
-// palavra e sempre uma aba selecionada (NN/g, "Tabs, Used Right").
+// Videos · Shorts · Channels, like the tabs on a YouTube channel page. Ordered by relevance
+// (watching comes before organizing), one-word labels and always one tab selected (NN/g, "Tabs,
+// Used Right").
 export const TAB_ORDER = [FEED_TAB.VIDEOS, FEED_TAB.SHORTS, FEED_TAB.CHANNELS];
 export const TABPANEL_ID = 'tstb-tabpanel';
 
@@ -25,7 +25,7 @@ function renderTab(tab, active, actions) {
       className: active ? 'tstb-tab tstb-tab-active' : 'tstb-tab',
       'aria-selected': String(active),
       'aria-controls': TABPANEL_ID,
-      // Só a aba ativa entra no Tab; as setas trocam entre elas (padrão WAI-ARIA).
+      // Only the active tab is in the Tab order; arrow keys switch between them (WAI-ARIA pattern).
       tabindex: active ? '0' : '-1',
       'data-focus-key': `tab:${tab}`,
       onClick: () => actions.setTab(tab),

@@ -1,8 +1,6 @@
-// Regressão: quando o feed de Inscrições falhava (layout novo, erro HTTP), as
-// datas de sincronização do feed nunca eram gravadas. Toda abertura de
-// Categorias depois do intervalo de 1 minuto refazia a sincronização inteira
-// (até ~117 requisições autenticadas), e cada clique numa categoria do menu
-// também abre a página.
+// Regression: when the subscriptions feed failed (new layout, HTTP error), the feed's sync dates
+// were never saved. Every Categories open after the 1-minute interval redid the whole sync (up to
+// ~117 authenticated requests), and every click on a category in the menu also opens the page.
 import { afterEach, expect, it, vi } from 'vitest';
 import { ENTRY_ID } from '../../src/dom/sidebar.js';
 import { createFakeStorageArea } from '../helpers/fakeStorage.js';
@@ -16,7 +14,7 @@ const flush = async () => {
 afterEach(() => vi.useRealTimers());
 
 it('com o feed de Inscrições falhando, reabrir Categorias não refaz a sincronização completa', async () => {
-  // Só o relógio é falso: os setTimeout de flush continuam reais.
+  // Only the clock is fake: the flush setTimeouts stay real.
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(1_000_000_000_000);
   document.body.innerHTML = `<ytd-page-manager></ytd-page-manager>${GUIDE_HTML}`;
@@ -35,7 +33,7 @@ it('com o feed de Inscrições falhando, reabrir Categorias não refaz a sincron
     await flush();
   };
   await open();
-  // Passa o intervalo de 1 minuto entre sincronizações e abre de novo.
+  // Waits out the 1-minute interval between syncs and opens again.
   vi.setSystemTime(Date.now() + 61_000);
   await open();
 

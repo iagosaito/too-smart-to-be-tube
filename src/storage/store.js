@@ -1,19 +1,18 @@
 import { mergeChannels } from '../core/channels.js';
 
 const KEYS = ['channels', 'categories', 'lastSyncedAt', 'latestUploads', 'uploadsSyncedAt', 'preferences', 'feedItems', 'feedSyncedAt', 'feedAttemptedAt'];
-// Os vídeos mais recentes do feed de Inscrições (~150 bytes cada): o bastante
-// para várias semanas de feed por categoria sem pesar no storage.
+// The newest videos from the subscriptions feed (~150 bytes each): enough for several weeks of
+// per-category feed without weighing on storage.
 export const MAX_FEED_ITEMS = 800;
-// Cache das abas de canal: uma chave por canal e aba (tabCache:<ucid>:<aba>)
-// e um índice só com as datas.
+// Channel tab cache: one key per channel and tab (tabCache:<ucid>:<tab>) and an index with only the
+// dates.
 const TAB_CACHE_PREFIX = 'tabCache:';
 const TAB_CACHE_INDEX_KEY = 'tabCacheIndex';
-// Pausa e inícios recentes da fila de consultas, comuns a todas as abas.
+// Pause and recent starts of the request queue, shared by every tab.
 const REQUEST_BUDGET_KEY = 'requestBudget';
 
-// storage.local em vez de storage.sync: o sync limita cada item a 8 KB, o que
-// estoura rápido com centenas de inscrições.
-// A área é injetada para que os testes usem um fake em memória.
+// storage.local instead of storage.sync: sync limits each item to 8 KB, which overflows quickly
+// with hundreds of subscriptions. The area is injected so tests can use an in-memory fake.
 export function createStore(area) {
   return {
     load: () => loadState(area),
@@ -23,8 +22,8 @@ export function createStore(area) {
     saveUploads: (uploads, now = Date.now()) => saveMergedUploads(area, uploads, now),
     savePreferences: (changes) => saveMergedPreferences(area, changes),
     saveFeed: (items, now = Date.now()) => area.set({ feedItems: items.slice(0, MAX_FEED_ITEMS), feedSyncedAt: now }),
-    // Gravado a cada tentativa de ler o feed, mesmo com falha: sem isso uma
-    // falha persistente faria toda abertura da página sincronizar de novo.
+    // Written on every attempt to read the feed, even on failure: otherwise a persistent failure
+    // would make every page open sync again.
     markFeedAttempt: (now = Date.now()) => area.set({ feedAttemptedAt: now }),
     channelTabStorage: createChannelTabStorage(area),
     loadRequestBudget: async () => (await area.get([REQUEST_BUDGET_KEY]))[REQUEST_BUDGET_KEY] ?? null,
@@ -48,7 +47,7 @@ function createChannelTabStorage(area) {
 
 async function loadState(area) {
   const data = await area.get(KEYS);
-  // Na primeira execução o storage está vazio; padrões evitam checagens espalhadas.
+  // On first run storage is empty; defaults avoid scattered checks.
   return {
     channels: data.channels ?? {},
     categories: data.categories ?? [],
@@ -70,15 +69,15 @@ async function saveMergedChannels(area, incoming) {
 }
 
 async function saveFullSync(area, channels, now) {
-  // A sincronização completa é a lista oficial: substituir (em vez de mesclar)
-  // faz inscrições canceladas sumirem. As categorias ficam intactas e o
-  // agrupamento já ignora ids de canais que não existem mais.
+  // The full sync is the official list: replacing (instead of merging) makes cancelled
+  // subscriptions disappear. Categories stay intact and grouping already ignores ids of channels
+  // that no longer exist.
   await area.set({ channels: mergeChannels({}, channels), lastSyncedAt: now });
 }
 
 async function saveMergedUploads(area, incoming, now) {
-  // Mescla mantendo a data mais nova: o feed só cobre algumas semanas, então
-  // um canal que sumiu dele não deve perder a data que já conhecíamos.
+  // Merges keeping the newest date: the feed only covers a few weeks, so a channel that dropped out
+  // of it must not lose the date we already knew.
   const { latestUploads } = await loadState(area);
   const merged = { ...latestUploads };
   for (const [channelId, publishedAt] of Object.entries(incoming)) {

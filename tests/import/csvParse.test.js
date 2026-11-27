@@ -41,9 +41,9 @@ describe('parseCsv', () => {
   });
 });
 
-// Regressão (ReDoS): uma célula longa seguida de "\r" sozinho fazia a regex
-// do parser recuar em todos os comprimentos possíveis, com tempo quadrático:
-// um CSV malicioso de 5 MB travaria a aba do YouTube por horas.
+// Regression (ReDoS): a long cell followed by a lone "\r" made the parser's regex backtrack through
+// every possible length, in quadratic time: a malicious 5 MB CSV would freeze the YouTube tab for
+// hours.
 describe('parseCsv com entradas hostis', () => {
   it('trata "\\r" sozinho como quebra de linha', () => {
     expect(parseCsv('a,b\rc,d\r')).toEqual([['a', 'b'], ['c', 'd']]);

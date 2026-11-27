@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { LocalizedError } from '../../src/i18n/errors.js';
 import { backoffDelay, createRequestQueue } from '../../src/sync/requestQueue.js';
 
-// Relógio e espera simulados: o teste controla o tempo sem esperar de verdade.
+// Simulated clock and wait: the test controls time without really waiting.
 function fakeClock() {
   const clock = { now: 0, sleeps: [] };
   clock.sleep = vi.fn(async (ms) => {
@@ -14,15 +14,15 @@ function fakeClock() {
 
 const httpError = (status) => new LocalizedError('error.http', { status });
 
-// Limites guardados num storage comum, como o chrome.storage.local entre abas.
+// Limits kept in a shared storage, like chrome.storage.local across tabs.
 function sharedBudget() {
   const storage = {};
   return { load: async () => structuredClone(storage.budget ?? null), save: async (budget) => { storage.budget = structuredClone(budget); } };
 }
 
-// Regressão (#3): a fila era por aba e só em memória. Com N abas do YouTube o
-// limite virava N × 60 requisições por 10 min, um 429 numa aba não pausava as
-// outras e recarregar a página (F5) zerava a pausa.
+// Regression (#3): the queue was per tab and in memory only. With N YouTube tabs the limit became N
+// × 60 requests per 10 min, a 429 in one tab didn't pause the others and reloading the page (F5)
+// reset the pause.
 describe('limites compartilhados entre abas', () => {
   const queueFor = (clock, shared, options = {}) => createRequestQueue({ minIntervalMs: 0, now: () => clock.now, sleep: clock.sleep, shared, ...options });
 

@@ -1,5 +1,5 @@
-// Caminhos SVG no estilo Material, o mesmo traço dos ícones do YouTube, para
-// a página parecer nativa. Ficam como dados porque innerHTML é bloqueado.
+// Material-style SVG paths, the same stroke as YouTube's icons, so the page looks native. They are
+// kept as data because innerHTML is blocked.
 export const ICONS = {
   grid: 'M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z',
   folder: 'M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z',

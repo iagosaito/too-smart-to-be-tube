@@ -1,8 +1,7 @@
 import * as esbuild from 'esbuild';
 
-// Content scripts do MV3 não aceitam `import` estático; bundlar em IIFE nos
-// deixa escrever módulos pequenos e testáveis sem expor arquivos via
-// web_accessible_resources.
+// MV3 content scripts don't accept static `import`; bundling into an IIFE lets us write small,
+// testable modules without exposing files through web_accessible_resources.
 const options = {
   entryPoints: ['src/content/main.js'],
   outfile: 'dist/content.js',

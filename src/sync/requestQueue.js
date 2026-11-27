@@ -1,13 +1,11 @@
 import { LocalizedError } from '../i18n/errors.js';
 
-// Fila para as consultas aos canais do feed por categoria. Mesmo sendo
-// requisições públicas, sem cookies, rajadas podem levar o YouTube a limitar o
-// IP (o mesmo da sessão logada); a fila mantém o ritmo parecido com o de uma
-// pessoa navegando e para tudo se o YouTube pedir (429).
+// Queue for the per-category feed's channel requests. Even though they are public requests without
+// cookies, bursts may lead YouTube to throttle the IP (the same as the logged-in session's); the
+// queue keeps a pace similar to a person browsing and stops everything if YouTube asks (429).
 //
-// Com `shared` (o chrome.storage), a pausa e o teto por janela valem para
-// todas as abas do YouTube e sobrevivem a recarregar a página; sem ele, valem
-// só para esta fila (testes).
+// With `shared` (chrome.storage), the pause and the per-window cap apply to every YouTube tab and
+// survive a page reload; without it, they apply only to this queue (tests).
 export const QUEUE_DEFAULTS = {
   concurrency: 2,
   minIntervalMs: 350,
@@ -26,8 +24,8 @@ export function createRequestQueue(options = {}) {
     shared: null,
     ...options,
   };
-  // starts: inícios dentro da janela, cada um com id próprio (duas abas podem
-  // começar no mesmo milissegundo e precisam contar duas vezes).
+  // starts: starts within the window, each with its own id (two tabs may start in the same
+  // millisecond and must count twice).
   const state = { active: 0, waiting: [], starts: [], nextStart: 0, pausedUntil: 0, id: crypto.randomUUID(), count: 0 };
   return {
     run: (task) => new Promise((resolve, reject) => {
@@ -75,8 +73,7 @@ async function reserveSlot(state, config) {
   if (now < state.pausedUntil) throw rateLimited();
   state.starts = state.starts.filter((start) => now - start.at < config.windowMs);
   if (state.starts.length >= config.maxPerWindow) throw rateLimited();
-  // A vaga é reservada antes de esperar: duas tarefas simultâneas nunca
-  // pegam o mesmo horário de início.
+  // The slot is reserved before waiting: two simultaneous tasks never get the same start time.
   const startAt = Math.max(now, state.nextStart);
   state.nextStart = startAt + config.minIntervalMs;
   state.count += 1;
@@ -85,10 +82,9 @@ async function reserveSlot(state, config) {
   if (startAt > now) await config.sleep(startAt - now);
 }
 
-// Junta o que as outras abas registraram: a pausa mais longa e todos os
-// inícios dentro da janela. O storage não tem transações, então duas abas
-// reservando no mesmo instante podem contar uma a menos; o teto continua
-// valendo com essa folga mínima.
+// Merges what the other tabs recorded: the longest pause and every start within the window. Storage
+// has no transactions, so two tabs reserving at the same instant may count one fewer; the cap still
+// holds with that minimal slack.
 async function pullShared(state, config) {
   if (!config.shared) return;
   const budget = await config.shared.load().catch(() => null);
@@ -109,8 +105,8 @@ function isTransient(status) {
   return status === 408 || (status >= 500 && status < 600);
 }
 
-// Espera exponencial truncada com jitter (recomendação do Google Cloud): o
-// acaso evita que várias abas tentem de novo exatamente juntas.
+// Truncated exponential backoff with jitter (Google Cloud's recommendation): the randomness keeps
+// several tabs from retrying at exactly the same time.
 export function backoffDelay(retry, random = Math.random) {
   return Math.min(2 ** retry * 1000 + random() * 1000, 8000);
 }

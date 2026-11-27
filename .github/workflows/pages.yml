@@ -1,5 +1,5 @@
-# Publica a página de apresentação (site/) no GitHub Pages a cada mudança nela
-# na main. Só a pasta site/ vai para o ar: nada do código da extensão.
+# Publishes the landing page (site/) to GitHub Pages whenever it changes on main. Only the site/
+# folder goes live: none of the extension code.
 name: Pages
 
 on:
@@ -8,8 +8,8 @@ on:
     paths: ['site/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
-# Permissões mínimas: ler o código, publicar no Pages e o token OIDC que o
-# deploy-pages exige para provar a origem do artefato.
+# Minimal permissions: read the code, publish to Pages, and the OIDC token deploy-pages needs to
+# prove where the artifact came from.
 permissions:
   contents: read
 

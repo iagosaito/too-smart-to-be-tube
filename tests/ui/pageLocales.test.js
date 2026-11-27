@@ -1,4 +1,4 @@
-// A interface segue o idioma do YouTube (<html lang>); o CSV é sempre em inglês.
+// The UI follows YouTube's language (<html lang>); the CSV is always in English.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { injectSidebarEntry } from '../../src/dom/sidebar.js';
 import { parseCsv } from '../../src/import/csvParse.js';
@@ -105,7 +105,7 @@ describe('CSV sempre em inglês', () => {
     const page = await openIn(lang);
     [...page.querySelectorAll('.tstb-header-actions button')].at(-1).click();
     const [fileName, csv] = download.mock.calls[0];
-    // A data depende do fuso da máquina; o formato da data tem teste próprio.
+    // The date depends on the machine's time zone; the date format has its own test.
     expect(fileName).toMatch(/^youtube-subscriptions-\d{4}-\d{2}-\d{2}\.csv$/);
     expect(csv).toBe(
       '﻿Channel,Category,URL,Identifier\r\n' +

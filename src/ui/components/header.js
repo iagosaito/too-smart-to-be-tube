@@ -17,8 +17,8 @@ export function renderHeader({ state, view, actions, now }) {
 
 function renderSubtitle(state, view, now) {
   const total = plural('header.subscriptions', Object.keys(state.channels).length);
-  // O erro fica no mesmo lugar do status: o usuário procura o problema onde
-  // costuma ver se a sincronização deu certo.
+  // The error sits where the status is: the user looks for the problem where they usually check
+  // whether the sync worked.
   if (view.syncError) {
     return el('p', { className: 'tstb-subtitle tstb-error', role: 'alert' }, `${total} · ${t('header.syncFailed', { error: view.syncError })}`);
   }
@@ -33,7 +33,7 @@ function renderSearch(query, actions) {
     placeholder: t('header.search'),
     'aria-label': t('header.search'),
     value: query,
-    // Chave de foco: a página é re-renderizada a cada tecla e o foco precisa voltar aqui.
+    // Focus key: the page is re-rendered on every keystroke and focus must come back here.
     'data-focus-key': 'search',
     onInput: (event) => actions.searchAsYouType(event.target.value),
   });
@@ -41,8 +41,8 @@ function renderSearch(query, actions) {
 }
 
 function renderSyncButton({ syncing, syncCoolingDown }, actions) {
-  // Logo depois de sincronizar, o botão descansa um pouco (ver syncCoordinator):
-  // a dica explica por que está desabilitado em vez de parecer quebrado.
+  // Right after a sync, the button rests for a while (see syncCoordinator): the hint explains why
+  // it's disabled instead of looking broken.
   return el(
     'button',
     {
@@ -56,9 +56,9 @@ function renderSyncButton({ syncing, syncCoolingDown }, actions) {
   );
 }
 
-// Fica no cabeçalho, ao lado de Sincronizar, porque age sobre a coleção
-// inteira (não sobre o filtro ou a seleção atual). O rótulo diz o formato
-// antes do clique; desabilitado sem inscrições para não baixar arquivo vazio.
+// Lives in the header, next to Sync, because it acts on the whole collection (not on the current
+// filter or selection). The label states the format before the click; disabled without
+// subscriptions so it doesn't download an empty file.
 function renderExportButton(hasChannels, actions) {
   return el(
     'button',
@@ -67,8 +67,8 @@ function renderExportButton(hasChannels, actions) {
   );
 }
 
-// Par de Exportar: o mesmo formato vai e volta. Desabilitado sem inscrições
-// porque a importação só organiza canais que já estão na lista.
+// Export's counterpart: the same format goes out and comes back. Disabled without subscriptions
+// because the import only organizes channels already in the list.
 function renderImportButton(hasChannels, actions) {
   return el(
     'button',

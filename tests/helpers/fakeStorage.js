@@ -1,4 +1,4 @@
-// Imita a API de chrome.storage.local (get/set com Promises) em memória.
+// Mimics the chrome.storage.local API (get/set with Promises) in memory.
 export function createFakeStorageArea(initial = {}) {
   let data = structuredClone(initial);
   return {

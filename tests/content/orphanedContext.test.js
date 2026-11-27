@@ -1,7 +1,6 @@
-// Regressão: depois de recarregar a extensão em chrome://extensions, a aba do
-// YouTube aberta continuava com o script antigo. Na navegação seguinte ele
-// chamava chrome.storage e estourava "Uncaught (in promise) Error: Extension
-// context invalidated."
+// Regression: after reloading the extension in chrome://extensions, the open YouTube tab kept the
+// old script. On the next navigation it called chrome.storage and blew up with "Uncaught (in
+// promise) Error: Extension context invalidated."
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { ENTRY_ID } from '../../src/dom/sidebar.js';
 import { TOAST_ID } from '../../src/ui/components/feedback.js';
@@ -15,11 +14,11 @@ const recordRejection = (reason) => rejections.push(reason);
 beforeAll(async () => {
   process.on('unhandledRejection', recordRejection);
   document.body.innerHTML = GUIDE_HTML;
-  // Script carregado com a extensão viva...
+  // Script loaded with the extension alive...
   globalThis.chrome = { runtime: { id: 'test' }, storage: { local: { get: invalidated, set: invalidated }, onChanged: { addListener: () => {} } } };
   await import('../../src/content/main.js');
   await flush();
-  // ...e a extensão recarregada em seguida: o contexto deste script se perde.
+  // ...and the extension reloaded right after: this script's context is lost.
   globalThis.chrome.runtime = {};
   rejections.length = 0;
 });

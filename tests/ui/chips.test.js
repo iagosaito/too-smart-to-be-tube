@@ -23,7 +23,7 @@ describe('renderChips', () => {
     expect(children.map((node) => node.querySelector('.tstb-chip-label')?.textContent ?? node.textContent.trim())).toEqual([
       'Todas', 'Alfa', 'Beta', 'Sem categoria', 'Nova categoria',
     ]);
-    // Sem rolagem horizontal: nada fica escondido atrás de setas.
+    // No horizontal scrolling: nothing is hidden behind arrows.
     expect(nav().querySelector('.tstb-chips-track, .tstb-chips-arrow')).toBeNull();
   });
 

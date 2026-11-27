@@ -1,14 +1,13 @@
 import { categoryVideos, FEED_TAB, interleave, nextChannels, orderByActivity } from './categoryFeed.js';
 
-// Estado do feed de uma página de Categorias: uma sessão por categoria e aba.
-// Duas medidas separadas: a tela mostra uma página de itens por vez e os
-// canais são consultados em lotes só quando o que já foi baixado não enche a
-// próxima página (cada canal traz dezenas de Shorts: um lote rende várias
-// páginas sem nenhuma requisição nova). Tudo por ação explícita ("Carregar
-// mais"), exceto o primeiro lote de Shorts, que é a intenção de quem abriu a aba.
+// Feed state of a Categories page: one session per category and tab. Two separate measures: the
+// screen shows one page of items at a time, and channels are queried in batches only when what was
+// already downloaded can't fill the next page (each channel brings dozens of Shorts: one batch
+// yields several pages without any new request). Everything happens on explicit action ("Load
+// more"), except the first batch of Shorts, which is what opening the tab asks for.
 export const BATCH_SIZE = 8;
-// 4 fileiras de 6 Shorts ou 8 de 3 vídeos: o bastante para rolar, pouco o
-// bastante para o fim da página continuar perto.
+// 4 rows of 6 Shorts or 8 rows of 3 videos: enough to scroll, few enough that the end of the page
+// stays close.
 export const PAGE_SIZE = 24;
 
 export function createFeedController({ source, onChange, batchSize = BATCH_SIZE, pageSize = PAGE_SIZE }) {
@@ -19,16 +18,16 @@ export function createFeedController({ source, onChange, batchSize = BATCH_SIZE,
     if (sessions.get(`${category.id}:${tab}`)?.signature !== signature) {
       const session = { signature, tab, ordered: orderByActivity(channels, latestUploads), requested: new Set(), results: new Map(), pending: new Set(), errorKey: null, visible: pageSize };
       sessions.set(`${category.id}:${tab}`, session);
-      // O primeiro lote de Shorts espera o cache: canais já em cache não devem
-      // ocupar vagas do lote que vai à rede, e se o cache já enche a primeira
-      // página nada vai à rede.
+      // The first batch of Shorts waits for the cache: channels already cached must not take slots
+      // in the batch that goes to the network, and if the cache already fills the first page
+      // nothing goes to the network.
       hydrateFromCache(session).then(() => tab === FEED_TAB.SHORTS && fillPage(session));
     }
     return sessions.get(`${category.id}:${tab}`);
   }
 
   async function hydrateFromCache(session) {
-    // Sem rede: tudo o que já está no cache aparece sem custo.
+    // No network: everything already in the cache shows at no cost.
     const cached = await Promise.all(session.ordered.filter((channel) => channel.ucid).map(async (channel) => [channel, await source.cached(channel, session.tab)]));
     for (const [channel, items] of cached) {
       if (!items || session.requested.has(channel.id)) continue;
@@ -38,8 +37,8 @@ export function createFeedController({ source, onChange, batchSize = BATCH_SIZE,
     if (cached.some(([, items]) => items)) onChange();
   }
 
-  // Mostra a próxima página; só consulta canais se o que já foi baixado não
-  // bastar para preenchê-la.
+  // Shows the next page; only queries channels if what was already downloaded isn't enough to fill
+  // it.
   function loadMore(session, feedItems = []) {
     session.visible += pageSize;
     fillPage(session, feedItems);
@@ -59,7 +58,7 @@ export function createFeedController({ source, onChange, batchSize = BATCH_SIZE,
     source.load(channel, session.tab)
       .then((items) => session.results.set(channel.id, items))
       .catch((error) => {
-        // Libera o canal para uma nova tentativa e mostra o motivo (ex.: limite de consultas).
+        // Frees the channel for a new attempt and shows the reason (e.g. the request limit).
         session.requested.delete(channel.id);
         session.errorKey = error?.key ?? 'error.feedUnavailable';
       })
@@ -82,7 +81,8 @@ export function modelOf(session, feedItems = []) {
   return {
     items: items.slice(0, session.visible),
     loading: session.pending.size,
-    // Há mais se ainda sobra algo já baixado ou algum canal por consultar.
+    // There is more if something already downloaded is left over or some channel is still to be
+    // queried.
     hasMore: items.length > session.visible || nextChannels(session.ordered, session.requested, 1).length > 0,
     missingIds: session.ordered.filter((channel) => !channel.ucid).length,
     channelCount: session.ordered.length,

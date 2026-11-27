@@ -2,17 +2,17 @@ import { LocalizedError } from '../i18n/errors.js';
 import { YOUTUBE_ORIGIN } from './auth.js';
 import { shortsFromPage, videosFromPage } from './videoItems.js';
 
-// Parâmetros das abas "Videos" e "Shorts" de um canal, como o próprio
-// YouTube envia ao trocar de aba (lidos de uma página real de canal).
+// Params for a channel's "Videos" and "Shorts" tabs, as YouTube itself sends them when switching
+// tabs (read from a real channel page).
 export const CHANNEL_TAB_PARAMS = {
   videos: 'EgZ2aWRlb3PyBgQKAjoA',
   shorts: 'EgZzaG9ydHPyBgUKA5oBAA==',
 };
 const BROWSE_URL = `${YOUTUBE_ORIGIN}/youtubei/v1/browse?prettyPrint=false`;
 
-// Busca uma aba de um canal **sem cookies** (credentials: 'omit'): vídeos e
-// Shorts de um canal são públicos, então a requisição não fica associada à
-// conta do usuário — sem risco para a conta, mesmo com várias consultas.
+// Fetches a channel tab **without cookies** (credentials: 'omit'): a channel's videos and Shorts
+// are public, so the request isn't tied to the user's account — no risk to the account, even with
+// many requests.
 export async function fetchChannelTab({ channel, tab, clientVersion, fetchFn = fetch, now = Date.now() }) {
   const body = JSON.stringify({
     context: { client: { clientName: 'WEB', clientVersion, hl: 'en' } },

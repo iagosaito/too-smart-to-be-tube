@@ -62,7 +62,7 @@ describe('injectMiniGuideEntry', () => {
 
   it('keepMiniGuideEntry reinsere o item quando o YouTube redesenha a lista', async () => {
     const observer = keepMiniGuideEntry(items(), () => {});
-    // Simula o YouTube recriando a lista com seus próprios itens.
+    // Simulates YouTube recreating the list with its own items.
     items().replaceChildren(...new DOMParser().parseFromString(
       `<div>${miniEntry('/shorts', 'Shorts')}${miniEntry('/feed/subscriptions', 'Inscrições')}</div>`, 'text/html',
     ).body.firstChild.children);
@@ -102,7 +102,7 @@ describe('keepSidebarEntry', () => {
   it('reinsere o item quando o YouTube redesenha as seções do menu expandido', async () => {
     const observer = keepSidebarEntry(guide(), () => {});
     const sections = guide().querySelector('#sections');
-    // Simula o YouTube recriando as seções ao expandir o menu: nosso item some.
+    // Simulates YouTube recreating the sections when expanding the menu: our item disappears.
     const fresh = [...sections.querySelectorAll('ytd-guide-section-renderer')].map((node) => node.cloneNode(true));
     sections.replaceChildren(...fresh);
     expect(document.getElementById(ENTRY_ID)).toBeNull();

@@ -1,12 +1,11 @@
 import { LocalizedError } from '../i18n/errors.js';
 import { fetchChannelTab } from '../youtube/channelTabs.js';
 
-// Ponto único para obter a aba de um canal: primeiro o cache; se não houver,
-// a consulta pública passa pela fila (ritmo controlado) e o resultado é guardado.
+// Single entry point to get a channel's tab: the cache first; if it isn't there, the public request
+// goes through the queue (paced) and the result is stored.
 export function createFeedSource({ cache, queue, clientVersion, fetchTab = fetchChannelTab }) {
-  // Consultas em andamento por canal e aba: uma sessão nova (canal adicionado
-  // à categoria, página reaberta) reaproveita a que já está na fila em vez de
-  // pedir o mesmo canal de novo.
+  // Requests in flight per channel and tab: a new session (channel added to the category, page
+  // reopened) reuses the one already queued instead of requesting the same channel again.
   const inFlight = new Map();
 
   async function fetchAndCache(channel, tab) {
@@ -24,8 +23,8 @@ export function createFeedSource({ cache, queue, clientVersion, fetchTab = fetch
     load(channel, tab) {
       const key = `${channel.ucid ?? channel.id}:${tab}`;
       if (!inFlight.has(key)) {
-        // Sai do mapa ao terminar, com sucesso ou falha: uma falha não fica
-        // presa e o próximo pedido consulta de novo.
+        // Leaves the map when it finishes, with success or failure: a failure doesn't get stuck and
+        // the next request queries again.
         inFlight.set(key, fetchAndCache(channel, tab).finally(() => inFlight.delete(key)));
       }
       return inFlight.get(key);

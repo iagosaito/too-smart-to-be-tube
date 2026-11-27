@@ -1,11 +1,10 @@
-// Quando a extensão é recarregada ou atualizada, o script que já estava rodando
-// na aba fica "órfão": o DOM continua acessível, mas qualquer chamada a
-// chrome.* lança "Extension context invalidated". Detectar isso evita erros
-// no console e permite orientar o usuário a recarregar a página.
+// When the extension is reloaded or updated, the script already running in the tab becomes
+// "orphaned": the DOM is still accessible, but any call to chrome.* throws "Extension context
+// invalidated". Detecting this avoids console errors and lets us tell the user to reload the page.
 
 export function isExtensionAlive(chromeApi = globalThis.chrome) {
   try {
-    // runtime.id some (ou o acesso lança) assim que o contexto é invalidado.
+    // runtime.id disappears (or accessing it throws) as soon as the context is invalidated.
     return Boolean(chromeApi?.runtime?.id);
   } catch {
     return false;
@@ -16,8 +15,8 @@ export function isContextInvalidated(error) {
   return /extension context invalidated/i.test(String(error?.message ?? error));
 }
 
-// Executa a tarefa só se a extensão ainda estiver viva; se o contexto se
-// perder no meio do caminho, chama onOrphaned em vez de deixar o erro escapar.
+// Runs the task only if the extension is still alive; if the context is lost midway, calls
+// onOrphaned instead of letting the error escape.
 export async function runIfAlive(task, onOrphaned, chromeApi = globalThis.chrome) {
   if (!isExtensionAlive(chromeApi)) return onOrphaned();
   try {

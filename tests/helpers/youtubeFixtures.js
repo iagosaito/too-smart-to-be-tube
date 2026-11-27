@@ -1,4 +1,4 @@
-// HTML reduzido imitando a estrutura real do menu lateral e de /feed/channels.
+// Trimmed HTML mimicking the real structure of the sidebar and of /feed/channels.
 
 export function guideEntry(href, title, avatar = '') {
   const img = avatar ? `<yt-img-shadow><img src="${avatar}"></yt-img-shadow>` : '';

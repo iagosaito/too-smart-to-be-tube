@@ -1,6 +1,5 @@
-// Fluxo completo do feed por categoria, carregando o content script como o
-// Chrome faz: sincronização guarda o feed e os ucids; o menu lateral abre a
-// categoria direto no feed.
+// Full per-category feed flow, loading the content script the way Chrome does: the sync stores the
+// feed and the ucids; the sidebar opens the category straight into the feed.
 import { readFileSync } from 'node:fs';
 import { expect, it, vi } from 'vitest';
 import { PAGE_ID } from '../../src/ui/page.js';
@@ -12,7 +11,7 @@ const flush = async () => {
   for (let i = 0; i < 10; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
 };
 
-// Resposta real do feed (lockups com autor), embrulhada como a página /feed/subscriptions.
+// A real feed response (lockups with an author), wrapped like the /feed/subscriptions page.
 const realFeed = JSON.parse(readFileSync('tests/fixtures/youtube/feed-lockups.json', 'utf8'));
 const FIRESHIP_UCID = 'UCsBjURrPoezykLs9EqgamOA';
 const channelRenderer = {
@@ -51,6 +50,7 @@ it('sincroniza o feed e o ucid; clicar na categoria do menu abre o feed dela', a
     'If you’ve deployed anything since 2015, I have bad news...',
     'The only software that didn’t break this week...',
   ]);
-  // O menu é redesenhado ao marcar a ativa; busca o item de novo em vez de usar a referência antiga.
+  // The menu is redrawn when marking the active one; look the item up again instead of using the
+  // old reference.
   expect(document.querySelector('.tstb-sidebar-category-active').textContent).toBe('Programação');
 });

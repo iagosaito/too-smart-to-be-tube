@@ -3,7 +3,7 @@ import { el } from '../elements.js';
 import { localeTag, plural, t } from '../../i18n/i18n.js';
 
 export const TOAST_ID = 'tstb-toast';
-// Valor sentinela porque "" já é usado pela opção-título "Mover para…".
+// Sentinel value because "" is already used by the "Move to…" title option.
 export const MOVE_TO_NONE = '__none__';
 
 export function renderBulkBar(categories, count, actions) {
@@ -15,7 +15,7 @@ export function renderBulkBar(categories, count, actions) {
   const onChange = (event) => actions.moveSelected(event.target.value === MOVE_TO_NONE ? null : event.target.value);
   const select = el('select', { className: 'tstb-bulk-select', 'aria-label': t('bulk.moveLabel'), onChange }, options);
   select.value = '';
-  // Barra fixa no rodapé: continua visível enquanto o usuário rola e marca mais canais.
+  // Bar fixed at the bottom: it stays visible while the user scrolls and selects more channels.
   return el('div', { className: 'tstb-bulkbar', role: 'region', 'aria-label': t('bulk.region') }, [
     el('span', { className: 'tstb-bulk-count' }, plural('bulk.count', count)),
     select,
@@ -24,7 +24,7 @@ export function renderBulkBar(categories, count, actions) {
 }
 
 export function renderEmptyState({ title, text, action = null }) {
-  // Estado vazio sempre aponta o próximo passo, em vez de só dizer "nada aqui".
+  // An empty state always points to the next step, instead of just saying "nothing here".
   return el('div', { className: 'tstb-empty-state' }, [
     el('h3', {}, title),
     el('p', {}, text),
@@ -33,7 +33,7 @@ export function renderEmptyState({ title, text, action = null }) {
 }
 
 export function showToast(message, { duration = 4000, action = null } = {}) {
-  // Fora da página de Categorias para sobreviver às re-renderizações.
+  // Outside the Categories page so it survives re-renders.
   document.getElementById(TOAST_ID)?.remove();
   const toast = el('div', { id: TOAST_ID, className: 'tstb-toast', role: 'status' }, [
     el('span', {}, message),
@@ -46,7 +46,7 @@ export function showToast(message, { duration = 4000, action = null } = {}) {
 }
 
 function renderToastAction(action) {
-  // Ação no próprio aviso (ex.: Desfazer), como no snackbar do YouTube/Gmail:
-  // aparece no momento em que o usuário percebe o resultado.
+  // Action in the toast itself (e.g. Undo), like YouTube's/Gmail's snackbar: it appears right when
+  // the user notices the result.
   return el('button', { type: 'button', className: 'tstb-toast-action', onClick: action.onClick }, action.label);
 }

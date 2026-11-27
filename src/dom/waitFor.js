@@ -1,7 +1,7 @@
-// O YouTube é uma SPA que monta o menu lateral depois do document_idle, então
-// observamos o DOM em vez de supor que o elemento já existe. O timeout evita
-// um observer vivo para sempre em páginas sem menu (ex.: embeds); timeout
-// null espera indefinidamente, para elementos que só surgem por ação do usuário.
+// YouTube is an SPA that mounts the sidebar after document_idle, so we observe the DOM instead of
+// assuming the element already exists. The timeout avoids an observer living forever on pages
+// without a menu (e.g. embeds); a null timeout waits indefinitely, for elements that only appear
+// after a user action.
 export function waitFor(selector, { root = document, timeout = 10000 } = {}) {
   const found = root.querySelector(selector);
   if (found) return Promise.resolve(found);

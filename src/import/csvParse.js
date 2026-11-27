@@ -1,39 +1,38 @@
 const DELIMITERS = [',', ';', '\t'];
 
-// Detecta o separador pela linha de cabeçalho: o Excel em português salva
-// CSV com ";" e o usuário pode ter editado o arquivo exportado nele.
+// Detects the separator from the header row: Excel in Portuguese saves CSV with ";" and the user
+// may have edited the exported file in it.
 export function detectDelimiter(text) {
-  // Mesmas quebras de linha que o parser aceita, inclusive "\r" sozinho.
+  // The same line breaks the parser accepts, including a lone "\r".
   const header = text.split(/\r\n|\n|\r/, 1)[0];
   const counts = DELIMITERS.map((delimiter) => header.split(delimiter).length - 1);
   const best = counts.indexOf(Math.max(...counts));
   return counts[best] > 0 ? DELIMITERS[best] : ',';
 }
 
-// Máquina de estados de uma passada só (tempo linear). A versão anterior
-// usava uma regex que, com uma célula longa seguida de "\r" sozinho, recuava
-// em todos os comprimentos possíveis: tempo quadrático, e um CSV malicioso de
-// 5 MB travava a aba do YouTube.
+// Single-pass state machine (linear time). The previous version used a regex that, with a long cell
+// followed by a lone "\r", backtracked through every possible length: quadratic time, and a
+// malicious 5 MB CSV froze the YouTube tab.
 export function parseCsv(text) {
-  // O BOM que a exportação adiciona não pode virar parte do nome da primeira coluna.
+  // The BOM the export adds must not become part of the first column's name.
   const body = String(text).replace(/^\uFEFF/, '');
   const state = { delimiter: detectDelimiter(body), rows: [], row: [], cell: '', quoted: false };
   for (let index = 0; index < body.length; index += 1) index = step(state, body, index);
   endRow(state);
-  // Linhas em branco (ex.: final do arquivo) não carregam informação.
+  // Blank lines (e.g. the end of the file) carry no information.
   return state.rows.filter((row) => row.some((cell) => cell.trim() !== ''));
 }
 
-// Devolve o índice do último caractere consumido (alguns passos consomem dois).
+// Returns the index of the last character consumed (some steps consume two).
 function step(state, body, index) {
   if (state.quoted) return stepQuoted(state, body, index);
   const char = body[index];
-  // Aspas só abrem uma célula entre aspas no início dela; no meio são texto comum.
+  // Quotes only open a quoted cell at its start; in the middle they are plain text.
   if (char === '"' && state.cell === '') state.quoted = true;
   else if (char === state.delimiter) endCell(state);
   else if (char === '\n' || char === '\r') {
     endRow(state);
-    // "\r\n" (Windows/Excel) é uma quebra só; "\r" sozinho também conta como quebra.
+    // "\r\n" (Windows/Excel) is a single break; a lone "\r" also counts as a break.
     if (char === '\r' && body[index + 1] === '\n') return index + 1;
   } else state.cell += char;
   return index;
@@ -41,7 +40,7 @@ function step(state, body, index) {
 
 function stepQuoted(state, body, index) {
   if (body[index] !== '"') state.cell += body[index];
-  // "" dentro de aspas é uma aspa literal.
+  // "" inside quotes is a literal quote.
   else if (body[index + 1] === '"') {
     state.cell += '"';
     return index + 1;

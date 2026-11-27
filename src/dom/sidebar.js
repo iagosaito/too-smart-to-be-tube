@@ -6,41 +6,42 @@ import { SELECTORS } from './selectors.js';
 export const ENTRY_ID = 'tstb-sidebar-entry';
 export const MINI_ENTRY_ID = 'tstb-mini-entry';
 
-// Quantas categorias aparecem antes de "Mostrar mais": o mesmo limite que o
-// YouTube usa na lista de Inscrições do menu, para parecer nativo.
+// How many categories show before "Show more": the same limit YouTube uses for the Subscriptions
+// list in the menu, so it feels native.
 export const SIDEBAR_VISIBLE_CATEGORIES = 7;
 const LIST_CLASS = 'tstb-sidebar-categories';
 
-// Estado da lista no menu, compartilhado por todas as reinserções: o YouTube
-// recria o menu, e a lista precisa voltar igual (mesmas categorias, aberta ou não).
+// State of the list in the menu, shared by every reinsertion: YouTube recreates the menu, and the
+// list must come back the same (same categories, expanded or not).
 const sidebarModel = { categories: [], onOpenCategory: null, expanded: false, activeId: null };
 
 export function injectSidebarEntry(guide, onClick) {
-  // A navegação SPA dispara a injeção várias vezes; sem esta checagem o item duplicaria.
+  // SPA navigation triggers the injection several times; without this check the item would be
+  // duplicated.
   const existing = guide.querySelector(`#${ENTRY_ID}`);
   if (existing) return existing;
 
   const firstSection = guide.querySelector(SELECTORS.guideSection);
   if (!firstSection) return null;
 
-  // Inserido como irmão da seção, e não dentro da lista de itens, porque o
-  // Polymer do YouTube re-renderiza essas listas e apagaria nosso nó.
+  // Inserted as a sibling of the section, not inside the item list, because YouTube's Polymer
+  // re-renders those lists and would wipe our node.
   const entry = el('div', { id: ENTRY_ID, className: 'tstb-sidebar-entry' }, [buildSectionHeader(onClick), renderCategoryList()]);
   firstSection.after(entry);
   return entry;
 }
 
-// Atualiza a lista de categorias do menu (ex.: categoria criada ou renomeada).
+// Updates the menu's category list (e.g. a category was created or renamed).
 export function setSidebarCategories(categories, onOpenCategory) {
   Object.assign(sidebarModel, { categories, onOpenCategory });
   refreshCategoryList();
 }
 
-// Destaca a categoria aberta, como o YouTube destaca a página atual.
+// Highlights the open category, the way YouTube highlights the current page.
 export function markActiveSidebarCategory(categoryId) {
   if (sidebarModel.activeId === categoryId) return;
   sidebarModel.activeId = categoryId;
-  // Com uma categoria aberta, o destaque fica nela, não no título "Categorias".
+  // With a category open, the highlight goes to it, not to the "Categories" title.
   document.documentElement.classList.toggle('tstb-category-open', Boolean(categoryId));
   refreshCategoryList();
 }
@@ -80,28 +81,27 @@ function renderToggle(expanded) {
   ]));
 }
 
-// O menu recolhido é outro componente do YouTube (ícone em cima, rótulo
-// embaixo), então ganha um item próprio com o mesmo comportamento.
+// The collapsed menu is a different YouTube component (icon on top, label below), so it gets its
+// own item with the same behavior.
 export function injectMiniGuideEntry(items, onClick) {
   const existing = items.querySelector(`#${MINI_ENTRY_ID}`);
   if (existing) return existing;
 
-  // Aqui entramos dentro da lista nativa: fora dela o item ficava num
-  // contêiner com outro espaçamento e saía desalinhado. Se o Polymer
-  // re-renderizar a lista, a próxima navegação reinsere o item.
+  // Here we go inside the native list: outside it the item sat in a container with different
+  // spacing and came out misaligned. If Polymer re-renders the list, the next navigation reinserts
+  // the item.
   const entry = el('div', { id: MINI_ENTRY_ID, className: 'tstb-mini-entry' }, buildButton('tstb-mini-button', onClick));
   const reference = findMiniGuideSlot(items);
-  // Insere no pai real da referência: se o YouTube aninhar os itens numa
-  // camada extra, items.insertBefore lançaria erro e o item não apareceria.
+  // Inserts into the reference's actual parent: if YouTube nests the items in an extra layer,
+  // items.insertBefore would throw and the item wouldn't show up.
   (reference?.parentNode ?? items).insertBefore(entry, reference);
   return entry;
 }
 
-// O YouTube redesenha os menus (ao expandir/recolher, ao atualizar as
-// inscrições) e remove nós que não são dele. Um observer por menu reinsere o
-// item quando ele some; inserir dispara o observer de novo, mas aí o item já
-// existe e nada acontece. O WeakSet evita empilhar observers no mesmo menu a
-// cada navegação.
+// YouTube redraws the menus (when expanding/collapsing, when refreshing subscriptions) and removes
+// nodes that aren't its own. One observer per menu reinserts the item when it disappears; inserting
+// fires the observer again, but by then the item exists and nothing happens. The WeakSet avoids
+// stacking observers on the same menu on every navigation.
 const keptMenus = new WeakSet();
 
 function keepEntry(container, inject, options) {
@@ -114,13 +114,13 @@ function keepEntry(container, inject, options) {
 }
 
 export function keepMiniGuideEntry(items, onClick) {
-  // Só os filhos diretos: a lista do menu recolhido é plana.
+  // Direct children only: the collapsed menu's list is flat.
   return keepEntry(items, () => injectMiniGuideEntry(items, onClick), { childList: true });
 }
 
 export function keepSidebarEntry(guide, onClick) {
-  // Subtree porque o YouTube recria as seções dentro de #sections, e não o
-  // guide inteiro. O callback só faz uma busca por id quando nada mudou.
+  // Subtree because YouTube recreates the sections inside #sections, not the whole guide. The
+  // callback only does an id lookup when nothing changed.
   return keepEntry(guide, () => injectSidebarEntry(guide, onClick), { childList: true, subtree: true });
 }
 
@@ -128,13 +128,14 @@ function findMiniGuideSlot(items) {
   const entryOf = (selector) => items.querySelector(selector)?.closest(SELECTORS.miniGuideEntry) ?? null;
   const subscriptions = entryOf(SELECTORS.miniGuideSubscriptions);
   if (subscriptions) return subscriptions;
-  // Sem "Inscrições" (ex.: deslogado), fica logo após o Shorts; sem ambos, no fim (null).
+  // Without "Subscriptions" (e.g. logged out), it goes right after Shorts; without both, at the end
+  // (null).
   return entryOf(SELECTORS.miniGuideShorts)?.nextElementSibling ?? null;
 }
 
-// No menu expandido o item vira título de seção ("Categorias ›"), no mesmo
-// estilo de "Inscrições ›" e "Você ›": deixa claro que as categorias abaixo
-// pertencem a ele e que clicar no título abre a página de organizar.
+// In the expanded menu the item becomes a section title ("Categories ›"), in the same style as
+// "Subscriptions ›" and "You ›": it makes clear that the categories below belong to it and that
+// clicking the title opens the management page.
 function buildSectionHeader(onClick) {
   return el('button', { type: 'button', className: 'tstb-sidebar-button tstb-sidebar-header', onClick }, [
     el('span', { className: 'tstb-sidebar-label' }, t('app.title')),
@@ -143,7 +144,8 @@ function buildSectionHeader(onClick) {
 }
 
 function buildButton(className, onClick) {
-  // <button> em vez de <a href="#">: não é navegação, e assim ganha teclado/acessibilidade de graça.
+  // <button> instead of <a href="#">: it isn't navigation, and this way keyboard support and
+  // accessibility come for free.
   return el('button', { type: 'button', className, onClick }, [
     svgIcon(ICONS.folder),
     el('span', { className: 'tstb-sidebar-label' }, t('app.title')),

@@ -1,15 +1,15 @@
 import { groupChannels } from '../core/categories.js';
 import { toCsv } from './csv.js';
 
-// Formato sempre em inglês, independente do idioma da interface: um único
-// formato para documentar, editar em planilhas e importar de volta.
+// The format is always in English, regardless of the UI language: a single format to document, edit
+// in spreadsheets and import back.
 const HEADER = ['Channel', 'Category', 'URL', 'Identifier'];
-// Célula vazia em vez de um texto traduzido: é o que a importação entende
-// como "sem categoria" em qualquer idioma.
+// An empty cell instead of translated text: it is what the import understands as "no category" in
+// any language.
 const NO_CATEGORY = '';
 
-// Mesma ordem da página (categorias do usuário, "Sem categoria" por último,
-// nomes em ordem alfabética), para o arquivo bater com o que a pessoa vê.
+// Same order as the page (user categories, "No category" last, names alphabetical), so the file
+// matches what the person sees.
 export function subscriptionRows(state) {
   const { groups, uncategorized } = groupChannels(state.categories, state.channels);
   const rowsOf = (channels, categoryName) =>
@@ -26,7 +26,7 @@ export function subscriptionsCsv(state) {
 }
 
 export function csvFileName(timestamp) {
-  // Data local (não UTC): exportar às 23h não deve gerar o arquivo com a data de amanhã.
+  // Local date (not UTC): exporting at 11 p.m. must not name the file with tomorrow's date.
   const date = new Date(timestamp);
   const pad = (number) => String(number).padStart(2, '0');
   return `youtube-subscriptions-${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}.csv`;

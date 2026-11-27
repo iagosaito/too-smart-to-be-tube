@@ -1,7 +1,6 @@
-// Regressão: cada clique em "Categorias" criava uma página nova que não sabia
-// da sincronização em andamento. Cliques repetidos disparavam sincronizações
-// em paralelo, cada uma com até ~100 requisições autenticadas ao YouTube
-// (risco de rate-limit) e gravações que se atropelavam.
+// Regression: every click on "Categories" created a new page that didn't know about the sync in
+// progress. Repeated clicks started syncs in parallel, each with up to ~100 authenticated requests
+// to YouTube (rate-limit risk) and writes trampling each other.
 import { expect, it, vi } from 'vitest';
 import { ENTRY_ID } from '../../src/dom/sidebar.js';
 import { createFakeStorageArea } from '../helpers/fakeStorage.js';

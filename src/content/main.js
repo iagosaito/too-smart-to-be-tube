@@ -21,7 +21,7 @@ const store = createStore(chrome.storage.local);
 
 async function syncFromDom() {
   const channels = scrapeChannels(document);
-  // Não grava nada quando a leitura vem vazia (DOM ainda carregando).
+  // Saves nothing when the read comes back empty (DOM still loading).
   if (channels.length) await store.mergeChannels(channels);
 }
 
@@ -32,17 +32,17 @@ async function syncAllSubscriptions() {
   return channels.length;
 }
 
-// Um coordenador por aba, compartilhado por todas as páginas de Categorias
-// abertas nela: cliques repetidos não disparam sincronizações em paralelo.
+// One coordinator per tab, shared by every Categories page opened in it: repeated clicks don't
+// start syncs in parallel.
 const syncCoordinator = createSyncCoordinator(syncAllSubscriptions);
 
 async function syncLatestUploads() {
-  // O feed de Inscrições é um extra: se falhar, a lista de inscrições (já
-  // salva) continua valendo e o erro não deve derrubar a sincronização.
+  // The subscriptions feed is an extra: if it fails, the subscriptions list (already saved) still
+  // stands and the error must not bring the sync down.
   try {
     const videos = await fetchSubscriptionFeed();
-    // Os mesmos vídeos alimentam a data do último vídeo de cada canal e o feed
-    // por categoria (aba Vídeos), sem nenhuma requisição a mais.
+    // The same videos feed each channel's latest upload date and the per-category feed (Videos
+    // tab), with no extra requests.
     await store.saveUploads(latestByChannel(videos));
     await store.saveFeed(videos);
   } catch (error) {
@@ -52,9 +52,9 @@ async function syncLatestUploads() {
   }
 }
 
-// Fonte do feed por categoria, uma por aba: cache persistido e uma fila que
-// controla o ritmo das consultas públicas aos canais. A pausa e o teto da
-// fila ficam no storage, valendo para todas as abas do YouTube abertas.
+// Per-category feed source, one per tab: a persisted cache and a queue that paces the public
+// channel requests. The queue's pause and cap live in storage, so they apply to every open YouTube
+// tab.
 const feedSource = createFeedSource({
   cache: createChannelTabCache({ storage: store.channelTabStorage }),
   queue: createRequestQueue({ shared: { load: store.loadRequestBudget, save: store.saveRequestBudget } }),
@@ -62,15 +62,15 @@ const feedSource = createFeedSource({
 });
 
 async function openCategories(options = {}) {
-  // A leitura do DOM é instantânea e já mostra algo enquanto a sincronização
-  // completa (várias requisições) roda em segundo plano.
+  // Reading the DOM is instant and shows something right away while the full sync (several
+  // requests) runs in the background.
   await runIfAlive(async () => {
     await syncFromDom();
     await openCategoriesPage({ store, sync: syncCoordinator, feedSource, ...options });
   }, warnOrphaned);
 }
 
-// Clicar numa categoria no menu lateral abre direto o feed dela.
+// Clicking a category in the sidebar opens its feed directly.
 const openCategoryFeed = (categoryId) => openCategories({ initialFilter: categoryId });
 
 async function refreshSidebarCategories(categories) {
@@ -79,8 +79,8 @@ async function refreshSidebarCategories(categories) {
 }
 
 function warnOrphaned() {
-  // Só avisamos quando o usuário clica: em tarefas de fundo seria um alerta
-  // sem contexto a cada navegação.
+  // We only warn when the user clicks: in background tasks it would be an alert with no context on
+  // every navigation.
   closeCategoriesPage();
   showToast(t('toast.extensionUpdated'), {
     duration: 15_000,
@@ -89,47 +89,45 @@ function warnOrphaned() {
 }
 
 function stopBackgroundWork() {
-  // Script órfão: para de reagir às navegações. O próximo carregamento da
-  // página injeta o script novo da extensão.
+  // Orphaned script: stop reacting to navigations. The next page load injects the extension's new
+  // script.
   document.removeEventListener('yt-navigate-finish', setup);
 }
 
-// Os menus podem só ser montados muito depois do carregamento (ex.: numa
-// janela estreita o menu expandido só existe quando o usuário abre o ☰).
-// Cada espera é iniciada uma vez; depois disso o observer do menu mantém o
-// item no lugar.
+// The menus may only be mounted long after the page loads (e.g. in a narrow window the expanded
+// menu only exists once the user opens ☰). Each wait starts once; after that the menu's observer
+// keeps the item in place.
 const waiting = new Set();
-// Sem o contêiner do menu, a espera vigia o documento inteiro: com prazo,
-// para não rodar a cada mutação da página (inclusive durante um vídeo).
-// A próxima navegação tenta de novo.
+// Without the menu's container, the wait watches the whole document: with a deadline, so it doesn't
+// run on every page mutation (including during a video). The next navigation tries again.
 const DOCUMENT_WAIT_MS = 10_000;
 
 async function whenPresent(selector, keep, scopeSelector) {
   const current = document.querySelector(selector);
-  // Se o YouTube recriou o menu inteiro, este é um elemento novo: passa a ser observado.
+  // If YouTube recreated the whole menu, this is a new element: start observing it.
   if (current) return keep(current);
   if (waiting.has(selector)) return;
   waiting.add(selector);
   try {
     keep(await waitFor(selector, waitScope(scopeSelector)));
   } catch {
-    // Prazo esgotado sem o menu: nada a fazer até a próxima navegação.
+    // Deadline passed without the menu: nothing to do until the next navigation.
   } finally {
     waiting.delete(selector);
   }
 }
 
 function waitScope(scopeSelector) {
-  // Dentro do contêiner do menu as mutações são raras, então dá para esperar
-  // sem prazo pelo momento em que o usuário abrir o menu.
+  // Inside the menu's container mutations are rare, so we can wait with no deadline for the moment
+  // the user opens the menu.
   const scope = document.querySelector(scopeSelector);
   return scope ? { root: scope, timeout: null } : { timeout: DOCUMENT_WAIT_MS };
 }
 
 function setupMenus() {
   whenPresent(SELECTORS.miniGuideItems, (items) => keepMiniGuideEntry(items, openCategories), SELECTORS.miniGuide);
-  // Espera uma seção, não só o ytd-guide-renderer, porque ele existe vazio
-  // antes de o YouTube preencher o menu.
+  // Waits for a section, not just ytd-guide-renderer, because it exists empty before YouTube fills
+  // in the menu.
   whenPresent(SELECTORS.guideSection, (section) => keepSidebarEntry(section.closest(SELECTORS.guide) ?? section.parentElement, openCategories), SELECTORS.guideDrawer);
 }
 
@@ -139,16 +137,15 @@ async function setup() {
   await runIfAlive(syncFromDom, stopBackgroundWork);
 }
 
-// O YouTube é SPA: o content script roda uma vez, mas a página muda sem
-// recarregar. Estes são os eventos que o próprio site dispara a cada troca;
-// fechar no início da navegação faz a página de Categorias se comportar como
-// qualquer outra página do YouTube.
+// YouTube is an SPA: the content script runs once, but the page changes without reloading. These
+// are the events the site itself fires on every change; closing at the start of a navigation makes
+// the Categories page behave like any other YouTube page.
 document.addEventListener('yt-navigate-start', closeCategoriesPage);
 document.addEventListener('yt-navigate-finish', setup);
 setup();
 
-// Mantém a lista do menu lateral em dia quando as categorias mudam (inclusive
-// por outra aba do YouTube aberta ao mesmo tempo).
+// Keeps the sidebar list up to date when categories change (including from another YouTube tab open
+// at the same time).
 chrome.storage.onChanged?.addListener((changes, area) => {
   if (area === 'local' && changes.categories) refreshSidebarCategories(changes.categories.newValue ?? []);
 });

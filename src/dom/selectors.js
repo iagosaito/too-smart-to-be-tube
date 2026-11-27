@@ -1,26 +1,27 @@
-// Todos os seletores do YouTube ficam aqui porque o HTML do site muda com
-// frequência: quando algo quebrar, este é o único arquivo a corrigir.
+// All YouTube selectors live here because the site's HTML changes often: when something breaks,
+// this is the only file to fix.
 export const SELECTORS = {
   guide: 'ytd-guide-renderer',
   guideSection: 'ytd-guide-section-renderer',
-  // Versão recolhida do menu: outro componente. Hoje o YouTube já o monta
-  // escondido no carregamento, mas pode montá-lo só quando é exibido.
+  // Collapsed version of the menu: a different component. Today YouTube already mounts it hidden on
+  // load, but it may mount it only when it is shown.
   miniGuide: 'ytd-mini-guide-renderer',
   miniGuideItems: 'ytd-mini-guide-renderer #items',
-  // Gaveta do menu expandido: existe vazia desde o carregamento e o YouTube
-  // só cria as seções dentro dela quando o menu abre.
+  // Drawer of the expanded menu: it exists empty from page load and YouTube only creates the
+  // sections inside it when the menu opens.
   guideDrawer: 'tp-yt-app-drawer#guide',
   miniGuideEntry: 'ytd-mini-guide-entry-renderer',
-  // O item de Categorias entra logo antes de Inscrições (ou depois do Shorts, se Inscrições sumir).
+  // The Categories item goes right before Subscriptions (or after Shorts, if Subscriptions is
+  // missing).
   miniGuideSubscriptions: 'a[href="/feed/subscriptions"]',
   miniGuideShorts: 'a[href^="/shorts"]',
   guideEntryLink: 'ytd-guide-entry-renderer a#endpoint',
-  // A seção de inscrições é a única cujo cabeçalho/rodapé aponta para /feed/channels.
+  // The subscriptions section is the only one whose header/footer points to /feed/channels.
   subscriptionsMarker: 'a[href="/feed/channels"]',
   feedChannel: 'ytd-channel-renderer',
   feedChannelLink: 'a#main-link',
   feedChannelName: 'ytd-channel-name #text',
   image: 'img',
-  // Contêiner das páginas do YouTube; a página de Categorias é montada aqui dentro.
+  // Container for YouTube's pages; the Categories page is mounted inside it.
   pageManager: 'ytd-page-manager',
 };

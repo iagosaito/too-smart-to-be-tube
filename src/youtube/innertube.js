@@ -2,13 +2,12 @@ import { LocalizedError } from '../i18n/errors.js';
 import { buildAuthHeaders, YOUTUBE_ORIGIN } from './auth.js';
 import { extractConfig, extractInitialData } from './pageData.js';
 
-// Peças comuns para ler páginas do YouTube via a API interna (InnerTube):
-// a lista de inscrições e o feed de vídeos usam o mesmo fluxo de
-// "HTML da primeira página + continuações paginadas".
+// Shared pieces for reading YouTube pages through the internal API (InnerTube): the subscriptions
+// list and the video feed use the same "first page HTML + paginated continuations" flow.
 
 export async function fetchFirstPage(fetchFn, url) {
-  // O HTML traz junto a configuração da sessão (versão do cliente, conta
-  // ativa), necessária para pedir as próximas páginas.
+  // The HTML also carries the session config (client version, active account), needed to request
+  // the next pages.
   const html = await (await fetchFn(url, { credentials: 'include' })).text();
   return { config: extractConfig(html), data: extractInitialData(html) };
 }
@@ -28,8 +27,8 @@ export function continuationToken(data) {
   return continuation?.continuationEndpoint?.continuationCommand?.token ?? null;
 }
 
-// Busca por chave em qualquer profundidade em vez de um caminho fixo: o
-// aninhamento do JSON do YouTube muda com frequência, os nomes dos renderers não.
+// Searches for a key at any depth instead of a fixed path: the nesting of YouTube's JSON changes
+// often, the renderer names don't.
 export function findAll(node, key, found = []) {
   if (Array.isArray(node)) {
     node.forEach((item) => findAll(item, key, found));

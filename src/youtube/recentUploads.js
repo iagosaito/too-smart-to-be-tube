@@ -3,13 +3,13 @@ import { YOUTUBE_ORIGIN } from './auth.js';
 import { continuationToken, fetchContinuation, fetchFirstPage } from './innertube.js';
 import { videosFromPage } from './videoItems.js';
 
-// Reexportado: testes e outros módulos já importavam daqui.
+// Re-exported: tests and other modules already imported it from here.
 export { parseRelativeTime } from './videoItems.js';
 
-// Pedimos o feed em inglês: o texto de data ("3 days ago") fica previsível
-// independentemente do idioma da conta. O português fica como reserva.
+// We request the feed in English: the date text ("3 days ago") stays predictable regardless of the
+// account's language. Portuguese stays as a fallback.
 const FEED_URL = `${YOUTUBE_ORIGIN}/feed/subscriptions?hl=en`;
-// O feed cobre algumas semanas; mais páginas que isso trariam pouco e custariam requisições.
+// The feed covers a few weeks; more pages than this would bring little and cost requests.
 const MAX_PAGES = 15;
 
 export async function fetchSubscriptionFeed({ fetchFn = fetch, cookie = document.cookie, now = Date.now() } = {}) {
@@ -22,7 +22,7 @@ export async function fetchSubscriptionFeed({ fetchFn = fetch, cookie = document
     videos.push(...videosFromPage(next, now));
     token = continuationToken(next);
   }
-  // Ordem mais recente primeiro: é a ordem em que o feed por categoria mostra.
+  // Newest first: the order in which the per-category feed shows them.
   return [...new Map(videos.map((video) => [video.videoId, video])).values()].sort((a, b) => b.publishedAt - a.publishedAt);
 }
 

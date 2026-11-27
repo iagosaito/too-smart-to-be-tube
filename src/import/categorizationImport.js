@@ -2,29 +2,29 @@ import { cleanCategoryName, createCategory } from '../core/categories.js';
 import { channelIdFromHref } from '../core/channels.js';
 import { normalizeText } from '../core/text.js';
 
-// O formato do CSV é sempre em inglês (Channel, Category, URL, Identifier),
-// independente do idioma da interface. Os nomes em português continuam
-// aceitos porque arquivos exportados por versões anteriores usavam eles.
+// The CSV format is always in English (Channel, Category, URL, Identifier), regardless of the UI
+// language. The Portuguese names are still accepted because files exported by earlier versions used
+// them.
 const COLUMNS = {
   name: ['channel', 'name', 'canal', 'nome'],
   category: ['category', 'categoria'],
   url: ['url', 'link'],
   id: ['identifier', 'id', 'handle', 'identificador'],
 };
-// Célula vazia já significa "sem categoria"; estes textos são aceitos por
-// clareza e pela mesma compatibilidade com arquivos antigos.
+// An empty cell already means "no category"; these texts are accepted for clarity and for the same
+// compatibility with old files.
 const NO_CATEGORY = new Set(['No category', 'Sem categoria'].map(normalizeText));
-// Limites contra arquivos malformados ou maliciosos. O tamanho limita tudo o
-// que vem depois: 5 MB são ~60 mil canais e, como leitura e plano são lineares,
-// o pior caso (linhas mínimas) leva ~1 s. Contar linhas seria redundante.
+// Limits against malformed or malicious files. The size bounds everything that follows: 5 MB is ~60
+// thousand channels and, since parsing and planning are linear, the worst case (minimal rows) takes
+// ~1 s. Counting rows would be redundant.
 export const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
-// Teto de categorias criadas de uma vez: folgado para qualquer organização
-// real, mas impede que um arquivo encha o menu com lixo.
+// Cap on categories created at once: generous for any real organization, but it stops a file from
+// filling the menu with junk.
 export const MAX_NEW_CATEGORIES = 1_000;
 
 export function readImport(rows) {
   const columns = mapColumns(rows[0] ?? []);
-  // error é uma chave de tradução: a interface traduz no idioma ativo.
+  // error is a translation key: the UI translates it in the active language.
   if (columns.category === undefined) return { entries: [], error: 'import.missingCategory' };
   if ([columns.id, columns.url, columns.name].every((index) => index === undefined)) {
     return { entries: [], error: 'import.missingIdentifier' };
@@ -45,19 +45,18 @@ function mapColumns(header) {
 function toEntry(row, columns) {
   const cell = (key) => (columns[key] === undefined ? '' : unguard(row[columns[key]] ?? '').trim());
   const category = cell('category');
-  // Vazio ou "Sem categoria" significam, explicitamente, tirar o canal de qualquer categoria.
+  // Empty or "No category" explicitly mean removing the channel from any category.
   return { id: cell('id'), url: cell('url'), name: cell('name'), category: NO_CATEGORY.has(normalizeText(category)) ? '' : category };
 }
 
 function unguard(value) {
-  // Desfaz a proteção contra fórmulas que a exportação aplica ("'=..." → "=...").
+  // Undoes the formula protection the export applies ("'=..." → "=...").
   return /^'[=+\-@]/.test(value) ? value.slice(1) : value;
 }
 
-// O plano custa ~0,5 s com dezenas de milhares de linhas e a revisão é
-// redesenhada a cada interação: reaproveita o último plano enquanto o arquivo
-// e o estado forem os mesmos. O estado é recarregado (objetos novos) a cada
-// gravação, então comparar por identidade basta para saber se mudou.
+// The plan costs ~0.5 s with tens of thousands of rows and the review is redrawn on every
+// interaction: reuse the last plan while the file and the state are the same. State is reloaded
+// (new objects) on every write, so comparing by identity is enough to know whether it changed.
 const planCache = new WeakMap();
 
 export function cachedPlanImport(state, entries) {
@@ -72,8 +71,8 @@ export function planImport(state, entries) {
   const { targets, unknown } = resolveTargets(state, entries);
   const created = newCategoryNames(state.categories, targets);
   const base = { matched: targets.size, created, unknown };
-  // Nada é aplicado quando o arquivo passa do limite: melhor recusar inteiro
-  // do que importar pela metade.
+  // Nothing is applied when the file goes over the limit: better to reject it entirely than to
+  // import half of it.
   if (created.length > MAX_NEW_CATEGORIES) {
     return { categories: state.categories, summary: { ...base, moved: 0, categoryCount: 0, error: 'import.tooManyCategories' } };
   }
@@ -84,8 +83,8 @@ export function planImport(state, entries) {
   return { categories: applyTargets(categories, targetIds), summary };
 }
 
-// Um destino por canal, valendo a última linha: linhas repetidas do mesmo
-// canal não podem criar uma categoria por linha.
+// One destination per channel, the last row wins: repeated rows for the same channel must not
+// create one category per row.
 function resolveTargets(state, entries) {
   const byName = new Map(Object.values(state.channels).map((channel) => [normalizeText(channel.name), channel.id]));
   const targets = new Map();
@@ -99,7 +98,7 @@ function resolveTargets(state, entries) {
 }
 
 function newCategoryNames(categories, targets) {
-  // Reaproveita categoria existente com o mesmo nome (ignorando acentos/maiúsculas).
+  // Reuses an existing category with the same name (ignoring accents/case).
   const known = new Set(categories.map((category) => normalizeText(category.name)));
   const created = [];
   for (const name of targets.values()) {
@@ -112,19 +111,20 @@ function newCategoryNames(categories, targets) {
 }
 
 function toCategoryIds(categories, targets) {
-  // Índice por nome normalizado: buscar com find a cada linha tornava o plano quadrático.
+  // Index by normalized name: searching with find on every row made the plan quadratic.
   const idByName = new Map(categories.map((category) => [normalizeText(category.name), category.id]));
   return new Map([...targets].map(([channelId, name]) => [channelId, name ? idByName.get(normalizeText(name)) : null]));
 }
 
 function countMoved(originalCategories, targetIds) {
-  // "Muda de categoria" é em relação ao que o usuário tem hoje.
+  // "Changes category" is relative to what the user has today.
   const original = new Map(originalCategories.flatMap((category) => category.channelIds.map((id) => [id, category.id])));
   return [...targetIds].filter(([channelId, categoryId]) => (original.get(channelId) ?? null) !== categoryId).length;
 }
 
 function applyTargets(categories, targetIds) {
-  // Uma passada só: tira os canais importados de onde estavam e os põe no destino.
+  // A single pass: takes the imported channels out of where they were and puts them in the
+  // destination.
   const additions = new Map();
   for (const [channelId, categoryId] of targetIds) {
     if (!categoryId) continue;
@@ -138,7 +138,7 @@ function applyTargets(categories, targetIds) {
 }
 
 function resolveChannelId(entry, channels, byName) {
-  // Ordem do mais confiável ao menos: o nome do canal pode mudar ou repetir.
+  // Ordered from most to least reliable: a channel name can change or repeat.
   const candidates = [channelIdFromHref(entry.id), channelIdFromHref(entry.url), byName.get(normalizeText(entry.name))];
   return candidates.find((id) => id && channels[id]) ?? null;
 }
