@@ -1,9 +1,10 @@
-// Interações do site. Tudo é melhoria progressiva: sem JavaScript a página
-// continua completa (o tour mostra a primeira imagem, o FAQ usa <details>).
+// Site interactions. Everything is progressive enhancement: without JavaScript the page is still
+// complete (the tour shows the first image, the FAQ uses <details>).
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Tour: abas verticais no padrão WAI-ARIA (setas mudam de aba, só a ativa é tabulável).
+// Tour: vertical tabs following the WAI-ARIA pattern (arrow keys switch tabs, only the active one
+// is tabbable).
 function setupTour() {
   const tabs = [...document.querySelectorAll('.tour-tab')];
   const panel = document.getElementById('panel-tour');
@@ -33,11 +34,11 @@ function setupTour() {
       event.preventDefault();
     });
   });
-  // Pré-carrega as outras telas para a troca ser instantânea.
+  // Preloads the other screenshots so switching is instant.
   for (const tab of tabs) new Image().src = `assets/${tab.dataset.shot}.webp`;
 }
 
-// Troca a imagem com um fade curto; sem animação para quem pediu menos movimento.
+// Swaps the image with a short fade; no animation for users who asked for reduced motion.
 function swapImage(image, src, alt) {
   if (image.getAttribute('src') === src) return;
   const apply = () => {
@@ -50,11 +51,11 @@ function swapImage(image, src, alt) {
   setTimeout(apply, 160);
 }
 
-// Revela blocos ao entrar na tela (uma vez só, para não distrair ao rolar de volta).
+// Reveals blocks as they enter the viewport (only once, so scrolling back doesn't distract).
 function setupReveal() {
   const items = document.querySelectorAll('.reveal');
   if (prefersReducedMotion || !('IntersectionObserver' in window)) return;
-  // O que já está na tela aparece de imediato: animar o conteúdo visível só atrasa a leitura.
+  // What is already on screen appears right away: animating visible content only delays reading.
   for (const item of items) {
     if (item.getBoundingClientRect().top < window.innerHeight) item.classList.add('is-visible');
   }
@@ -69,7 +70,7 @@ function setupReveal() {
   items.forEach((item) => observer.observe(item));
 }
 
-// Destaca no menu do topo a seção que está sendo lida.
+// Highlights the section being read in the top menu.
 function setupActiveNav() {
   const links = new Map([...document.querySelectorAll('.nav-links a')].map((link) => [link.hash.slice(1), link]));
   const observer = new IntersectionObserver((entries) => {
@@ -87,7 +88,7 @@ function setupActiveNav() {
   });
 }
 
-// Botão "Copiar" dos comandos de instalação, com retorno visível e anunciado.
+// "Copy" button for the install commands, with visible and announced feedback.
 function setupCopy() {
   for (const button of document.querySelectorAll('[data-copy]')) {
     button.setAttribute('aria-live', 'polite');
@@ -103,7 +104,7 @@ function setupCopy() {
   }
 }
 
-// Sombra no menu do topo só depois de rolar, para separá-lo do conteúdo.
+// Top menu shadow only after scrolling, to separate it from the content.
 function setupNavShadow() {
   const nav = document.querySelector('.nav');
   const update = () => nav.classList.toggle('is-scrolled', window.scrollY > 8);

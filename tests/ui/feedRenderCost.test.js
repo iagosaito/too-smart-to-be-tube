@@ -1,6 +1,6 @@
-// Regressão: nas abas Vídeos e Shorts, cada render montava a grade de canais
-// inteira (cartões, imagens, botões) e a descartava, porque os resultados são
-// o feed. Com 500 canais eram ~3 mil elementos por render, várias vezes por lote.
+// Regression: on the Videos and Shorts tabs, every render built the whole channel grid (cards,
+// images, buttons) and threw it away, because the results are the feed. With 500 channels that was
+// ~3 thousand elements per render, several times per batch.
 import { afterEach, expect, it, vi } from 'vitest';
 import { createFeedCardCache } from '../../src/ui/components/feedView.js';
 import { renderPage } from '../../src/ui/render.js';

@@ -31,7 +31,7 @@ describe('detectLocale', () => {
 
   it('cai no inglês para idiomas sem tradução', () => {
     expect(detectLocale(fakeDoc('fr-FR'), fakeNav('de-DE'))).toBe('en');
-    // null (e não undefined): undefined ativaria os padrões, que leem a página real.
+    // null (not undefined): undefined would trigger the defaults, which read the real page.
     expect(detectLocale(null, null)).toBe('en');
   });
 });
@@ -105,8 +105,8 @@ describe('localeTag', () => {
   });
 });
 
-// Impede publicar um idioma com tradução faltando: toda chave precisa
-// existir em todos os idiomas, com o mesmo tipo (texto ou plural).
+// Prevents shipping a language with a missing translation: every key must exist in every language,
+// with the same type (text or plural).
 describe('paridade dos dicionários', () => {
   const shape = (dictionary) =>
     Object.fromEntries(Object.entries(dictionary).map(([key, value]) => [key, typeof value === 'string' ? 'text' : Object.keys(value).sort().join('/')]));

@@ -3,11 +3,11 @@ import { LocalizedError } from '../i18n/errors.js';
 import { YOUTUBE_ORIGIN } from './auth.js';
 import { continuationToken, fetchContinuation, fetchFirstPage, findAll } from './innertube.js';
 
-// Reexportado: os testes e outros módulos já importavam findAll daqui.
+// Re-exported: tests and other modules already imported findAll from here.
 export { findAll };
 
 const CHANNELS_PAGE_URL = `${YOUTUBE_ORIGIN}/feed/channels`;
-// Limite de segurança: evita laço infinito se o YouTube devolver sempre o mesmo token.
+// Safety limit: avoids an infinite loop if YouTube keeps returning the same token.
 const MAX_PAGES = 100;
 
 export async function fetchAllSubscriptions({ fetchFn = fetch, cookie = document.cookie } = {}) {
@@ -25,7 +25,7 @@ export async function fetchAllSubscriptions({ fetchFn = fetch, cookie = document
 async function fetchChannelsPage(fetchFn) {
   const { config, data } = await fetchFirstPage(fetchFn, CHANNELS_PAGE_URL);
   const firstPage = data ? parseChannelsPage(data) : { channels: [], token: null };
-  // Lista vazia quase sempre significa sessão deslogada; falhar evita apagar o cache.
+  // An empty list almost always means a logged-out session; failing avoids wiping the cache.
   if (!firstPage.channels.length) throw new LocalizedError('error.noSubscriptions');
   return { config, firstPage };
 }
@@ -39,7 +39,7 @@ export function parseChannelsPage(data) {
 
 export function rendererToChannel(renderer) {
   return createChannel({
-    // O handle (/@nome) é o mesmo id usado pelo menu lateral, mantendo as categorias consistentes.
+    // The handle (/@name) is the same id the sidebar uses, keeping categories consistent.
     href: renderer.navigationEndpoint?.browseEndpoint?.canonicalBaseUrl ?? `/channel/${renderer.channelId}`,
     name: renderer.title?.simpleText ?? renderer.title?.runs?.[0]?.text,
     avatar: largestThumbnail(renderer.thumbnail),
@@ -49,7 +49,7 @@ export function rendererToChannel(renderer) {
 
 function largestThumbnail(thumbnail) {
   const url = thumbnail?.thumbnails?.at(-1)?.url ?? '';
-  // O YouTube usa URLs relativas ao protocolo ("//yt3..."), que não funcionam fora do site.
+  // YouTube uses protocol-relative URLs ("//yt3..."), which don't work outside the site.
   return url.startsWith('//') ? `https:${url}` : url;
 }
 

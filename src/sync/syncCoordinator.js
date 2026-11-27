@@ -1,11 +1,10 @@
-// Cada sincronização completa faz dezenas de requisições autenticadas ao
-// YouTube. O coordenador fica no escopo do content script (um por aba) e
-// garante duas coisas:
-// - uma sincronização por vez: quem pedir enquanto uma está rodando recebe a
-//   mesma promise, em vez de abrir outra em paralelo;
-// - um intervalo mínimo depois de uma sincronização bem-sucedida, para cliques
-//   repetidos não virarem rajadas de requisições (risco de rate-limit).
-// Falhas não iniciam o intervalo: tentar de novo na hora é o esperado.
+// Each full sync makes dozens of authenticated requests to YouTube. The coordinator lives in the
+// content script's scope (one per tab) and guarantees two things:
+// - one sync at a time: whoever asks while one is running gets the same promise, instead of
+//   starting another in parallel;
+// - a minimum interval after a successful sync, so repeated clicks don't turn into request bursts
+//   (rate-limit risk).
+// Failures don't start the interval: retrying right away is what's expected.
 export const SYNC_COOLDOWN_MS = 60_000;
 
 export function createSyncCoordinator(run, { now = Date.now, cooldownMs = SYNC_COOLDOWN_MS } = {}) {

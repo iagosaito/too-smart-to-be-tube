@@ -2,16 +2,16 @@ import { sortByName } from './channels.js';
 
 const defaultMakeId = () => crypto.randomUUID();
 
-// Limite aplicado no núcleo (e não só no campo de texto da interface): nomes
-// também chegam por importação de CSV e precisam respeitar o mesmo tamanho.
+// Limit enforced in the core (not just in the UI text field): names also arrive through CSV import
+// and must respect the same length.
 export const CATEGORY_NAME_MAX = 60;
 
 export function cleanCategoryName(name) {
   return String(name ?? '').trim().slice(0, CATEGORY_NAME_MAX).trim();
 }
 
-// Todas as funções devolvem um novo array em vez de mutar: o estado vem do
-// storage e é re-renderizado, então mutações escondidas causariam bugs sutis.
+// Every function returns a new array instead of mutating: state comes from storage and is
+// re-rendered, so hidden mutations would cause subtle bugs.
 
 export function createCategory(categories, name, makeId = defaultMakeId) {
   const cleanName = cleanCategoryName(name);
@@ -28,12 +28,12 @@ export function renameCategory(categories, categoryId, name) {
 }
 
 export function removeCategory(categories, categoryId) {
-  // Os canais da categoria removida voltam naturalmente para "Sem categoria".
+  // The removed category's channels naturally go back to "No category".
   return categories.filter((category) => category.id !== categoryId);
 }
 
-// Um canal pertence a no máximo uma categoria: mantém a UI simples (um único
-// seletor por canal) e evita o canal aparecer repetido no painel.
+// A channel belongs to at most one category: keeps the UI simple (a single picker per channel) and
+// avoids the channel showing up twice in the panel.
 export function assignChannel(categories, channelId, categoryId) {
   return categories.map((category) => {
     const withoutChannel = category.channelIds.filter((id) => id !== channelId);
@@ -42,15 +42,15 @@ export function assignChannel(categories, channelId, categoryId) {
   });
 }
 
-// Reaproveita assignChannel para que mover em lote siga exatamente a mesma
-// regra de "uma categoria por canal" que mover individualmente.
+// Reuses assignChannel so that bulk moves follow exactly the same "one category per channel" rule
+// as single moves.
 export function assignChannels(categories, channelIds, categoryId) {
   return channelIds.reduce((result, channelId) => assignChannel(result, channelId, categoryId), categories);
 }
 
-// Ordem de exibição é sempre alfabética, independente da ordem de criação:
-// posições previsíveis deixam achar a categoria sem ler a lista inteira, e
-// não mudam quando canais são movidos (como aconteceria ordenando por tamanho).
+// Display order is always alphabetical, regardless of creation order: predictable positions let you
+// find a category without reading the whole list, and they don't change when channels are moved (as
+// they would when sorting by size).
 export function sortCategoriesByName(categories, locale) {
   return [...categories].sort((a, b) => a.name.localeCompare(b.name, locale, { sensitivity: 'base' }));
 }
@@ -62,7 +62,7 @@ export function findCategoryOf(categories, channelId) {
 export function groupChannels(categories, channelsById, locale) {
   const assigned = new Set();
   const groups = categories.map((category) => {
-    // Ignora ids sem canal conhecido (ex.: inscrição cancelada) em vez de quebrar.
+    // Ignores ids with no known channel (e.g. a cancelled subscription) instead of breaking.
     const channels = category.channelIds.map((id) => channelsById[id]).filter(Boolean);
     channels.forEach((channel) => assigned.add(channel.id));
     return { category, channels: sortByName(channels, locale) };
@@ -72,7 +72,7 @@ export function groupChannels(categories, channelsById, locale) {
 }
 
 function hasCategoryNamed(categories, name, ignoreId = null) {
-  // Comparação sem diferenciar maiúsculas: "Música" e "música" confundiriam o usuário.
+  // Case-insensitive comparison: "Music" and "music" would confuse the user.
   const target = name.toLocaleLowerCase();
   return categories.some(
     (category) => category.id !== ignoreId && category.name.toLocaleLowerCase() === target,

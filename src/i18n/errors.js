@@ -1,8 +1,8 @@
 import { t } from './i18n.js';
 
-// Erros que chegam à tela (ex.: falha de sincronização) carregam a chave de
-// tradução em vez de um texto fixo: o módulo que lança não precisa saber o
-// idioma, e a interface traduz na hora de mostrar.
+// Errors that reach the screen (e.g. a sync failure) carry the translation key instead of fixed
+// text: the throwing module doesn't need to know the language, and the UI translates at display
+// time.
 export class LocalizedError extends Error {
   constructor(key, params = {}) {
     super(key);

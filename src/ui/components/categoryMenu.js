@@ -1,10 +1,10 @@
 import { el, svgIcon } from '../elements.js';
 import { ICONS } from '../icons.js';
 
-// Menu próprio para escolher a categoria de um canal. Substitui o <select>
-// nativo nos cartões: no Chrome, depois que o menu lateral do YouTube era
-// alternado, a lista nativa abria sob o cursor e soltar o botão do mouse já
-// escolhia uma opção. Aqui só um clique explícito numa opção escolhe algo.
+// Custom menu for choosing a channel's category. It replaces the native <select> in the cards: in
+// Chrome, after YouTube's sidebar was toggled, the native list opened under the cursor and
+// releasing the mouse button already picked an option. Here only an explicit click on an option
+// picks something.
 
 export const MENU_ID = 'tstb-category-menu';
 const GAP = 4;
@@ -12,7 +12,7 @@ const VIEWPORT_MARGIN = 8;
 
 let openMenu = null;
 
-// items: [{ id, label, checked }]. onSelect recebe o id escolhido.
+// items: [{ id, label, checked }]. onSelect receives the chosen id.
 export function openCategoryMenu(anchor, { label, items, onSelect }) {
   closeCategoryMenu();
   const menu = el('div', { id: MENU_ID, className: 'tstb-menu', role: 'menu', 'aria-label': label });
@@ -22,8 +22,7 @@ export function openCategoryMenu(anchor, { label, items, onSelect }) {
     onSelect(item.id);
   })));
   menu.addEventListener('keydown', (event) => handleKeydown(event, menu, close));
-  // Fica no <body>, fora da página: não é apagado por re-renderizações nem
-  // cortado pela grade.
+  // Lives in <body>, outside the page: it isn't wiped by re-renders or clipped by the grid.
   document.body.append(menu);
   anchor.setAttribute('aria-expanded', 'true');
   openMenu = { menu, anchor, cleanup: listenForDismiss(menu, anchor, close) };
@@ -46,8 +45,8 @@ export function closeCategoryMenu({ restoreFocus = false } = {}) {
   if (restoreFocus && anchor.isConnected) anchor.focus();
 }
 
-// O cartão que abriu o menu pode sumir num re-render (ex.: fim da
-// sincronização); um menu sem âncora ficaria flutuando no lugar errado.
+// The card that opened the menu may disappear in a re-render (e.g. when a sync finishes); a menu
+// without an anchor would float in the wrong place.
 export function closeCategoryMenuIfDetached() {
   if (openMenu && !openMenu.anchor.isConnected) closeCategoryMenu();
 }
@@ -61,16 +60,16 @@ function renderItem({ label, checked }, choose) {
 }
 
 function listenForDismiss(menu, anchor, close) {
-  // Clique fora fecha sem escolher nada. O clique no próprio gatilho é
-  // ignorado aqui: o gatilho já alterna o menu no seu próprio click.
+  // Clicking outside closes without choosing anything. A click on the trigger itself is ignored
+  // here: the trigger already toggles the menu on its own click.
   const onPointerDown = (event) => {
     if (!menu.contains(event.target) && !anchor.contains(event.target)) close(false);
   };
-  // Rolar ou redimensionar deslocaria o menu da sua âncora; fechar é mais
-  // previsível do que tentar acompanhar.
+  // Scrolling or resizing would move the menu away from its anchor; closing is more predictable
+  // than trying to follow.
   const onViewportChange = (event) => {
-    // Rolar a lista do próprio menu não conta. O alvo pode ser window ou
-    // document (não são elementos), então só usamos contains com Element.
+    // Scrolling the menu's own list doesn't count. The target may be window or document (not
+    // elements), so we only use contains with an Element.
     const insideMenu = event.target instanceof Element && menu.contains(event.target);
     if (!insideMenu) close(false);
   };
@@ -100,12 +99,12 @@ function handleKeydown(event, menu, close) {
 }
 
 export function positionMenu(menu, anchor) {
-  // Posição calculada na hora a partir de onde o gatilho está agora.
+  // Position computed on the spot from where the trigger is now.
   const rect = anchor.getBoundingClientRect();
   const height = menu.offsetHeight;
   const width = menu.offsetWidth;
   const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_MARGIN;
-  // Abre para baixo; só vira para cima se não couber e houver mais espaço acima.
+  // Opens downward; only flips upward if it doesn't fit and there is more room above.
   const openUp = height > spaceBelow && rect.top > spaceBelow;
   const top = openUp ? rect.top - height - GAP : rect.bottom + GAP;
   const left = Math.min(Math.max(VIEWPORT_MARGIN, rect.left), window.innerWidth - width - VIEWPORT_MARGIN);

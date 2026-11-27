@@ -1,5 +1,5 @@
-// Português (Brasil). Chaves com { one, other } são plurais; {count} e
-// outros {nomes} são preenchidos na hora.
+// Portuguese (Brazil). Keys with { one, other } are plurals; {count} and other {names} are filled
+// in at render time.
 export default {
   'app.title': 'Categorias',
 

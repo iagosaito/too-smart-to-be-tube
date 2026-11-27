@@ -21,13 +21,12 @@ import { FILTER_ALL, pruneSelection, resolveFilter, SORT_NAME, visibleChannels }
 
 export const PAGE_ID = 'tstb-page';
 export const OPEN_CLASS = 'tstb-page-open';
-// Espera uma pausa na digitação antes de redesenhar: filtrar a cada tecla
-// deixava a digitação travada com muitas inscrições.
+// Waits for a pause in typing before redrawing: filtering on every keystroke made typing lag with
+// many subscriptions.
 const SEARCH_DELAY_MS = 150;
-// Um CSV de inscrições tem poucos KB; o limite barra arquivos errados (ex.: um vídeo).
-// Tempo maior que o padrão para dar chance de clicar em "Desfazer".
+// Longer than the default to give time to click "Undo".
 const UNDO_TOAST_MS = 10_000;
-// Sincronizar a cada abertura faria dezenas de requisições à toa; uma vez por hora basta.
+// Syncing on every open would make dozens of pointless requests; once an hour is enough.
 const AUTO_SYNC_AFTER_MS = 60 * 60 * 1000;
 
 export async function openCategoriesPage(options) {
@@ -36,11 +35,11 @@ export async function openCategoriesPage(options) {
   if (options.feedSource) {
     context.feed = createFeedController({ source: options.feedSource, onChange: () => scheduleRender(page, context) });
   }
-  // A página anterior fica só oculta (não destruída), então um vídeo continuaria tocando.
+  // The previous page is only hidden (not destroyed), so a video would keep playing.
   document.querySelector('video')?.pause();
   await reload(page, context);
-  // Também acompanha uma sincronização já em andamento (aberta por outra
-  // instância da página), para mostrar "Sincronizando…" em vez de oferecer outra.
+  // Also follows a sync already in progress (started by another instance of the page), to show
+  // "Syncing…" instead of offering another one.
   if (context.sync && (context.sync.isRunning() || needsSync(context.state, context.now()))) runSync(page, context);
   return page;
 }
@@ -53,10 +52,10 @@ export function closeCategoriesPage() {
 }
 
 function needsSync(state, now) {
-  // Campos nulos: quem já usava a extensão ainda não tem as datas ou o feed
-  // (nem o ucid dos canais), então sincroniza na hora em vez de esperar a
-  // próxima hora cheia. Se o feed já foi tentado e falhou, espera a próxima
-  // sincronização normal: tentar a cada abertura repetiria ~100 requisições.
+  // Null fields: someone who already used the extension doesn't have the dates or the feed yet (nor
+  // the channels' ucid), so it syncs right away instead of waiting for the next full hour. If the
+  // feed was already attempted and failed, it waits for the next regular sync: retrying on every
+  // open would repeat ~100 requests.
   const feedMissing = state.uploadsSyncedAt == null || state.feedSyncedAt == null;
   return isStale(state.lastSyncedAt, now) || (feedMissing && state.feedAttemptedAt == null);
 }
@@ -85,10 +84,10 @@ function createContext(options) {
     renderQueued: false,
     searchTimer: null,
     cooldownTimer: null,
-    // Estado só de tela (filtro, busca, seleção): não é salvo, como a busca do próprio YouTube.
+    // Screen-only state (filter, search, selection): not saved, like YouTube's own search.
     view: {
       filter: options.initialFilter ?? FILTER_ALL,
-      // Assistir vem antes de organizar: categorias abrem nos vídeos.
+      // Watching comes before organizing: categories open on the videos.
       tab: options.initialTab ?? FEED_TAB.VIDEOS,
       query: '',
       sort: null,
@@ -104,8 +103,8 @@ function mountPage() {
   closeCategoriesPage();
   const slots = SLOTS.map((name) => el('div', { className: 'tstb-slot', 'data-slot': name }));
   const page = el('div', { id: PAGE_ID, className: 'tstb-page', role: 'main' }, slots);
-  // Dentro do ytd-page-manager herdamos as margens do cabeçalho e do menu
-  // lateral, então a página se encaixa no layout do YouTube sem CSS frágil.
+  // Inside ytd-page-manager we inherit the header's and sidebar's margins, so the page fits
+  // YouTube's layout without fragile CSS.
   (document.querySelector(SELECTORS.pageManager) ?? document.body).append(page);
   document.documentElement.classList.add(OPEN_CLASS);
   window.scrollTo?.(0, 0);
@@ -113,9 +112,10 @@ function mountPage() {
 }
 
 async function reload(page, context) {
-  // O storage é a fonte da verdade; recarregar após cada gravação evita estado divergente.
+  // Storage is the source of truth; reloading after every write avoids diverging state.
   context.state = await context.store.load();
-  // A ordem escolhida é lembrada entre visitas; só é lida do storage na primeira carga.
+  // The chosen sort order is remembered across visits; it is only read from storage on the first
+  // load.
   context.view.sort ??= context.state.preferences.sortBy ?? SORT_NAME;
   render(page, context);
 }
@@ -151,7 +151,7 @@ function feedEnvFor(context, now) {
 }
 
 function scheduleRender(page, context) {
-  // Vários canais de um lote terminam quase juntos: um redesenho só para todos.
+  // Several channels in a batch finish almost together: a single redraw for all of them.
   if (context.renderQueued) return;
   context.renderQueued = true;
   queueMicrotask(() => {
@@ -161,7 +161,7 @@ function scheduleRender(page, context) {
 }
 
 function scheduleCooldownEnd(page, context) {
-  // Redesenha quando o intervalo acaba, para o botão reabilitar sozinho.
+  // Redraws when the interval ends, so the button re-enables on its own.
   clearTimeout(context.cooldownTimer);
   const left = syncCooldownLeft(context);
   if (left > 0) context.cooldownTimer = setTimeout(() => render(page, context), left);
@@ -199,28 +199,29 @@ function viewActions(page, context) {
     render(page, context);
   };
   return {
-    // Trocar de categoria limpa a seleção para não mover canais que o usuário já não vê.
+    // Switching categories clears the selection so we don't move channels the user no longer sees.
     setFilter: (filter) => update({ filter, selected: new Set() }),
     search: (query) => update({ query }),
     searchAsYouType: (query) => scheduleSearch(page, context, query),
     isSelecting: () => context.view.selected.size > 0,
     setSort: (sort) => {
       update({ sort });
-      // Gravar a preferência não precisa bloquear a tela; uma falha só faz a ordem não ser lembrada.
+      // Saving the preference doesn't need to block the screen; a failure only means the order
+      // isn't remembered.
       context.store.savePreferences({ sortBy: sort }).catch(() => {});
     },
     toggleSelect: (channelId) => update({ selected: toggled(context.view.selected, channelId) }),
     clearSelection: () => update({ selected: new Set() }),
     rerender: () => update({}),
     cancelImport: () => update({ pendingImport: null }),
-    // Trocar de aba limpa a seleção: ela só existe na lista de canais.
+    // Switching tabs clears the selection: it only exists in the channel list.
     setTab: (tab) => update({ tab, selected: new Set() }),
   };
 }
 
 function scheduleSearch(page, context, query) {
-  // A consulta é gravada já, e só o redesenho espera: assim um re-render
-  // vindo de outra ação (ex.: fim da sincronização) não apaga o que foi digitado.
+  // The query is saved right away, and only the redraw waits: that way a re-render coming from
+  // another action (e.g. a sync finishing) doesn't wipe what was typed.
   context.view.query = query;
   clearTimeout(context.searchTimer);
   context.searchTimer = setTimeout(() => render(page, context), context.searchDelay);
@@ -246,7 +247,7 @@ function dataActions(page, context) {
 
 async function createAndOpen(categories, name, save) {
   const next = createCategory(categories, name);
-  // Abrir a categoria recém-criada leva o usuário direto ao próximo passo: preenchê-la.
+  // Opening the newly created category takes the user straight to the next step: filling it.
   const created = next.length > categories.length ? next.at(-1) : null;
   await save(next, created ? { filter: created.id, selected: new Set() } : {});
 }
@@ -254,7 +255,7 @@ async function createAndOpen(categories, name, save) {
 async function removeWithConfirmation(context, category, save) {
   const count = category.channelIds.length;
   const detail = count ? ` ${plural('confirm.deleteDetail', count, { none: t('chips.none') })}` : '';
-  // Confirmação porque excluir não tem "desfazer" e desfaz trabalho manual de organização.
+  // Confirmation because deleting has no "undo" and throws away manual organizing work.
   if (!context.confirm(`${t('confirm.delete', { name: category.name })}${detail}`)) return;
   await save(removeCategory(context.state.categories, category.id), { filter: FILTER_ALL });
   showToast(t('toast.categoryDeleted', { name: category.name }));
@@ -268,7 +269,7 @@ async function moveSelection(context, categoryId, save) {
 }
 
 function exportSubscriptions(context) {
-  // Exporta do estado salvo (não da tela), então filtro e busca não afetam o arquivo.
+  // Exports from the saved state (not from the screen), so filter and search don't affect the file.
   const { state } = context;
   context.download(csvFileName(context.now()), subscriptionsCsv(state));
   const count = Object.keys(state.channels).length;
@@ -280,12 +281,12 @@ async function startImport(page, context) {
   if (!file) return;
   context.view.pendingImport = await readImportFile(file);
   render(page, context);
-  // Leva foco e leitores de tela direto ao resultado da ação que o usuário acabou de fazer.
+  // Takes focus and screen readers straight to the result of the action the user just took.
   page.querySelector('.tstb-review h3')?.focus();
 }
 
 async function readImportFile(file) {
-  // error é uma chave de tradução, como os erros de readImport.
+  // error is a translation key, like readImport's errors.
   if (file.size > MAX_IMPORT_BYTES) return { fileName: file.name, error: 'import.tooLarge' };
   const { entries, error } = readImport(parseCsv(await file.text()));
   return { fileName: file.name, entries: error ? null : entries, error };
@@ -293,10 +294,10 @@ async function readImportFile(file) {
 
 async function applyImport(page, context) {
   const previous = context.state.categories;
-  // Mesmo plano (do cache) que a revisão mostra agora, calculado com o estado atual.
+  // The same plan (from the cache) the review shows now, computed with the current state.
   const { categories, summary } = cachedPlanImport(context.state, context.view.pendingImport.entries);
-  // A revisão já esconde o botão nesses casos; a checagem aqui garante que nada
-  // fora do limite seja gravado mesmo se a ação for chamada por outro caminho.
+  // The review already hides the button in these cases; this check guarantees nothing over the
+  // limit is saved even if the action is called some other way.
   if (summary.error || !summary.matched) return;
   await saveCategories(page, context, categories, { pendingImport: null, filter: FILTER_ALL, selected: new Set() });
   const undo = () => saveCategories(page, context, previous);
@@ -305,7 +306,7 @@ async function applyImport(page, context) {
 }
 
 function toggled(set, value) {
-  // Novo Set em vez de mutar: o estado de tela é tratado como imutável, como o resto.
+  // A new Set instead of mutating: screen state is treated as immutable, like everything else.
   const next = new Set(set);
   if (next.has(value)) next.delete(value);
   else next.add(value);

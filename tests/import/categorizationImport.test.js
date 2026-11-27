@@ -80,10 +80,9 @@ describe('planImport', () => {
   });
 });
 
-// Regressão: a importação não tinha limites. Um CSV com milhares de linhas
-// para o mesmo canal criava milhares de categorias vazias (gravadas para
-// sempre), os nomes podiam ter qualquer tamanho e o plano tinha custo
-// quadrático, travando a aba na tela de revisão.
+// Regression: the import had no limits. A CSV with thousands of rows for the same channel created
+// thousands of empty categories (saved forever), names could be any length and the plan had
+// quadratic cost, freezing the tab on the review screen.
 describe('limites da importação', () => {
   const many = (count, row) => Array.from({ length: count }, (_, index) => row(index));
 
@@ -121,7 +120,7 @@ describe('limites da importação', () => {
     expect(cachedPlanImport({ ...state }, entries)).toBe(first);
     const changed = cachedPlanImport({ ...state, categories: [] }, entries);
     expect(changed).not.toBe(first);
-    // Categorias novas ganham ids aleatórios: compara o resumo, não os ids.
+    // New categories get random ids: compare the summary, not the ids.
     expect(changed.summary).toEqual(planImport({ ...state, categories: [] }, entries).summary);
   });
 

@@ -1,4 +1,4 @@
-// A maior parte dos testes verifica textos em português; fixar o idioma da
-// página (como o YouTube faz com <html lang>) mantém esses testes estáveis.
-// Testes de outros idiomas trocam o atributo e restauram no fim.
+// Most tests check Portuguese text; pinning the page language (as YouTube does with <html lang>)
+// keeps those tests stable. Tests for other languages change the attribute and restore it at the
+// end.
 document.documentElement.lang = 'pt-BR';

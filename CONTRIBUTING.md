@@ -28,7 +28,7 @@ tab that stays open keeps running the old script.
 
 - **Small, readable functions.** Aim for functions of roughly 5–25 lines with a single responsibility.
 - **Comments explain why, not what.** The code says what it does; comments record the decision behind it
-  (a YouTube quirk, a browser limitation, a UX trade-off).
+  (a YouTube quirk, a browser limitation, a UX trade-off). Write them in English.
 - **Keep YouTube selectors in one place.** All DOM selectors live in `src/dom/selectors.js`, so a YouTube
   redesign is fixed in a single file.
 - **Never use `innerHTML`.** YouTube enforces Trusted Types, and channel names are untrusted input. Build DOM

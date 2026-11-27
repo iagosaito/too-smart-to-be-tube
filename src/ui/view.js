@@ -3,15 +3,15 @@ import { sortByName } from '../core/channels.js';
 import { normalizeText } from '../core/text.js';
 import { localeTag, relativeTime, t } from '../i18n/i18n.js';
 
-// Regras de apresentação puras (sem DOM): ficam separadas para serem testadas
-// sem montar a página inteira.
+// Pure presentation rules (no DOM): kept separate so they can be tested without mounting the whole
+// page.
 
 export const FILTER_ALL = 'all';
 export const FILTER_NONE = 'none';
 export const SORT_NAME = 'name';
 export const SORT_RECENT = 'recent';
 
-// Reexportado para a UI continuar importando tudo de apresentação daqui.
+// Re-exported so the UI keeps importing all presentation logic from here.
 export { normalizeText };
 
 export function visibleChannels(state, view) {
@@ -23,8 +23,8 @@ export function visibleChannels(state, view) {
 
 export function sortChannels(channels, sort, latestUploads) {
   if (sort !== SORT_RECENT) return channels;
-  // Os canais já chegam em ordem alfabética e o sort é estável: empates e
-  // canais sem data conhecida (que vão para o fim) continuam em ordem de nome.
+  // Channels already arrive in alphabetical order and the sort is stable: ties and channels with no
+  // known date (which go to the end) stay in name order.
   const publishedAt = (channel) => latestUploads[channel.id] ?? -Infinity;
   return [...channels].sort((a, b) => publishedAt(b) - publishedAt(a));
 }
@@ -40,7 +40,7 @@ function channelsForFilter(state, filter) {
 export function buildChips(state) {
   const locale = localeTag();
   const { groups, uncategorized } = groupChannels(sortCategoriesByName(state.categories, locale), state.channels, locale);
-  // "Sem categoria" fica no fim porque é a fila de trabalho, não um destino.
+  // "No category" goes last because it is the work queue, not a destination.
   return [
     { id: FILTER_ALL, label: t('chips.all'), count: Object.keys(state.channels).length },
     ...groups.map(({ category, channels }) => ({ id: category.id, label: category.name, count: channels.length })),
@@ -49,32 +49,32 @@ export function buildChips(state) {
 }
 
 export function resolveFilter(filter, categories) {
-  // Uma categoria excluída deixaria a tela "presa" num filtro inexistente.
+  // A deleted category would leave the screen "stuck" on a filter that doesn't exist.
   const isFixed = filter === FILTER_ALL || filter === FILTER_NONE;
   return isFixed || categories.some((category) => category.id === filter) ? filter : FILTER_ALL;
 }
 
 export function formatSyncInfo(lastSyncedAt, now) {
   if (lastSyncedAt == null) return t('sync.never');
-  // Tempo relativo é mais fácil de avaliar do que uma data ("isso está atualizado?").
+  // Relative time is easier to judge than a date ("is this up to date?").
   if (now - lastSyncedAt < 60_000) return t('sync.justNow');
   return t('sync.ago', { time: relativeTime(now - lastSyncedAt) });
 }
 
 export function formatUploadAge(publishedAt, now) {
   if (publishedAt == null) return null;
-  // A data vem de textos como "3 days ago", então a precisão é dessa ordem:
-  // mostramos a mesma granularidade que o YouTube, sem fingir exatidão.
+  // The date comes from texts like "3 days ago", so that is the precision: we show the same
+  // granularity as YouTube, without faking accuracy.
   if (now - publishedAt < 3_600_000) return t('upload.justNow');
   return t('upload.ago', { time: relativeTime(now - publishedAt) });
 }
 
-// Só o que está na tela pode estar selecionado. Sem isto, um canal marcado que
-// sumia da grade (movido individualmente ou escondido pela busca) seguia
-// selecionado, invisível, e era levado junto pela ação em lote.
+// Only what is on screen can be selected. Without this, a selected channel that left the grid
+// (moved individually or hidden by the search) stayed selected, invisible, and was carried along by
+// the bulk action.
 export function pruneSelection(selected, visible) {
   const visibleIds = new Set(visible.map((channel) => channel.id));
   const kept = [...selected].filter((id) => visibleIds.has(id));
-  // Mesmo Set quando nada muda: evita trabalho e re-renderizações à toa.
+  // The same Set when nothing changes: avoids pointless work and re-renders.
   return kept.length === selected.size ? selected : new Set(kept);
 }

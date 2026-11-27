@@ -4,13 +4,11 @@ import { CATEGORY_NAME_MAX } from '../../core/categories.js';
 import { t } from '../../i18n/i18n.js';
 import { FILTER_ALL, FILTER_NONE } from '../view.js';
 
-// Chips em vez de seções empilhadas: mostram uma categoria por vez. A barra
-// quebra linha para que todas as categorias fiquem visíveis de uma vez: aqui
-// os chips são a navegação principal, e achar a categoria batendo o olho vale
-// mais do que a altura extra (uma versão com rolagem horizontal escondia a
-// maioria atrás de setas e deixou a seleção mais lenta).
-// "Todas" (visão geral) abre a barra e "Sem categoria" (fila de trabalho) a
-// fecha, sempre nas mesmas posições.
+// Chips instead of stacked sections: they show one category at a time. The bar wraps so that every
+// category is visible at once: here the chips are the main navigation, and finding a category at a
+// glance is worth more than the extra height (a horizontally scrolling version hid most of them
+// behind arrows and made selection slower). "All" (overview) opens the bar and "No category" (work
+// queue) closes it, always in the same positions.
 export function renderChips(chips, activeId, actions) {
   const all = chips.find((chip) => chip.id === FILTER_ALL);
   const none = chips.find((chip) => chip.id === FILTER_NONE);
@@ -44,7 +42,7 @@ function renderChip(chip, activeId, actions, { icon = null, className = '' } = {
 }
 
 function renderNewCategoryChip(actions) {
-  // Criar direto na barra mantém o usuário no contexto, sem diálogo modal.
+  // Creating right in the bar keeps the user in context, without a modal dialog.
   const button = el('button', { type: 'button', className: 'tstb-chip tstb-chip-new' }, [svgIcon(ICONS.add), t('chips.new')]);
   button.addEventListener('click', () => button.replaceWith(renderNewCategoryForm(actions, button)));
   return button;
@@ -59,7 +57,7 @@ function renderNewCategoryForm(actions, button) {
   const form = el('form', { className: 'tstb-chip tstb-chip-form', onSubmit }, [input]);
   const cancel = () => form.replaceWith(button);
   input.addEventListener('keydown', (event) => event.key === 'Escape' && cancel());
-  // Sair do campo vazio desiste da criação, como num campo de renomear do sistema.
+  // Leaving the field empty cancels the creation, like a system rename field.
   input.addEventListener('blur', () => !input.value.trim() && cancel());
   queueMicrotask(() => input.focus());
   return form;

@@ -1,9 +1,9 @@
-// Lista de categorias dentro do item "Categorias" do menu lateral expandido.
+// Category list inside the "Categories" item of the expanded sidebar.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GUIDE_HTML } from '../helpers/youtubeFixtures.js';
 
-// O estado da lista é compartilhado pelo módulo (sobrevive às reinserções que
-// o YouTube força); cada teste carrega o módulo do zero para não herdar estado.
+// The list's state is shared by the module (it survives the reinsertions YouTube forces); each test
+// loads the module from scratch so it doesn't inherit state.
 let sidebar;
 beforeEach(async () => {
   vi.resetModules();

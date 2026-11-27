@@ -1,4 +1,4 @@
-// Feed por categoria na página de Categorias (abas Vídeos · Shorts · Canais).
+// Per-category feed on the Categories page (Videos · Shorts · Channels tabs).
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocalizedError } from '../../src/i18n/errors.js';
 import { createStore } from '../../src/storage/store.js';
@@ -22,7 +22,7 @@ const video = (videoId, channelId, hoursAgo, extra = {}) => ({
   videoId, channelId, title: `Vídeo ${videoId}`, publishedAt: NOW - hoursAgo * HOUR, duration: '10:05', viewCount: 921_000, ...extra,
 });
 const feedItems = [video('feedAlura01', '/@alura', 48), video('feedBossa01', '/@bossa', 1), video('feedRocket1', '/@rocket', 5)];
-// Ids de vídeo têm 11 caracteres; derivados do canal para serem previsíveis nos testes.
+// Video ids are 11 characters long; derived from the channel so they are predictable in tests.
 const fakeId = (channel, suffix) => `${channel.id.slice(2, 7)}${suffix}`.padEnd(11, 'x').slice(0, 11);
 
 let area;
@@ -105,7 +105,8 @@ describe('aba Vídeos', () => {
     expect(card.querySelector('.tstb-video-title a').href).toBe('https://www.youtube.com/watch?v=feedAlura01');
     expect(card.querySelector('.tstb-video-channel').textContent).toBe('Alura');
     expect(card.querySelector('.tstb-video-avatar').getAttribute('src')).toBe('https://yt3.example/alura.jpg');
-    // O formato compacto usa espaço inquebrável ("921 mil" não quebra de linha); a comparação normaliza.
+    // The compact format uses a non-breaking space ("921 mil" doesn't wrap); the comparison
+    // normalizes it.
     expect(card.querySelector('.tstb-video-meta').textContent.replace(/\s/g, ' ')).toBe('921 mil visualizações • há 2 dias');
   });
 
@@ -141,7 +142,7 @@ describe('aba Shorts', () => {
 
     pending.forEach((finish) => finish());
     await flush();
-    // Rocketseat publicou mais recentemente, então vem primeiro; os canais se alternam.
+    // Rocketseat published most recently, so it comes first; the channels alternate.
     expect($$('.tstb-short-title').map((node) => node.textContent)).toEqual(['Short 1 Rocketseat', 'Short 1 Alura', 'Short 2 Rocketseat', 'Short 2 Alura']);
     const firstShort = fakeId(channels['/@rocket'], 'sh1');
     expect($('.tstb-short-link').href).toBe(`https://www.youtube.com/shorts/${firstShort}`);
@@ -159,11 +160,10 @@ describe('aba Shorts', () => {
   });
 });
 
-// Regressão: no YouTube, clicar em "Carregar mais" levava a página de volta ao
-// topo. O painel do feed era recriado a cada render e a lista de cartões saía
-// dele por um instante, deixando a página curta; o botão focado era removido e,
-// ao perder o foco, o YouTube media o layout nesse momento: o navegador
-// ajustava a rolagem para caber, no topo. O foco também caía no <body>.
+// Regression: on YouTube, clicking "Load more" took the page back to the top. The feed panel was
+// recreated on every render and the card list left it for an instant, making the page short; the
+// focused button was removed and, on blur, YouTube measured the layout at that moment: the browser
+// adjusted the scroll to fit, at the top. Focus also fell to <body>.
 describe('"Carregar mais" mantém o lugar na página', () => {
   const manyShorts = async (channel) => Array.from({ length: 30 }, (_, n) => ({ videoId: fakeId(channel, `s${String(n).padStart(2, '0')}`), channelId: channel.id, title: `Short ${n}`, viewCount: 10 }));
 

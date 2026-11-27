@@ -9,17 +9,17 @@ import { cachedPlanImport } from '../import/categorizationImport.js';
 import { renderViewHeading } from './components/viewHeading.js';
 import { buildChips, FILTER_ALL, FILTER_NONE, formatUploadAge, SORT_RECENT, visibleChannels } from './view.js';
 
-// Regiões fixas da página. Cada render preenche cada região separadamente,
-// assim a grade (a parte cara) não é tocada quando só o cabeçalho muda.
+// Fixed regions of the page. Each render fills each region separately, so the grid (the expensive
+// part) isn't touched when only the header changes.
 export const SLOTS = ['header', 'review', 'chips', 'heading', 'results', 'bulkBar'];
 
-// env agrupa o que não é estado nem ação: o relógio (injetável nos testes) e o cache de cartões.
+// env groups what is neither state nor action: the clock (injectable in tests) and the card cache.
 export function renderPage(state, view, actions, { now, cardCache, feed }) {
   const channels = visibleChannels(state, view);
   const common = commonParts(state, view, actions, now, channels);
-  // Dentro de uma categoria, nas abas Vídeos e Shorts, os resultados são o
-  // feed: a grade de canais nem é montada (com centenas de canais ela custava
-  // milhares de elementos a cada render, só para ser descartada).
+  // Inside a category, on the Videos and Shorts tabs, the results are the feed: the channel grid
+  // isn't even built (with hundreds of channels it cost thousands of elements per render, only to
+  // be thrown away).
   if (feed) return { ...common, results: renderFeed(feed, actions), bulkBar: null };
   return { ...common, ...managementParts(state, view, actions, now, channels, cardCache) };
 }
@@ -56,16 +56,15 @@ function categoryControlFor(filter) {
 }
 
 function metaFor(state, view, now) {
-  // Em ordem de recência, dizer "sem vídeos recentes" explica por que o canal
-  // está no fim; em A–Z isso seria só ruído, então a linha some.
+  // When sorted by recency, saying "no recent videos" explains why the channel is at the end; in
+  // A–Z it would just be noise, so the line goes away.
   const fallback = view.sort === SORT_RECENT ? t('upload.none') : null;
   return (channel) => formatUploadAge(state.latestUploads?.[channel.id], now) ?? fallback;
 }
 
 function renderPendingImport(state, pending, actions) {
-  // O resumo acompanha o estado atual (se o usuário mexer em algo enquanto
-  // revisa, os números batem com o que será aplicado), mas só é recalculado
-  // quando o estado muda de fato.
+  // The summary follows the current state (if the user changes something while reviewing, the
+  // numbers match what will be applied), but it is only recomputed when the state actually changes.
   const summary = pending.entries ? cachedPlanImport(state, pending.entries).summary : null;
   return renderImportReview(pending, summary, actions);
 }

@@ -1,7 +1,7 @@
-// Regressão: com o menu recolhido, abrir uma categoria e depois expandir o
-// menu fazia o item "Categorias" sumir do menu expandido. O YouTube redesenha
-// as seções ao expandir e remove nós que não são dele; nada reinseria o item
-// até a próxima navegação (e abrir Categorias não é uma navegação).
+// Regression: with the menu collapsed, opening a category and then expanding the menu made the
+// "Categories" item disappear from the expanded menu. YouTube redraws the sections when expanding
+// and removes nodes that aren't its own; nothing reinserted the item until the next navigation (and
+// opening Categories isn't a navigation).
 import { expect, it } from 'vitest';
 import { ENTRY_ID } from '../../src/dom/sidebar.js';
 import { createFakeStorageArea } from '../helpers/fakeStorage.js';

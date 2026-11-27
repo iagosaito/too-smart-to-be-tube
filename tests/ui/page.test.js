@@ -21,9 +21,9 @@ beforeEach(() => {
   closeCategoryMenu();
   document.body.innerHTML = '<ytd-page-manager><ytd-browse id="home">Início</ytd-browse></ytd-page-manager>';
   document.documentElement.className = '';
-  // O jsdom não implementa rolagem e polui a saída com avisos.
+  // jsdom doesn't implement scrolling and floods the output with warnings.
   window.scrollTo = vi.fn();
-  // Sincronização recente: a maioria dos testes não deve disparar a sincronização automática.
+  // Recent sync: most tests must not trigger the automatic sync.
   area = createFakeStorageArea({ channels, categories, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 });
   store = createStore(area);
 });
@@ -35,17 +35,17 @@ const chip = (label) => $$('.tstb-chip').find((node) => node.querySelector('.tst
 const button = (label) => $$('button').find((node) => node.textContent.trim() === label);
 const cardNames = () => $$('.tstb-card-name').map((node) => node.textContent);
 const checkFor = (name) => $$('.tstb-check').find((node) => node.getAttribute('aria-label') === `Selecionar ${name}`);
-// Ações gravam no storage de forma assíncrona; aguardamos a fila de tarefas esvaziar.
+// Actions write to storage asynchronously; we wait for the task queue to drain.
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
-// Testes passam a sincronização como função simples; aqui ela vira o
-// coordenador real, sem intervalo mínimo (o cooldown tem testes próprios).
+// Tests pass the sync as a plain function; here it becomes the real coordinator, with no minimum
+// interval (the cooldown has its own tests).
 function withCoordinator(options) {
   if (typeof options.sync !== 'function') return options;
   return { ...options, sync: createSyncCoordinator(options.sync, { now: options.now ?? (() => 1_000), cooldownMs: 0 }) };
 }
 const open = (options = {}) => openCategoriesPage({ store, now: () => 1_000, searchDelay: 0, ...withCoordinator(options) });
 
-// Menu próprio de categoria dos cartões (pílula e ícone de mover).
+// Custom category menu on the cards (pill and move icon).
 const menu = () => document.getElementById(MENU_ID);
 const menuLabels = () => [...menu().querySelectorAll('.tstb-menu-item')].map((item) => item.textContent);
 const checkedInMenu = () => menu().querySelector('[aria-checked="true"]')?.textContent;
@@ -213,7 +213,7 @@ describe('categorias', () => {
     chip('Tech').click();
     const titleGroup = $('.tstb-title-group');
     expect(titleGroup.querySelector('.tstb-title-edit')).not.toBeNull();
-    // Sem lápis no nome: nada reserva espaço entre o nome e a contagem.
+    // No pencil on the name: nothing reserves space between the name and the count.
     expect(titleGroup.querySelector('.tstb-title-edit svg')).toBeNull();
     expect(titleGroup.querySelector('[aria-label="Excluir categoria Tech"]')).not.toBeNull();
     expect($('.tstb-heading-actions').querySelector('[aria-label^="Excluir"]')).toBeNull();
@@ -423,9 +423,9 @@ describe('seleção em lote', () => {
   });
 });
 
-// Regressão: canais selecionados que saíam da tela (movidos individualmente ou
-// escondidos pela busca) continuavam selecionados, invisíveis, e eram movidos
-// junto pela ação em lote, desfazendo o que o usuário tinha acabado de fazer.
+// Regression: selected channels that left the screen (moved individually or hidden by the search)
+// stayed selected, invisible, and were moved along by the bulk action, undoing what the user had
+// just done.
 describe('seleção só contém o que está na tela', () => {
   const storeWith = (categoriesList) =>
     createStore(createFakeStorageArea({ channels, categories: categoriesList, lastSyncedAt: 1_000, uploadsSyncedAt: 1_000, feedSyncedAt: 1_000 }));
@@ -692,7 +692,7 @@ describe('intervalo entre sincronizações', () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
     try {
       vi.setSystemTime(10_000_000);
-      // Sincronização recente no storage: a abertura não dispara a automática.
+      // Recent sync in storage: opening doesn't trigger the automatic one.
       const fresh = createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: Date.now(), uploadsSyncedAt: Date.now(), feedSyncedAt: Date.now() }));
       const coordinator = createSyncCoordinator(async () => 3, { cooldownMs: 60_000 });
       await openCategoriesPage({ store: fresh, sync: coordinator, now: Date.now, searchDelay: 0 });
@@ -712,7 +712,7 @@ describe('intervalo entre sincronizações', () => {
   it('ao abrir a página durante uma sincronização já em andamento, mostra "Sincronizando…" sem iniciar outra', async () => {
     let finish;
     const run = vi.fn(() => new Promise((resolve) => (finish = resolve)));
-    // Mesmo relógio da página (now: () => 1_000), como em produção, onde ambos usam Date.now.
+    // The same clock as the page (now: () => 1_000), as in production, where both use Date.now.
     const coordinator = createSyncCoordinator(run, { cooldownMs: 0, now: () => 1_000 });
     coordinator.sync();
     await openCategoriesPage({ store, sync: coordinator, now: () => 1_000, searchDelay: 0 });

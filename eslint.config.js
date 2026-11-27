@@ -9,7 +9,7 @@ export default [
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      // Content script: APIs do navegador + a API de extensões do Chrome.
+      // Content script: browser APIs plus Chrome's extension API.
       globals: { ...globals.browser, chrome: 'readonly' },
     },
   },
@@ -18,12 +18,12 @@ export default [
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      // Testes rodam no Node com jsdom: precisam dos dois conjuntos.
+      // Tests run in Node with jsdom: they need both sets.
       globals: { ...globals.browser, ...globals.node },
     },
   },
   {
-    // Site de apresentação: script clássico (sem import) rodando no navegador.
+    // Landing page: classic script (no imports) running in the browser.
     files: ['site/**/*.js'],
     languageOptions: { ecmaVersion: 'latest', sourceType: 'script', globals: globals.browser },
   },
@@ -33,7 +33,7 @@ export default [
   },
   {
     rules: {
-      // "smart" permite `== null`, usado de propósito para cobrir null e undefined.
+      // "smart" allows `== null`, used on purpose to cover both null and undefined.
       eqeqeq: ['error', 'smart'],
       'no-var': 'error',
       'prefer-const': 'error',

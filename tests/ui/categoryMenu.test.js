@@ -42,8 +42,8 @@ describe('openCategoryMenu', () => {
     expect(anchor.getAttribute('aria-expanded')).toBe('true');
   });
 
-  // Garantia do motivo deste componente existir: apertar e soltar o botão do
-  // mouse (sem clicar numa opção) nunca escolhe nada.
+  // The reason this component exists: pressing and releasing the mouse button (without clicking an
+  // option) never picks anything.
   it('apertar e soltar o mouse sem clicar numa opção não escolhe nada', () => {
     open();
     for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup']) {

@@ -6,7 +6,7 @@ import { createFakeStorageArea } from '../helpers/fakeStorage.js';
 const channel = (n) => ({ id: `/@c${n}`, ucid: `UC${String(n).padStart(22, '0')}` });
 const cacheOn = (area, now) => createChannelTabCache({ storage: createStore(area).channelTabStorage, now });
 const storedKeys = (area) => Object.keys(area.dump()).filter((key) => key.startsWith('tabCache:')).sort();
-// Grava o que estiver pendente (as gravações são agrupadas em 1 s).
+// Writes whatever is pending (writes are grouped within 1 s).
 const persist = () => vi.advanceTimersByTimeAsync(1000);
 
 beforeEach(() => vi.useFakeTimers());
@@ -33,13 +33,13 @@ describe('createChannelTabCache', () => {
     await cache.set(channel(1), 'videos', []);
     await cache.set(channel(2), 'videos', []);
     await persist();
-    // Uma gravação com as entradas novas e outra com o índice.
+    // One write with the new entries and another with the index.
     expect(set).toHaveBeenCalledTimes(2);
     expect(storedKeys(area)).toEqual([`tabCache:${channel(1).ucid}:videos`, `tabCache:${channel(2).ucid}:videos`, `tabCache:${channel(9).ucid}:videos`]);
   });
 
-  // Regressão (#6): o limite era de 150 entradas e cada canal ocupa duas
-  // (Vídeos e Shorts): uma categoria de 100 canais já perdia parte do cache.
+  // Regression (#6): the limit was 150 entries and each channel takes two (Videos and Shorts): a
+  // 100-channel category already lost part of its cache.
   it(`guarda ${MAX_CACHED_CHANNELS} canais com as duas abas`, async () => {
     let now = 0;
     const cache = cacheOn(createFakeStorageArea(), () => now);
@@ -69,8 +69,8 @@ describe('createChannelTabCache', () => {
     expect(storedKeys(area)).toHaveLength(2 * MAX_CACHED_CHANNELS);
   });
 
-  // Regressão (#5): cada aba carregava o cache uma vez e gravava o objeto
-  // inteiro; a última a gravar apagava o que as outras tinham salvo.
+  // Regression (#5): each tab loaded the cache once and wrote the whole object; the last one to
+  // write erased what the others had saved.
   it('duas abas gravando no mesmo storage não apagam o que a outra salvou', async () => {
     const area = createFakeStorageArea();
     const tabA = cacheOn(area, () => 1);

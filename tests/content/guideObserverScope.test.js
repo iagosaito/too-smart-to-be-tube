@@ -1,8 +1,7 @@
-// Regressão: numa janela estreita o menu expandido só ganha seções quando o
-// usuário abre o ☰ (verificado no youtube.com: o tp-yt-app-drawer#guide existe
-// vazio desde o carregamento). A espera pelo menu ficava num MutationObserver
-// no documento inteiro, sem prazo, rodando a cada mutação da página, inclusive
-// durante a reprodução de vídeos.
+// Regression: in a narrow window the expanded menu only gets its sections when the user opens ☰
+// (checked on youtube.com: tp-yt-app-drawer#guide exists empty from page load). The wait for the
+// menu used a MutationObserver on the whole document, with no deadline, running on every page
+// mutation, including during video playback.
 import { afterEach, expect, it, vi } from 'vitest';
 import { ENTRY_ID } from '../../src/dom/sidebar.js';
 import { createFakeStorageArea } from '../helpers/fakeStorage.js';
@@ -15,7 +14,7 @@ const flush = async () => {
 afterEach(() => vi.restoreAllMocks());
 
 it('espera o menu expandido observando só o contêiner dele, não o documento', async () => {
-  // Como no YouTube estreito: menu recolhido pronto, gaveta do menu expandido vazia.
+  // Like narrow YouTube: the collapsed menu is ready, the expanded menu's drawer is empty.
   document.body.innerHTML = `
     <ytd-mini-guide-renderer><div id="items"></div></ytd-mini-guide-renderer>
     <tp-yt-app-drawer id="guide"><div id="guide-content"></div></tp-yt-app-drawer>
@@ -34,7 +33,7 @@ it('espera o menu expandido observando só o contêiner dele, não o documento',
   const wholeDocument = observed.filter(({ target, subtree }) => subtree && (target === document.documentElement || target === document.body || target === document));
   expect(wholeDocument).toEqual([]);
 
-  // Abrir o ☰: o YouTube cria o menu dentro da gaveta e o item entra nele.
+  // Opening ☰: YouTube creates the menu inside the drawer and the item goes into it.
   document.querySelector('#guide-content').insertAdjacentHTML('beforeend', GUIDE_HTML);
   await flush();
   expect(document.querySelector(`ytd-guide-renderer #${ENTRY_ID}`)).not.toBeNull();

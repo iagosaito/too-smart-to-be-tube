@@ -8,8 +8,8 @@ export function readCookie(cookieString, name) {
   return entry ? entry.slice(prefix.length) : null;
 }
 
-// A API interna (InnerTube) só devolve dados da conta com este cabeçalho, que
-// é o mesmo que o site do YouTube calcula: SHA-1 de "timestamp SAPISID origem".
+// The internal API (InnerTube) only returns account data with this header, which is the same one
+// the YouTube site computes: SHA-1 of "timestamp SAPISID origin".
 export async function sapisidHash(sapisid, origin, timestamp) {
   const bytes = new TextEncoder().encode(`${timestamp} ${sapisid} ${origin}`);
   const digest = await crypto.subtle.digest('SHA-1', bytes);
@@ -18,7 +18,7 @@ export async function sapisidHash(sapisid, origin, timestamp) {
 }
 
 export async function buildAuthHeaders(config, cookieString, now = Date.now()) {
-  // O cookie seguro é o fallback porque alguns navegadores só expõem ele.
+  // The secure cookie is the fallback because some browsers only expose that one.
   const sapisid = readCookie(cookieString, 'SAPISID') ?? readCookie(cookieString, '__Secure-3PAPISID');
   if (!sapisid) throw new LocalizedError('error.notSignedIn');
 

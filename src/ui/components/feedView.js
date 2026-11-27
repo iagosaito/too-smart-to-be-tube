@@ -5,14 +5,13 @@ import { el, syncChildren } from '../elements.js';
 import { renderEmptyState } from './feedback.js';
 import { TABPANEL_ID } from './categoryTabs.js';
 
-// Feed de uma categoria (vídeos ou Shorts). Os cartões seguem a grade do
-// YouTube: miniatura primeiro, título em até duas linhas, canal e
-// "visualizações • há quanto tempo".
+// A category's feed (videos or Shorts). The cards follow YouTube's grid: thumbnail first, title in
+// up to two lines, channel and "views • time ago".
 
-// Painel, lista, rodapé e botão são os mesmos entre renders (um de cada por
-// tipo). No YouTube, recriá-los tirava a lista da página por um instante e
-// removia o botão focado: ao perder o foco o YouTube media o layout com a
-// página curta e a rolagem voltava ao topo a cada "Carregar mais".
+// Panel, list, footer and button are the same across renders (one of each per kind). On YouTube,
+// recreating them took the list off the page for an instant and removed the focused button: on blur
+// YouTube measured the layout with the page short, and the scroll jumped back to the top on every
+// "Load more".
 export function createFeedCardCache() {
   return { cards: new Map(), lists: {}, panels: {}, footers: {}, buttons: {}, actions: {} };
 }
@@ -23,7 +22,7 @@ export function renderFeed({ tab, model, channelsById, now, cache, query }, acti
   const panel = cachedPanel(cache, kind);
   panel.setAttribute('aria-labelledby', `tstb-tab-${tab}`);
   panel.setAttribute('aria-busy', String(model.loading > 0));
-  // O botão estável chama sempre as ações do render mais recente.
+  // The stable button always calls the actions of the latest render.
   cache.actions[kind] = actions;
   if (!items.length && !model.loading) {
     syncChildren(panel, [renderEmptyState(emptyStateFor(kind, model, actions, query))]);
@@ -41,14 +40,14 @@ function cachedPanel(cache, kind) {
 }
 
 function filterByQuery(items, channelsById, query) {
-  // A busca do cabeçalho também vale no feed: por título ou nome do canal.
+  // The header search also applies to the feed: by title or channel name.
   const needle = query?.trim().toLocaleLowerCase();
   if (!needle) return items;
   return items.filter((item) => `${item.title} ${channelsById[item.channelId]?.name ?? ''}`.toLocaleLowerCase().includes(needle));
 }
 
 function cachedList(cache, kind) {
-  // A mesma <ul> entre renders: só os cartões novos entram no DOM.
+  // The same <ul> across renders: only new cards enter the DOM.
   cache.lists[kind] ??= el('ul', { className: kind === 'short' ? 'tstb-shorts-grid' : 'tstb-video-grid' });
   return cache.lists[kind];
 }
@@ -56,7 +55,7 @@ function cachedList(cache, kind) {
 function cachedCard(cache, item, kind, channelsById, now) {
   const channel = channelsById[item.channelId] ?? { name: '', url: '', avatar: '' };
   const label = kind === 'short' ? viewsLabel(item.viewCount) : metaLine(item, now);
-  // Tudo o que aparece no cartão entra na chave (inclui idioma e "há quanto tempo").
+  // Everything shown on the card goes into the key (including the language and "time ago").
   const key = [kind, item.title, channel.name, channel.avatar, label, localeTag()].join('\u0000');
   const cached = cache.cards.get(`${kind}:${item.videoId}`);
   if (cached?.key === key) return cached.node;
@@ -68,7 +67,8 @@ function cachedCard(cache, item, kind, channelsById, now) {
 function renderVideoCard(video, channel, meta) {
   const href = videoUrl(video.videoId);
   return el('li', { className: 'tstb-video' }, [
-    // A miniatura repete o link do título: fora da ordem do Tab para não haver duas paradas iguais.
+    // The thumbnail repeats the title's link: out of the Tab order so there aren't two identical
+    // stops.
     el('a', { className: 'tstb-video-thumb', href, tabindex: '-1', 'aria-hidden': 'true' }, [
       el('img', { src: thumbnailUrl(video.videoId), alt: '', loading: 'lazy', decoding: 'async' }),
       video.duration ? el('span', { className: 'tstb-duration' }, video.duration) : null,
@@ -95,7 +95,7 @@ function renderShortCard(short, channel, views) {
 }
 
 function metaLine(video, now) {
-  // Mínimo de 1 minuto: "há 0 minutos" soaria como erro.
+  // At least 1 minute: "0 minutes ago" would look like an error.
   const time = relativeTime(Math.max(now - video.publishedAt, 60_000));
   const views = viewsLabel(video.viewCount);
   return views ? t('feed.meta', { views, time }) : time;
@@ -103,14 +103,14 @@ function metaLine(video, now) {
 
 function viewsLabel(count) {
   if (count == null) return '';
-  // Formato compacto do idioma: "921 mil", "921K".
+  // The language's compact format: "921 mil", "921K".
   const formatted = new Intl.NumberFormat(localeTag(), { notation: 'compact', maximumFractionDigits: 1 }).format(count);
   return plural('feed.views', count, { formatted });
 }
 
 function skeletons(kind, model, shown) {
-  // Esqueletos no formato exato da grade enquanto um lote carrega (1–10 s):
-  // dão noção do que vem sem chamar atenção para a espera (NN/g).
+  // Skeletons in the exact shape of the grid while a batch loads (1–10 s): they hint at what's
+  // coming without drawing attention to the wait (NN/g).
   if (!model.loading) return [];
   const count = shown ? 4 : kind === 'short' ? 12 : 8;
   return Array.from({ length: count }, () => el('li', { className: `tstb-skeleton tstb-skeleton-${kind}`, 'aria-hidden': 'true' }, [
@@ -124,8 +124,8 @@ function renderFooter(cache, kind, model, shown) {
   const children = [];
   if (model.errorKey) children.push(el('p', { className: 'tstb-feed-error', role: 'alert' }, capitalize(t(model.errorKey))));
   if (model.missingIds) children.push(el('p', { className: 'tstb-hint' }, t('feed.missingIds')));
-  // "Carregar mais" explícito (não rolagem infinita): cada clique é um lote
-  // limitado de consultas e o rodapé continua alcançável (NN/g, Baymard).
+  // Explicit "Load more" (not infinite scroll): each click is a bounded batch of requests and the
+  // footer stays reachable (NN/g, Baymard).
   if (model.hasMore && !model.loading) children.push(loadMoreButton(cache, kind));
   else if (!model.hasMore && !model.loading && shown) children.push(el('p', { className: 'tstb-feed-end' }, t('feed.end')));
   cache.footers[kind] ??= el('div', { className: 'tstb-feed-footer' });
@@ -135,7 +135,7 @@ function renderFooter(cache, kind, model, shown) {
 
 function loadMoreButton(cache, kind) {
   cache.buttons[kind] ??= el('button', { type: 'button', className: 'tstb-button tstb-load-more', onClick: () => cache.actions[kind].loadMore() });
-  // O texto acompanha o idioma, que pode mudar entre renders.
+  // The label follows the language, which may change between renders.
   const label = kind === 'short' ? t('feed.loadMoreShorts') : t('feed.loadOlder');
   if (cache.buttons[kind].textContent !== label) cache.buttons[kind].textContent = label;
   return cache.buttons[kind];

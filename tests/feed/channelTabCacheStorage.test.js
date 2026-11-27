@@ -1,6 +1,6 @@
-// Regressão (#8): o cache inteiro (até ~150 canais × 30 itens, perto de 1 MB)
-// ficava numa chave só, regravada a cada lote. Cada gravação chega com valor
-// antigo e novo ao storage.onChanged de todas as abas do YouTube abertas.
+// Regression (#8): the whole cache (up to ~150 channels × 30 items, close to 1 MB) sat in a single
+// key, rewritten on every batch. Each write reaches storage.onChanged in every open YouTube tab
+// with the old and the new value.
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createChannelTabCache } from '../../src/feed/channelTabCache.js';
 import { createStore } from '../../src/storage/store.js';

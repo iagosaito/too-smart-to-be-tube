@@ -1,4 +1,4 @@
-// JSON reduzido imitando as respostas reais de /feed/channels e /youtubei/v1/browse.
+// Trimmed JSON mimicking the real responses of /feed/channels and /youtubei/v1/browse.
 
 export function channelRenderer(handle, name, { thumb = `//yt3.example/${handle}.jpg`, withHandle = true } = {}) {
   return {
@@ -33,7 +33,7 @@ export function continuationResponse(items) {
 
 export function channelsPageHtml(data, config = {}) {
   const cfg = { INNERTUBE_CLIENT_VERSION: '2.20261120.00.00', INNERTUBE_API_KEY: 'KEY', SESSION_INDEX: 0, ...config };
-  // JSON.stringify não escapa "<", então imitamos o escape que o YouTube faz.
+  // JSON.stringify doesn't escape "<", so we mimic the escaping YouTube does.
   const json = JSON.stringify(data).replaceAll('<', '\\u003c');
   return `<html><script>ytcfg.set(${JSON.stringify(cfg)});</script>
     <script>var ytInitialData = ${json};</script><body></body></html>`;

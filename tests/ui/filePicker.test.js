@@ -5,7 +5,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// O jsdom não abre seletor de arquivos; capturamos o input criado no clique.
+// jsdom doesn't open a file picker; we capture the input created on click.
 function captureInput() {
   let input;
   vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function click() {

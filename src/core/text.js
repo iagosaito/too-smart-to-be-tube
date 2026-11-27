@@ -1,5 +1,5 @@
-// Fica no core porque busca (UI) e importação comparam nomes da mesma forma.
+// Lives in core because search (UI) and import compare names the same way.
 export function normalizeText(text) {
-  // Remove acentos para que "musica" encontre "Música".
+  // Strips accents so that "musica" finds "Música".
   return String(text ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase().trim();
 }

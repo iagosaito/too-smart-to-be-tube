@@ -145,8 +145,8 @@ describe('createFeedSource', () => {
     expect(fetchTab).toHaveBeenCalledOnce();
   });
 
-  // Regressão: uma sessão nova (canal adicionado à categoria, página reaberta)
-  // pedia de novo canais cujo lote ainda estava em andamento.
+  // Regression: a new session (channel added to the category, page reopened) requested again
+  // channels whose batch was still in flight.
   it('pedidos simultâneos do mesmo canal e aba compartilham uma única consulta', async () => {
     const release = {};
     const fetchTab = vi.fn(({ tab }) => new Promise((resolve) => { release[tab] = resolve; }));

@@ -1,7 +1,7 @@
 import { el } from './elements.js';
 
-// Abre o seletor de arquivos nativo a partir de um clique. Um <input type=file>
-// temporário evita manter um campo escondido na página do YouTube.
+// Opens the native file picker from a click. A temporary <input type=file> avoids keeping a hidden
+// field on the YouTube page.
 export function pickFile(accept = '.csv,text/csv') {
   return new Promise((resolve) => {
     const input = el('input', { type: 'file', accept, hidden: true });
@@ -10,8 +10,8 @@ export function pickFile(accept = '.csv,text/csv') {
       resolve(file ?? null);
     };
     input.addEventListener('change', () => finish(input.files?.[0]));
-    // "cancel" dispara quando o usuário fecha o seletor sem escolher nada;
-    // sem isso a Promise ficaria pendente e o input órfão na página.
+    // "cancel" fires when the user closes the picker without choosing anything; without it the
+    // Promise would stay pending and the input orphaned on the page.
     input.addEventListener('cancel', () => finish(null));
     document.body.append(input);
     input.click();

@@ -1,6 +1,5 @@
-// Español neutro (sirve para es, es-419, es-ES…). Las claves con
-// { one, other } son plurales; {count} y otros {nombres} se completan al
-// renderizar.
+// Neutral Spanish (works for es, es-419, es-ES…). Keys with { one, other } are plurals; {count} and
+// other {names} are filled in at render time.
 export default {
   'app.title': 'Categorías',
 

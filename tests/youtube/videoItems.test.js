@@ -11,9 +11,9 @@ import {
   videosFromPage,
 } from '../../src/youtube/videoItems.js';
 
-// Respostas reais do YouTube (nov/2026), só sem os menus. Validam o formato
-// verdadeiro, não um formato imaginado.
-// Caminho a partir da raiz: no ambiente jsdom import.meta.url não aponta para o arquivo.
+// Real YouTube responses (Nov 2026), only without the menus. They validate the true format, not an
+// imagined one.
+// Path from the root: in the jsdom environment import.meta.url doesn't point to the file.
 const fixture = (name) => JSON.parse(readFileSync(`tests/fixtures/youtube/${name}.json`, 'utf8'));
 const NOW = 1_800_000_000_000;
 const DAY = 86_400_000;
