@@ -204,3 +204,33 @@ describe('estados vazios do feed', () => {
     expect(button('Carregar vídeos mais antigos')).toBeDefined();
   });
 });
+
+describe('URL da página de Categorias', () => {
+  const path = () => window.location.pathname + window.location.hash;
+
+  beforeEach(() => window.history.replaceState(null, '', '/watch?v=abc'));
+
+  it('abrir cria uma entrada no histórico; trocar de categoria ou aba só a substitui', async () => {
+    const before = window.history.length;
+    await open({ initialFilter: 'prog' });
+    expect(path()).toBe('/feed/subscriptions#tstb=prog');
+    expect(window.history.length).toBe(before + 1);
+
+    tab('Shorts').click();
+    expect(path()).toBe('/feed/subscriptions#tstb=prog&tab=shorts');
+    $$('[aria-pressed]').find((node) => node.textContent.includes('Todas')).click();
+    expect(path()).toBe('/feed/subscriptions#tstb=all');
+    expect(window.history.length).toBe(before + 1);
+  });
+
+  it('a aba inicial vem das opções, como numa URL com tab', async () => {
+    await open({ initialFilter: 'prog', initialTab: 'channels' });
+    expect(tab('Canais').getAttribute('aria-selected')).toBe('true');
+    expect(path()).toBe('/feed/subscriptions#tstb=prog&tab=channels');
+  });
+
+  it('uma categoria que não existe mais cai em Todas e corrige a URL', async () => {
+    await open({ initialFilter: 'apagada' });
+    expect(path()).toBe('/feed/subscriptions#tstb=all');
+  });
+});

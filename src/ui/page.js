@@ -17,6 +17,7 @@ import { preserveFocus } from './focus.js';
 import { renderPage, SLOTS } from './render.js';
 import { describeError } from '../i18n/errors.js';
 import { plural, t } from '../i18n/i18n.js';
+import { routeFromUrl, urlForView } from './categoryRoute.js';
 import { FILTER_ALL, pruneSelection, resolveFilter, SORT_NAME, visibleChannels } from './view.js';
 
 export const PAGE_ID = 'tstb-page';
@@ -38,10 +39,44 @@ export async function openCategoriesPage(options) {
   // The previous page is only hidden (not destroyed), so a video would keep playing.
   document.querySelector('video')?.pause();
   await reload(page, context);
+  startAutoSync(page, context);
+  return page;
+}
+
+function startAutoSync(page, context) {
+  if (!context.sync) return;
   // Also follows a sync already in progress (started by another instance of the page), to show
   // "Syncing…" instead of offering another one.
-  if (context.sync && (context.sync.isRunning() || needsSync(context.state, context.now()))) runSync(page, context);
-  return page;
+  if (context.sync.isRunning()) return runSync(page, context);
+  if (!needsSync(context.state, context.now())) return;
+  if (isHidden()) onceVisible(() => syncIfStillNeeded(page, context));
+  else runSync(page, context);
+}
+
+// A Categories URL opens the page without a click: a restored browser session may open several
+// such tabs at once, and each would start a full sync of dozens of authenticated requests. Tabs in
+// the background wait until the user actually looks at them.
+const isHidden = () => document.visibilityState === 'hidden';
+
+function onceVisible(run) {
+  const onChange = () => {
+    if (isHidden()) return;
+    document.removeEventListener('visibilitychange', onChange);
+    run();
+  };
+  document.addEventListener('visibilitychange', onChange);
+}
+
+async function syncIfStillNeeded(page, context) {
+  // By the time a background tab is looked at, the page may be gone or another tab may have
+  // synced: storage, not the state read at opening, decides.
+  if (!page.isConnected) return;
+  const state = await context.store.load();
+  if (page.isConnected && needsSync(state, context.now())) runSync(page, context);
+}
+
+export function isCategoriesPageOpen() {
+  return Boolean(document.getElementById(PAGE_ID));
 }
 
 export function closeCategoriesPage() {
@@ -129,9 +164,22 @@ function render(page, context) {
   const now = context.now();
   const env = { now, cardCache: context.cardCache, feed: feedEnvFor(context, now) };
   const parts = renderPage(context.state, context.view, createActions(page, context), env);
-  markActiveSidebarCategory(context.state.categories.some((category) => category.id === context.view.filter) ? context.view.filter : null);
+  const isCategory = context.state.categories.some((category) => category.id === context.view.filter);
+  markActiveSidebarCategory(isCategory ? context.view.filter : null);
+  updateUrl(context.view, isCategory);
   preserveFocus(page, () => fillSlots(page, parts));
   closeCategoryMenuIfDetached();
+}
+
+function updateUrl(view, isCategory) {
+  // Tabs only exist inside a category; "All" and "No category" keep a single URL each.
+  const href = urlForView({ filter: view.filter, tab: isCategory ? view.tab : FEED_TAB.VIDEOS }, window.location.href);
+  if (href === window.location.href) return;
+  // Opening the page is a new history entry, so Back returns to the YouTube page underneath.
+  // Switching category or tab inside it replaces the entry: Back leaves the page instead of
+  // walking through every category visited.
+  if (routeFromUrl(window.location.href)) window.history.replaceState(window.history.state, '', href);
+  else window.history.pushState(null, '', href);
 }
 
 function fillSlots(page, parts) {
