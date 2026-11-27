@@ -26,7 +26,7 @@ tab that stays open keeps running the old script.
 
 ## Guidelines
 
-- **Small, readable functions.** Aim for 20 lines at most, with a single responsibility.
+- **Small, readable functions.** Aim for 25 lines at most, with a single responsibility.
 - **Comments explain why, not what.** The code says what it does; comments record the decision behind it
   (a YouTube quirk, a browser limitation, a UX trade-off). Write them in English.
 - **Keep YouTube selectors in one place.** All DOM selectors live in `src/dom/selectors.js`, so a YouTube

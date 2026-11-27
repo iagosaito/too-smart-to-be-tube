@@ -34,7 +34,7 @@ navigation, URLs and history, or how the feed loads and scrolls.
 
 ## Code
 
-- **Small functions: aim for 20 lines at most.** One responsibility each. When a function grows past that,
+- **Small functions: aim for 25 lines at most.** One responsibility each. When a function grows past that,
   extract the steps into well-named helpers. When you touch an existing longer function, split it as part of
   the change if that stays readable.
 - **Comments explain why, never how.** The code already says what it does and how. A comment records the

@@ -41,7 +41,7 @@ purpose: judge the code as it is.
      content scripts, a single purpose, user data kept local.
 3. **Quality.**
    - CONTRIBUTING's rules:
-     - functions of 20 lines at most;
+     - functions of 25 lines at most;
      - comments that explain why rather than how (flag comments that only narrate the code);
      - YouTube selectors only in `src/dom/selectors.js`;
      - pure logic without DOM or `chrome.*`.
