@@ -7,6 +7,10 @@
 
 **Organize your YouTube subscriptions into categories, right inside YouTube.**
 
+**[See it in action → iagosaito.github.io/too-smart-to-be-tube](https://iagosaito.github.io/too-smart-to-be-tube/)**
+
+[![The extension inside YouTube: a category opened as a feed of the newest videos from its channels, with the categories in YouTube's sidebar.](site/assets/feed-videos.webp)](https://iagosaito.github.io/too-smart-to-be-tube/)
+
 Too Smart To Be Tube is a Chrome extension that adds a **Categories** entry to YouTube's sidebar. It opens a page
 that looks and feels like part of YouTube, where you group the channels you follow (Programming, Music, Travel,
 Recipes…), find them by name, and see which ones posted most recently.
