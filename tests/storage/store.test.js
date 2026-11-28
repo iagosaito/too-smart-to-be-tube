@@ -14,7 +14,7 @@ describe('request queue limits', () => {
 describe('createStore', () => {
   it('returns the default state when storage is empty', async () => {
     const store = createStore(createFakeStorageArea());
-    expect(await store.load()).toEqual({ channels: {}, categories: [], lastSyncedAt: null, latestUploads: {}, uploadsSyncedAt: null, preferences: {}, feedItems: [], feedSyncedAt: null, feedAttemptedAt: null });
+    expect(await store.load()).toEqual({ channels: {}, categories: [], lastSyncedAt: null, latestUploads: {}, uploadsSyncedAt: null, preferences: {}, feedItems: [], feedSyncedAt: null });
   });
 
   it('saves and reloads categories', async () => {
