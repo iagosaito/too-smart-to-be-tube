@@ -28,7 +28,8 @@ export default [
     languageOptions: { ecmaVersion: 'latest', sourceType: 'script', globals: globals.browser },
   },
   {
-    files: ['*.js', '*.mjs'],
+    // Build script, config files and the Claude Code hooks run in Node.
+    files: ['*.js', '*.mjs', '.claude/**/*.mjs'],
     languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.node },
   },
   {
