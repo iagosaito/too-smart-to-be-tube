@@ -5,6 +5,6 @@ export function seededStorage() {
   return {
     channels: { '/@alura': { id: '/@alura', name: 'Alura', url: 'https://www.youtube.com/@alura', avatar: '' } },
     categories: [{ id: 'prog', name: 'Programming', channelIds: ['/@alura'] }],
-    lastSyncedAt: now, uploadsSyncedAt: now, feedSyncedAt: now, feedAttemptedAt: now, feedItems: [],
+    lastSyncedAt: now, uploadsSyncedAt: now, feedSyncedAt: now, feedItems: [],
   };
 }

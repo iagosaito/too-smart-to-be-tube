@@ -1,6 +1,6 @@
 import { mergeChannels } from '../core/channels.js';
 
-const KEYS = ['channels', 'categories', 'lastSyncedAt', 'latestUploads', 'uploadsSyncedAt', 'preferences', 'feedItems', 'feedSyncedAt', 'feedAttemptedAt'];
+const KEYS = ['channels', 'categories', 'lastSyncedAt', 'latestUploads', 'uploadsSyncedAt', 'preferences', 'feedItems', 'feedSyncedAt'];
 // The newest videos from the subscriptions feed (~150 bytes each): enough for several weeks of
 // per-category feed without weighing on storage.
 export const MAX_FEED_ITEMS = 800;
@@ -22,9 +22,6 @@ export function createStore(area) {
     saveUploads: (uploads, now = Date.now()) => saveMergedUploads(area, uploads, now),
     savePreferences: (changes) => saveMergedPreferences(area, changes),
     saveFeed: (items, now = Date.now()) => area.set({ feedItems: items.slice(0, MAX_FEED_ITEMS), feedSyncedAt: now }),
-    // Written on every attempt to read the feed, even on failure: otherwise a persistent failure
-    // would make every page open sync again.
-    markFeedAttempt: (now = Date.now()) => area.set({ feedAttemptedAt: now }),
     channelTabStorage: createChannelTabStorage(area),
     loadRequestBudget: async () => (await area.get([REQUEST_BUDGET_KEY]))[REQUEST_BUDGET_KEY] ?? null,
     saveRequestBudget: (budget) => area.set({ [REQUEST_BUDGET_KEY]: budget }),
@@ -57,7 +54,6 @@ async function loadState(area) {
     preferences: data.preferences ?? {},
     feedItems: data.feedItems ?? [],
     feedSyncedAt: data.feedSyncedAt ?? null,
-    feedAttemptedAt: data.feedAttemptedAt ?? null,
   };
 }
 

@@ -86,13 +86,10 @@ export function closeCategoriesPage() {
   document.documentElement.classList.remove(OPEN_CLASS);
 }
 
+// A fresh install has never synced, so it counts as stale. A failed feed read waits for the next
+// regular sync: retrying on every open would repeat ~100 requests.
 function needsSync(state, now) {
-  // Null fields: someone who already used the extension doesn't have the dates or the feed yet (nor
-  // the channels' ucid), so it syncs right away instead of waiting for the next full hour. If the
-  // feed was already attempted and failed, it waits for the next regular sync: retrying on every
-  // open would repeat ~100 requests.
-  const feedMissing = state.uploadsSyncedAt == null || state.feedSyncedAt == null;
-  return isStale(state.lastSyncedAt, now) || (feedMissing && state.feedAttemptedAt == null);
+  return isStale(state.lastSyncedAt, now);
 }
 
 function syncCooldownLeft(context) {

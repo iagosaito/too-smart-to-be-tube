@@ -501,6 +501,18 @@ describe('sync', () => {
     expect($('.tstb-subtitle').textContent).toBe('3 inscrições · Sincronizado agora');
   });
 
+  it('syncs automatically on a fresh install, which has never synced', async () => {
+    const sync = vi.fn(async () => 3);
+    await open({ store: createStore(createFakeStorageArea()), sync, now: () => 1_000 });
+    expect(sync).toHaveBeenCalledOnce();
+  });
+
+  it('waits for the next regular sync when a recent one could not read the feed', async () => {
+    const sync = vi.fn(async () => 3);
+    await open({ store: createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: 1_000 })), sync, now: () => 2_000 });
+    expect(sync).not.toHaveBeenCalled();
+  });
+
   it('in a background tab, the automatic sync waits for the tab to become visible', async () => {
     // Opening from a URL needs no click: a restored browser session may open several Categories
     // tabs at once, and each would start a full sync of dozens of authenticated requests.
@@ -731,12 +743,6 @@ describe('sort by latest video', () => {
     await open({ store: withUploads({ preferences: { sortBy: 'recent' } }), now: () => NOW });
     expect(sortSelect().value).toBe('recent');
     expect(cardNames()[0]).toBe('<img src=x onerror=alert(1)>');
-  });
-
-  it("syncs right away for someone who doesn't have video dates yet", async () => {
-    const sync = vi.fn(async () => 3);
-    await open({ store: withUploads({ uploadsSyncedAt: undefined }), sync, now: () => NOW });
-    expect(sync).toHaveBeenCalledOnce();
   });
 });
 
