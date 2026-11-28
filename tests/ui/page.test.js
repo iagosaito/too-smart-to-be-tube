@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { closeCategoriesPage, isStale, OPEN_CLASS, openCategoriesPage, PAGE_ID } from '../../src/ui/page.js';
+import { closeCategoriesPage, OPEN_CLASS, openCategoriesPage, PAGE_ID } from '../../src/ui/page.js';
 import { createStore } from '../../src/storage/store.js';
 import { closeCategoryMenu, MENU_ID } from '../../src/ui/components/categoryMenu.js';
 import { TOAST_ID } from '../../src/ui/components/feedback.js';
@@ -12,7 +12,8 @@ const channels = {
   '/@xss': { id: '/@xss', name: '<img src=x onerror=alert(1)>', url: 'https://www.youtube.com/@xss', avatar: '' },
 };
 const categories = [{ id: 'tech', name: 'Tech', channelIds: ['/@alura'] }];
-const HOUR = 60 * 60 * 1000;
+const MINUTE = 60 * 1000;
+const HOUR = 60 * MINUTE;
 
 let area;
 let store;
@@ -493,77 +494,164 @@ describe('the selection only holds what is on screen', () => {
 });
 
 describe('sync', () => {
-  it('syncs automatically when the last sync is old', async () => {
-    const sync = vi.fn(async () => store.replaceChannels(Object.values(channels), 2 * HOUR));
-    await open({ sync, now: () => 1_000 + 2 * HOUR });
+  // The automatic refresh, as main.js passes it: it records its own check in storage, like
+  // store.claimFeedRefresh does before fetching.
+  let clock;
+  const refreshing = (target = store) => vi.fn(async () => {
+    await target.claimFeedRefresh(() => true, clock);
+  });
+  const openWithRefresh = (refresh, options = {}) =>
+    openCategoriesPage({ store, now: () => clock, searchDelay: 0, sync: createSyncCoordinator(vi.fn(async () => 0), { refresh, now: () => clock, cooldownMs: 0 }), ...options });
+  const setVisibility = (state) => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+    document.dispatchEvent(new Event('visibilitychange'));
+  };
+
+  beforeEach(() => {
+    clock = 1_000;
+  });
+  afterEach(() => {
+    closeCategoriesPage();
+    delete document.visibilityState;
+    vi.useRealTimers();
+  });
+
+  it('refreshes on opening when the feed was never checked, without the full sync', async () => {
+    const refresh = refreshing();
+    await openWithRefresh(refresh);
     await flush();
-    expect(sync).toHaveBeenCalledOnce();
-    expect($('.tstb-subtitle').textContent).toBe('3 inscrições · Sincronizado agora');
+    expect(refresh).toHaveBeenCalledOnce();
   });
 
-  it('syncs automatically on a fresh install, which has never synced', async () => {
-    const sync = vi.fn(async () => 3);
-    await open({ store: createStore(createFakeStorageArea()), sync, now: () => 1_000 });
-    expect(sync).toHaveBeenCalledOnce();
+  it("doesn't refresh on opening within 5 minutes of the last check", async () => {
+    await store.claimFeedRefresh(() => true, 1_000);
+    clock = 1_000 + 4 * MINUTE;
+    const refresh = refreshing();
+    await openWithRefresh(refresh);
+    await flush();
+    expect(refresh).not.toHaveBeenCalled();
   });
 
-  it('waits for the next regular sync when a recent one could not read the feed', async () => {
-    const sync = vi.fn(async () => 3);
-    await open({ store: createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: 1_000 })), sync, now: () => 2_000 });
-    expect(sync).not.toHaveBeenCalled();
+  it('switching category refreshes only after 5 minutes', async () => {
+    const refresh = refreshing();
+    await openWithRefresh(refresh);
+    await flush();
+    chip('Tech').click();
+    await flush();
+    expect(refresh).toHaveBeenCalledOnce();
+
+    clock += 5 * MINUTE;
+    chip('Todas').click();
+    await flush();
+    expect(refresh).toHaveBeenCalledTimes(2);
   });
 
-  it('in a background tab, the automatic sync waits for the tab to become visible', async () => {
+  it('refreshes every 5 minutes while the page stays open', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    const refresh = refreshing();
+    await openWithRefresh(refresh);
+    await flush();
+    clock += 5 * MINUTE;
+    vi.advanceTimersByTime(5 * MINUTE);
+    await flush();
+    expect(refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it('a hidden tab waits; coming back after 5 minutes refreshes at once, sooner does not', async () => {
     // Opening from a URL needs no click: a restored browser session may open several Categories
-    // tabs at once, and each would start a full sync of dozens of authenticated requests.
-    let visibility = 'hidden';
-    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
-    try {
-      const sync = vi.fn(async () => store.replaceChannels(Object.values(channels), 2 * HOUR));
-      await open({ sync, now: () => 1_000 + 2 * HOUR });
-      await flush();
-      expect(sync).not.toHaveBeenCalled();
+    // tabs at once, and each would start fetching.
+    setVisibility('hidden');
+    const refresh = refreshing();
+    await openWithRefresh(refresh);
+    await flush();
+    expect(refresh).not.toHaveBeenCalled();
 
-      visibility = 'visible';
-      document.dispatchEvent(new Event('visibilitychange'));
-      document.dispatchEvent(new Event('visibilitychange'));
-      await flush();
-      expect(sync).toHaveBeenCalledOnce();
-    } finally {
-      delete document.visibilityState;
-    }
+    setVisibility('visible');
+    await flush();
+    expect(refresh).toHaveBeenCalledOnce();
+
+    clock += MINUTE;
+    setVisibility('hidden');
+    setVisibility('visible');
+    await flush();
+    expect(refresh).toHaveBeenCalledOnce();
+
+    clock += 5 * MINUTE;
+    setVisibility('hidden');
+    setVisibility('visible');
+    await flush();
+    expect(refresh).toHaveBeenCalledTimes(2);
   });
 
-  it("if another tab synced while this one was in the background, doesn't sync again", async () => {
-    let visibility = 'hidden';
-    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
-    try {
-      const sync = vi.fn(async () => {});
-      await open({ sync, now: () => 1_000 + 2 * HOUR });
-      await store.replaceChannels(Object.values(channels), 1_000 + 2 * HOUR);
-      visibility = 'visible';
-      document.dispatchEvent(new Event('visibilitychange'));
-      await flush();
-      expect(sync).not.toHaveBeenCalled();
-    } finally {
-      delete document.visibilityState;
-    }
+  it("if another tab refreshed while this one was hidden, doesn't refresh again", async () => {
+    setVisibility('hidden');
+    const refresh = refreshing();
+    await openWithRefresh(refresh);
+    await store.claimFeedRefresh(() => true, clock);
+    setVisibility('visible');
+    await flush();
+    expect(refresh).not.toHaveBeenCalled();
   });
 
-  it("a page closed in the background doesn't sync when the tab becomes visible", async () => {
-    let visibility = 'hidden';
-    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
-    try {
-      const sync = vi.fn(async () => {});
-      await open({ sync, now: () => 1_000 + 2 * HOUR });
-      closeCategoriesPage();
-      visibility = 'visible';
-      document.dispatchEvent(new Event('visibilitychange'));
-      await flush();
-      expect(sync).not.toHaveBeenCalled();
-    } finally {
-      delete document.visibilityState;
+  // Regression: the timer started before the first refresh recorded its check, so at the 5-minute
+  // tick the check was a moment short of 5 minutes old and wasn't due. The next refresh only came
+  // at 10 minutes.
+  it('refreshes about 5 minutes after the last check, even when the check came a moment after opening', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] });
+    const refresh = vi.fn(async () => {
+      await store.claimFeedRefresh(() => true, clock + 1_000);
+    });
+    await openWithRefresh(refresh);
+    await vi.advanceTimersByTimeAsync(0);
+    for (let step = 0; step < 12; step += 1) {
+      clock += 30_000;
+      await vi.advanceTimersByTimeAsync(30_000);
     }
+    expect(refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it('closing the page removes the timer and the visibility listener', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    setVisibility('hidden');
+    const refresh = refreshing();
+    await openWithRefresh(refresh);
+    closeCategoriesPage();
+    clock += 10 * MINUTE;
+    vi.advanceTimersByTime(10 * MINUTE);
+    setVisibility('visible');
+    await flush();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it('the feed-only refresh is silent; "Sincronizando…" shows only when the list is due', async () => {
+    let finish;
+    const refresh = vi.fn(() => new Promise((resolve) => (finish = resolve)));
+    await openWithRefresh(refresh);
+    await flush();
+    expect(button('Sincronizar').disabled).toBe(false);
+    finish();
+    await flush();
+    closeCategoriesPage();
+
+    await openWithRefresh(refresh, { store: createStore(createFakeStorageArea()) });
+    await flush();
+    expect(button('Sincronizando…')).toBeDefined();
+    finish();
+    await flush();
+  });
+
+  it('a list already synced today is not due; a day-old one is', async () => {
+    const refresh = vi.fn(async () => {});
+    clock = 1_000 + 23 * HOUR;
+    await openWithRefresh(refresh, { store: createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: 1_000, feedCheckedAt: clock })) });
+    await flush();
+    expect(refresh).not.toHaveBeenCalled();
+    closeCategoriesPage();
+
+    clock = 1_000 + 25 * HOUR;
+    await openWithRefresh(refresh, { store: createStore(createFakeStorageArea({ channels, categories, lastSyncedAt: 1_000, feedCheckedAt: clock })) });
+    await flush();
+    expect(refresh).toHaveBeenCalledOnce();
   });
 
   it('shows "Sincronizando…" and disables the button while it runs', async () => {
@@ -780,13 +868,5 @@ describe('interval between syncs', () => {
     await flush();
     expect(run).toHaveBeenCalledOnce();
     expect(button('Sincronizar').disabled).toBe(false);
-  });
-});
-
-describe('isStale', () => {
-  it('considers it stale without a sync or after one hour', () => {
-    expect(isStale(null, 0)).toBe(true);
-    expect(isStale(0, HOUR + 1)).toBe(true);
-    expect(isStale(0, HOUR)).toBe(false);
   });
 });

@@ -14,7 +14,7 @@ describe('request queue limits', () => {
 describe('createStore', () => {
   it('returns the default state when storage is empty', async () => {
     const store = createStore(createFakeStorageArea());
-    expect(await store.load()).toEqual({ channels: {}, categories: [], lastSyncedAt: null, latestUploads: {}, uploadsSyncedAt: null, preferences: {}, feedItems: [], feedSyncedAt: null });
+    expect(await store.load()).toEqual({ channels: {}, categories: [], lastSyncedAt: null, latestUploads: {}, uploadsSyncedAt: null, preferences: {}, feedItems: [], feedSyncedAt: null, feedCheckedAt: null, listCheckedAt: null });
   });
 
   it('saves and reloads categories', async () => {
@@ -69,6 +69,37 @@ describe('createStore', () => {
     expect(state.feedItems).toHaveLength(800);
     expect(state.feedItems[0].videoId).toBe('v0');
     expect(state.feedSyncedAt).toBe(77);
+  });
+
+  it('mergeFeed merges onto what is stored when it writes, keeping a write from another tab', async () => {
+    const area = createFakeStorageArea({ feedItems: [{ videoId: 'a', publishedAt: 10 }] });
+    const store = createStore(area);
+    const loadedEarlier = await store.load();
+    // Another tab writes after this one loaded.
+    await createStore(area).mergeFeed([{ videoId: 'b', publishedAt: 20 }], 5);
+    await store.mergeFeed([{ videoId: 'c', publishedAt: 30 }], 6);
+    const state = await store.load();
+    expect(loadedEarlier.feedItems).toHaveLength(1);
+    expect(state.feedItems.map((video) => video.videoId)).toEqual(['c', 'b', 'a']);
+    expect(state.feedSyncedAt).toBe(6);
+  });
+
+  it("the feed refresh doesn't touch the subscriptions list date", async () => {
+    const store = createStore(createFakeStorageArea({ lastSyncedAt: 1 }));
+    await store.claimFeedRefresh(() => true, 9);
+    await store.mergeFeed([{ videoId: 'a', publishedAt: 1 }], 9);
+    expect((await store.load()).lastSyncedAt).toBe(1);
+  });
+
+  it('a claim records the attempt only when due, read from storage at that moment', async () => {
+    const area = createFakeStorageArea();
+    const store = createStore(area);
+    const isDue = (state, now) => state.feedCheckedAt == null || now - state.feedCheckedAt >= 10;
+    expect(await store.claimFeedRefresh(isDue, 100)).toBe(true);
+    expect(await createStore(area).claimFeedRefresh(isDue, 105)).toBe(false);
+    expect(await store.claimFeedRefresh(isDue, 110)).toBe(true);
+    expect(await store.claimListSync(() => true, 120)).toBe(true);
+    expect(area.dump()).toMatchObject({ feedCheckedAt: 110, listCheckedAt: 120 });
   });
 
   it('stores the channel tab cache in one key per channel and tab, plus an index', async () => {

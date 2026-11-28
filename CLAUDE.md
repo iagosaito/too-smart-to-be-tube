@@ -111,8 +111,10 @@ When in doubt, read the current page: it wins over this summary. In this project
   - Channel tabs are public and fetched logged out (`credentials: 'omit'`), through the request queue. The
     queue allows 2 concurrent requests, 350 ms between starts, 60 per 10 min, and a 10 min pause on a 429, all
     shared across tabs through storage.
-  - Authenticated requests (the subscriptions list and feed) only happen in a sync. A sync runs on opening the
-    page when the last one is over 1 h old, in a visible tab only, or from the Sync button (60 s cooldown).
+  - Authenticated requests (the subscriptions list and feed) only happen while the Categories page is open in a
+    visible tab, or from the Sync button (60 s cooldown). The feed refreshes at most every 5 min, stopping at
+    the first page with a stored video; the list once a day or when the feed shows an unknown channel
+    (`src/sync/syncSchedule.js`). A 429 on either sets the same shared 10 min pause.
 - **Cross-tab:** several YouTube tabs share `chrome.storage.local`. Read right before writing and merge;
   never write back a whole object loaded earlier. Keep `storage.onChanged` payloads small (one key per channel
   and tab for the feed cache).

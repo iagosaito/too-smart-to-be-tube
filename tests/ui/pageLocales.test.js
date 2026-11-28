@@ -37,7 +37,7 @@ async function openIn(lang) {
     channels,
     categories,
     lastSyncedAt: NOW - 5 * 60_000,
-    uploadsSyncedAt: NOW, feedSyncedAt: NOW,
+    uploadsSyncedAt: NOW, feedSyncedAt: NOW - 5 * 60_000,
     latestUploads: { '/@bossa': NOW - 2 * DAY },
   });
   await openCategoriesPage({ store: createStore(area), sync: createSyncCoordinator(vi.fn(), { cooldownMs: 0 }), download, now: () => NOW });

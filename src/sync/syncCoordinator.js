@@ -5,26 +5,36 @@
 // - a minimum interval after a successful sync, so repeated clicks don't turn into request bursts
 //   (rate-limit risk).
 // Failures don't start the interval: retrying right away is what's expected.
+//
+// The automatic refresh goes through the same gate (never in parallel with a sync) but has no
+// cooldown of its own: its pace is decided by the timestamps in storage, shared by every tab.
 export const SYNC_COOLDOWN_MS = 60_000;
 
-export function createSyncCoordinator(run, { now = Date.now, cooldownMs = SYNC_COOLDOWN_MS } = {}) {
+export function createSyncCoordinator(run, { refresh = async () => null, now = Date.now, cooldownMs = SYNC_COOLDOWN_MS } = {}) {
   let inflight = null;
+  let inflightKind = null;
   let lastSuccessAt = null;
   const availableAt = () => (lastSuccessAt == null ? 0 : lastSuccessAt + cooldownMs);
 
-  function sync() {
-    if (inflight) return inflight;
-    if (now() < availableAt()) return Promise.resolve(null);
-    inflight = run()
-      .then((result) => {
-        lastSuccessAt = now();
-        return result;
-      })
-      .finally(() => {
-        inflight = null;
-      });
+  function start(kind, task) {
+    inflightKind = kind;
+    inflight = task().finally(() => {
+      inflight = null;
+      inflightKind = null;
+    });
     return inflight;
   }
 
-  return { sync, isRunning: () => inflight !== null, availableAt };
+  function sync() {
+    // A click during an automatic refresh still wants the full sync: it runs right after.
+    if (inflightKind === 'refresh') return inflight.catch(() => null).then(sync);
+    if (inflight) return inflight;
+    if (now() < availableAt()) return Promise.resolve(null);
+    return start('sync', () => run().then((result) => {
+      lastSuccessAt = now();
+      return result;
+    }));
+  }
+
+  return { sync, refresh: () => inflight ?? start('refresh', refresh), isRunning: () => inflight !== null, availableAt };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fetchLatestUploads, latestByChannel, parseFeedPage, parseRelativeTime } from '../../src/youtube/recentUploads.js';
+import { fetchLatestUploads, fetchSubscriptionFeed, latestByChannel, parseFeedPage, parseRelativeTime } from '../../src/youtube/recentUploads.js';
 import { channelsPageHtml, continuationItem, continuationResponse } from '../helpers/innertubeFixtures.js';
 
 const NOW = 1_000_000_000_000;
@@ -138,6 +138,44 @@ describe('fetchLatestUploads', () => {
     expect(uploads).toEqual({ '/@a': NOW - DAY, '/@b': NOW - 14 * DAY });
     expect(fetchFn.mock.calls[0][0]).toBe('https://www.youtube.com/feed/subscriptions?hl=en');
     expect(JSON.parse(fetchFn.mock.calls[1][1].body).context.client.hl).toBe('en');
+  });
+
+  it('with stored videos, stops at the first page that holds one of them', async () => {
+    const known = videoRenderer('a', '3 days ago');
+    const firstHtml = channelsPageHtml({ contents: [videoRenderer('a', '1 hour ago'), continuationItem('T1')] });
+    const fetchFn = vi.fn()
+      .mockResolvedValueOnce(textResponse(firstHtml))
+      .mockResolvedValueOnce(jsonResponse(continuationResponse([videoRenderer('b', '1 day ago'), known, continuationItem('T2')])));
+
+    const videos = await fetchSubscriptionFeed({ fetchFn, cookie: 'SAPISID=abc', now: NOW, knownIds: new Set([known.videoRenderer.videoId]) });
+
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(videos).toHaveLength(3);
+  });
+
+  it('when the first page already holds a stored video, makes a single request', async () => {
+    const known = videoRenderer('a', '3 days ago');
+    const firstHtml = channelsPageHtml({ contents: [videoRenderer('a', '1 hour ago'), known, continuationItem('T1')] });
+    const fetchFn = vi.fn().mockResolvedValueOnce(textResponse(firstHtml));
+    await fetchSubscriptionFeed({ fetchFn, cookie: '', now: NOW, knownIds: new Set([known.videoRenderer.videoId]) });
+    expect(fetchFn).toHaveBeenCalledOnce();
+  });
+
+  it('without stored videos, follows the continuations up to the limit', async () => {
+    const firstHtml = channelsPageHtml({ contents: [videoRenderer('a', '1 hour ago'), continuationItem('T0')] });
+    let page = 0;
+    const fetchFn = vi.fn(async () => {
+      if (fetchFn.mock.calls.length === 1) return textResponse(firstHtml);
+      page += 1;
+      return jsonResponse(continuationResponse([videoRenderer('a', `${page} days ago`), continuationItem(`T${page}`)]));
+    });
+    await fetchSubscriptionFeed({ fetchFn, cookie: 'SAPISID=abc', now: NOW });
+    expect(fetchFn).toHaveBeenCalledTimes(16);
+  });
+
+  it('an HTTP error on the first page keeps its status (a 429 must pause)', async () => {
+    const fetchFn = vi.fn().mockResolvedValue({ ok: false, status: 429, text: async () => '' });
+    await expect(fetchSubscriptionFeed({ fetchFn, cookie: '' })).rejects.toMatchObject({ key: 'error.http', params: { status: 429 } });
   });
 
   it("fails with a clear message when the feed can't be read", async () => {

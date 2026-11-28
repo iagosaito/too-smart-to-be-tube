@@ -50,6 +50,34 @@ describe('createSyncCoordinator', () => {
     await expect(coordinator.sync()).resolves.toBe('ok');
   });
 
+  it("an automatic refresh shares a running sync and doesn't start the cooldown", async () => {
+    const pending = deferred();
+    const run = vi.fn(() => pending.promise);
+    const refresh = vi.fn(async () => 'refreshed');
+    const coordinator = createSyncCoordinator(run, { refresh, now: () => 1_000 });
+    const syncing = coordinator.sync();
+    expect(coordinator.refresh()).toBe(syncing);
+    pending.resolve('ok');
+    await syncing;
+    expect(refresh).not.toHaveBeenCalled();
+
+    const fresh = createSyncCoordinator(run, { refresh, now: () => 1_000 });
+    await fresh.refresh();
+    expect(fresh.availableAt()).toBe(0);
+  });
+
+  it('a Sync click during an automatic refresh runs the full sync right after it', async () => {
+    const pending = deferred();
+    const run = vi.fn(async () => 'full');
+    const coordinator = createSyncCoordinator(run, { refresh: () => pending.promise, now: () => 1_000 });
+    coordinator.refresh();
+    const clicked = coordinator.sync();
+    expect(run).not.toHaveBeenCalled();
+    pending.resolve();
+    await expect(clicked).resolves.toBe('full');
+    expect(run).toHaveBeenCalledOnce();
+  });
+
   it('the default interval is 1 minute', () => {
     expect(SYNC_COOLDOWN_MS).toBe(60_000);
   });

@@ -22,7 +22,7 @@ function renderSubtitle(state, view, now) {
   if (view.syncError) {
     return el('p', { className: 'tstb-subtitle tstb-error', role: 'alert' }, `${total} · ${t('header.syncFailed', { error: view.syncError })}`);
   }
-  const info = view.syncing ? t('header.syncing') : formatSyncInfo(state.lastSyncedAt, now);
+  const info = view.syncing ? t('header.syncing') : formatSyncInfo(lastFetchedAt(state), now);
   return el('p', { className: 'tstb-subtitle', role: 'status' }, `${total} · ${info}`);
 }
 
@@ -75,4 +75,10 @@ function renderImportButton(hasChannels, actions) {
     { type: 'button', className: 'tstb-button', disabled: !hasChannels, onClick: actions.importCsv },
     [svgIcon(ICONS.upload), t('header.import')],
   );
+}
+
+// The feed refresh is what brings new videos, so it counts as a sync for the user.
+function lastFetchedAt({ lastSyncedAt, feedSyncedAt }) {
+  if (lastSyncedAt == null) return feedSyncedAt ?? null;
+  return Math.max(lastSyncedAt, feedSyncedAt ?? 0);
 }

@@ -12,19 +12,32 @@ const FEED_URL = `${YOUTUBE_ORIGIN}/feed/subscriptions?hl=en`;
 // The feed covers a few weeks; more pages than this would bring little and cost requests.
 const MAX_PAGES = 15;
 
-export async function fetchSubscriptionFeed({ fetchFn = fetch, cookie = document.cookie, now = Date.now() } = {}) {
+// With knownIds (the videos already stored), the fetch stops at the first page that holds one of
+// them: everything newer is on the pages already read, so going deeper would only bring videos we
+// have. Usually that is the first page. Without knownIds it walks to the limit (first install, Sync
+// button).
+export async function fetchSubscriptionFeed({ fetchFn = fetch, cookie = document.cookie, now = Date.now(), knownIds = new Set() } = {}) {
   const { config, data } = await fetchFirstPage(fetchFn, FEED_URL);
   if (!data) throw new LocalizedError('error.feedUnavailable');
   const videos = videosFromPage(data, now);
-  let token = continuationToken(data);
-  for (let page = 0; token && page < MAX_PAGES; page += 1) {
-    const next = await fetchContinuation(fetchFn, config, token, cookie, { hl: 'en' });
-    videos.push(...videosFromPage(next, now));
-    token = continuationToken(next);
-  }
+  const next = (token) => fetchContinuation(fetchFn, config, token, cookie, { hl: 'en' });
+  if (!reachesKnown(videos, knownIds)) await followContinuations(continuationToken(data), next, videos, { now, knownIds });
   // Newest first: the order in which the per-category feed shows them.
   return [...new Map(videos.map((video) => [video.videoId, video])).values()].sort((a, b) => b.publishedAt - a.publishedAt);
 }
+
+async function followContinuations(firstToken, next, videos, { now, knownIds }) {
+  let token = firstToken;
+  for (let page = 0; token && page < MAX_PAGES; page += 1) {
+    const data = await next(token);
+    const pageVideos = videosFromPage(data, now);
+    videos.push(...pageVideos);
+    if (reachesKnown(pageVideos, knownIds)) return;
+    token = continuationToken(data);
+  }
+}
+
+const reachesKnown = (videos, knownIds) => videos.some((video) => knownIds.has(video.videoId));
 
 export async function fetchLatestUploads(options) {
   return latestByChannel(await fetchSubscriptionFeed(options));
