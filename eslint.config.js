@@ -23,6 +23,11 @@ export default [
     },
   },
   {
+    // Injected by the e2e harness as text into youtube.com: a classic script in the page.
+    files: ['tests/e2e/youtube/injected.js'],
+    languageOptions: { sourceType: 'script', globals: globals.browser },
+  },
+  {
     // Landing page: classic script (no imports) running in the browser.
     files: ['site/**/*.js'],
     languageOptions: { ecmaVersion: 'latest', sourceType: 'script', globals: globals.browser },

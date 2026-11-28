@@ -82,71 +82,23 @@ function readState() {
   };
 }
 
-// The script every youtube.com document runs before its own scripts: a fake storage that survives
-// reloads (sessionStorage, seeded once), a log of history writes, then our CSS and bundle.
+// injected.js, with the seed, CSS and bundle filled in. Function replacers, because a string
+// replacement would expand `$&` and friends found in the bundle. The bundle goes in last so that
+// nothing inside it is mistaken for a placeholder.
 function injection(repo, seed) {
-  const bundle = readFileSync(join(repo, 'dist/content.js'), 'utf8');
-  const css = readFileSync(join(repo, 'src/ui/styles.css'), 'utf8');
-  return `(() => {
-    if (!location.hostname.endsWith('youtube.com')) return;
-    const KEY = 'tstb-e2e-storage';
-    if (!sessionStorage.getItem(KEY)) sessionStorage.setItem(KEY, ${JSON.stringify(JSON.stringify(seed))});
-    const read = () => JSON.parse(sessionStorage.getItem(KEY));
-    const write = (data) => sessionStorage.setItem(KEY, JSON.stringify(data));
-    window.chrome = window.chrome || {};
-    window.chrome.runtime = { id: 'e2e' };
-    window.chrome.storage = {
-      local: {
-        get: async (keys) => {
-          const all = read();
-          const list = keys == null ? Object.keys(all) : [].concat(keys);
-          return Object.fromEntries(list.filter((key) => key in all).map((key) => [key, all[key]]));
-        },
-        set: async (items) => write({ ...read(), ...items }),
-        remove: async (keys) => {
-          const all = read();
-          for (const key of [].concat(keys)) delete all[key];
-          write(all);
-        },
-      },
-      onChanged: { addListener: () => {} },
-    };
-    window.__tstbHistory = [];
-    for (const method of ['pushState', 'replaceState']) {
-      const original = history[method].bind(history);
-      history[method] = (state, title, url) => {
-        if (url != null) window.__tstbHistory.push(method + ' ' + new URL(url, location.href).hash);
-        return original(state, title, url);
-      };
-    }
-    const start = () => {
-      const style = document.createElement('style');
-      style.textContent = ${JSON.stringify(css)};
-      document.documentElement.append(style);
-      ${bundle}
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
-    else start();
-  })();`;
+  const read = (path) => readFileSync(join(repo, path), 'utf8');
+  return read('tests/e2e/youtube/injected.js')
+    .replace('/*SEED*/null', () => JSON.stringify(seed))
+    .replace("/*CSS*/''", () => JSON.stringify(read('src/ui/styles.css')))
+    .replace('/*BUNDLE*/', () => read('dist/content.js'));
 }
 
 async function connect(port) {
   const targets = await retry(async () => (await fetch(`http://127.0.0.1:${port}/json`)).json());
-  const socket = new WebSocket(targets.find((target) => target.type === 'page').webSocketDebuggerUrl);
-  await new Promise((resolve, reject) => {
-    socket.addEventListener('open', resolve);
-    socket.addEventListener('error', reject);
-  });
+  const socket = await openSocket(targets.find((target) => target.type === 'page').webSocketDebuggerUrl);
   let nextId = 0;
   const pending = new Map();
-  socket.addEventListener('message', (event) => {
-    const message = JSON.parse(event.data);
-    if (!pending.has(message.id)) return;
-    const { resolve, reject } = pending.get(message.id);
-    pending.delete(message.id);
-    if (message.error) reject(new Error(message.error.message));
-    else resolve(message.result);
-  });
+  socket.addEventListener('message', (event) => settle(pending, JSON.parse(event.data)));
   return {
     send: (method, params = {}) => new Promise((resolve, reject) => {
       nextId += 1;
@@ -155,6 +107,23 @@ async function connect(port) {
     }),
     close: () => socket.close(),
   };
+}
+
+function openSocket(url) {
+  const socket = new WebSocket(url);
+  return new Promise((resolve, reject) => {
+    socket.addEventListener('open', () => resolve(socket));
+    socket.addEventListener('error', reject);
+  });
+}
+
+// Events carry no id; only replies to our own commands settle a pending call.
+function settle(pending, message) {
+  if (!pending.has(message.id)) return;
+  const { resolve, reject } = pending.get(message.id);
+  pending.delete(message.id);
+  if (message.error) reject(new Error(message.error.message));
+  else resolve(message.result);
 }
 
 // Chrome takes a moment to open its debugging port.
