@@ -2,7 +2,8 @@
 // (sessionStorage, seeded once), a log of history writes, then our CSS and bundle. harness.js reads this
 // file as text and fills in the placeholders, so it stays a classic script with no outside references.
 (() => {
-  if (!location.hostname.endsWith('youtube.com')) return;
+  const host = location.hostname;
+  if (host !== 'youtube.com' && !host.endsWith('.youtube.com')) return;
   const SEED = /*SEED*/null;
   const CSS = /*CSS*/'';
   const KEY = 'tstb-e2e-storage';
