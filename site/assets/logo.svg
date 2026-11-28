@@ -1,6 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- A folder (a category) holding a play button (its feed). Light folder, red play: it nods to the
-       platform it lives in without looking like its logo, a red rectangle with a white triangle. -->
-  <path d="M6 16a6 6 0 0 1 6-6h13.5a6 6 0 0 1 4.6 2.2L33 16h19a6 6 0 0 1 6 6v26a6 6 0 0 1-6 6H12a6 6 0 0 1-6-6z" fill="#f1f1f1"/>
-  <path d="M27 26.5v17.5l15-8.75z" fill="#ff0033"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff4d6d"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#g)"/>
+  <!-- Três "pastas" empilhadas: categorias. -->
+  <rect x="14" y="16" width="36" height="8" rx="4" fill="#fff" opacity=".55"/>
+  <rect x="14" y="28" width="36" height="8" rx="4" fill="#fff" opacity=".8"/>
+  <rect x="14" y="40" width="22" height="8" rx="4" fill="#fff"/>
+  <path d="M41 39.5v10l8-5z" fill="#fff"/>
 </svg>

@@ -6,14 +6,12 @@ third-party requests (fonts, analytics or CDNs), matching the extension's privac
 - Preview: open `site/index.html` in a browser.
 - Deploy: published to GitHub Pages by `.github/workflows/pages.yml` on every change to `site/` on `main`
   (https://iagosaito.github.io/too-smart-to-be-tube/). Being plain files, it also works on any static host.
-- Design: borrows YouTube's dark palette, type and shapes (a watch page with chapters, video cards, chips), because
-  the extension lives inside YouTube. It never uses YouTube's logo or name as its own.
 
 ## Screenshots
 
-The images in `assets/` are real screenshots of the built extension running on youtube.com (headless Chrome,
-logged out, with the extension's storage seeded with demo categories). Every video, thumbnail and avatar comes
-from a channel that publishes under a Creative Commons license, and the footer credits them:
+The images in `assets/` are real screenshots of the built extension running on youtube.com (dark and light theme,
+headless Chrome, logged out, with the extension's storage seeded with demo categories). Every video, thumbnail
+and avatar comes from a channel that publishes under a Creative Commons license, and the footer credits them:
 
 | Channel | License |
 | --- | --- |
