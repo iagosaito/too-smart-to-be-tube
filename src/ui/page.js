@@ -19,6 +19,7 @@ import { describeError } from '../i18n/errors.js';
 import { plural, t } from '../i18n/i18n.js';
 import { routeFromUrl, urlForView } from './categoryRoute.js';
 import { FILTER_ALL, pruneSelection, resolveFilter, SORT_NAME, visibleChannels } from './view.js';
+import { FEED_REFRESH_MS, feedRefreshDue, listSyncDue } from '../sync/syncSchedule.js';
 
 export const PAGE_ID = 'tstb-page';
 export const OPEN_CLASS = 'tstb-page-open';
@@ -27,8 +28,6 @@ export const OPEN_CLASS = 'tstb-page-open';
 const SEARCH_DELAY_MS = 150;
 // Longer than the default to give time to click "Undo".
 const UNDO_TOAST_MS = 10_000;
-// Syncing on every open would make dozens of pointless requests; once an hour is enough.
-const AUTO_SYNC_AFTER_MS = 60 * 60 * 1000;
 
 export async function openCategoriesPage(options) {
   const context = createContext(options);
@@ -39,40 +38,46 @@ export async function openCategoriesPage(options) {
   // The previous page is only hidden (not destroyed), so a video would keep playing.
   document.querySelector('video')?.pause();
   await reload(page, context);
-  startAutoSync(page, context);
+  startAutoRefresh(page, context);
   return page;
 }
 
-function startAutoSync(page, context) {
+// Nothing runs in the background: the page refreshes on its own only while it is open and the tab
+// is visible, at three moments (opening a category, every few minutes, coming back to the tab).
+// Storage decides whether a fetch is due, so other tabs' fetches count too.
+let stopAutoRefresh = () => {};
+
+function startAutoRefresh(page, context) {
   if (!context.sync) return;
+  const refresh = () => requestRefresh(page, context);
+  const timer = setInterval(refresh, FEED_REFRESH_MS);
+  const onVisibility = () => !isHidden() && refresh();
+  document.addEventListener('visibilitychange', onVisibility);
+  stopAutoRefresh = () => {
+    clearInterval(timer);
+    document.removeEventListener('visibilitychange', onVisibility);
+  };
   // Also follows a sync already in progress (started by another instance of the page), to show
-  // "Syncing…" instead of offering another one.
-  if (context.sync.isRunning()) return runSync(page, context);
-  if (!needsSync(context.state, context.now())) return;
-  if (isHidden()) onceVisible(() => syncIfStillNeeded(page, context));
-  else runSync(page, context);
+  // "Syncing…" instead of offering another one. refresh() hands back whatever is running, without
+  // starting a full sync after it.
+  if (context.sync.isRunning()) runSync(page, context, { automatic: true });
+  else refresh();
 }
 
 // A Categories URL opens the page without a click: a restored browser session may open several
-// such tabs at once, and each would start a full sync of dozens of authenticated requests. Tabs in
-// the background wait until the user actually looks at them.
+// such tabs at once, and each would start fetching. Tabs in the background wait until the user
+// actually looks at them.
 const isHidden = () => document.visibilityState === 'hidden';
 
-function onceVisible(run) {
-  const onChange = () => {
-    if (isHidden()) return;
-    document.removeEventListener('visibilitychange', onChange);
-    run();
-  };
-  document.addEventListener('visibilitychange', onChange);
-}
-
-async function syncIfStillNeeded(page, context) {
-  // By the time a background tab is looked at, the page may be gone or another tab may have
-  // synced: storage, not the state read at opening, decides.
-  if (!page.isConnected) return;
+async function requestRefresh(page, context) {
+  if (isHidden() || !page.isConnected || context.sync.isRunning()) return;
   const state = await context.store.load();
-  if (page.isConnected && needsSync(state, context.now())) runSync(page, context);
+  const now = context.now();
+  const listDue = listSyncDue(state, now);
+  if (!page.isConnected || (!listDue && !feedRefreshDue(state, now))) return;
+  // The list takes several requests and on a first install the page is empty until it ends; the
+  // feed refresh is a single quick request, so it stays silent.
+  await runSync(page, context, { automatic: true, showProgress: listDue });
 }
 
 export function isCategoriesPageOpen() {
@@ -80,24 +85,16 @@ export function isCategoriesPageOpen() {
 }
 
 export function closeCategoriesPage() {
+  stopAutoRefresh();
+  stopAutoRefresh = () => {};
   closeCategoryMenu();
   markActiveSidebarCategory(null);
   document.getElementById(PAGE_ID)?.remove();
   document.documentElement.classList.remove(OPEN_CLASS);
 }
 
-// A fresh install has never synced, so it counts as stale. A failed feed read waits for the next
-// regular sync: retrying on every open would repeat ~100 requests.
-function needsSync(state, now) {
-  return isStale(state.lastSyncedAt, now);
-}
-
 function syncCooldownLeft(context) {
   return context.sync ? Math.max(0, context.sync.availableAt() - context.now()) : 0;
-}
-
-export function isStale(lastSyncedAt, now) {
-  return lastSyncedAt == null || now - lastSyncedAt > AUTO_SYNC_AFTER_MS;
 }
 
 function createContext(options) {
@@ -212,11 +209,13 @@ function scheduleCooldownEnd(page, context) {
   if (left > 0) context.cooldownTimer = setTimeout(() => render(page, context), left);
 }
 
-async function runSync(page, context) {
-  Object.assign(context.view, { syncing: true, syncError: '' });
-  render(page, context);
+async function runSync(page, context, { automatic = false, showProgress = true } = {}) {
+  if (showProgress) {
+    Object.assign(context.view, { syncing: true, syncError: '' });
+    render(page, context);
+  }
   try {
-    await context.sync.sync();
+    await (automatic ? context.sync.refresh() : context.sync.sync());
   } catch (error) {
     context.view.syncError = describeError(error);
   }
@@ -245,7 +244,11 @@ function viewActions(page, context) {
   };
   return {
     // Switching categories clears the selection so we don't move channels the user no longer sees.
-    setFilter: (filter) => update({ filter, selected: new Set() }),
+    setFilter: (filter) => {
+      update({ filter, selected: new Set() });
+      // Opening another category is one of the moments a stale feed refreshes.
+      if (context.sync) requestRefresh(page, context);
+    },
     search: (query) => update({ query }),
     searchAsYouType: (query) => scheduleSearch(page, context, query),
     isSelecting: () => context.view.selected.size > 0,

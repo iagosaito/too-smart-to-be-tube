@@ -1,6 +1,7 @@
 import { mergeChannels } from '../core/channels.js';
+import { mergeFeedItems } from '../core/feedItems.js';
 
-const KEYS = ['channels', 'categories', 'lastSyncedAt', 'latestUploads', 'uploadsSyncedAt', 'preferences', 'feedItems', 'feedSyncedAt'];
+const KEYS = ['channels', 'categories', 'lastSyncedAt', 'latestUploads', 'uploadsSyncedAt', 'preferences', 'feedItems', 'feedSyncedAt', 'feedCheckedAt', 'listCheckedAt'];
 // The newest videos from the subscriptions feed (~150 bytes each): enough for several weeks of
 // per-category feed without weighing on storage.
 export const MAX_FEED_ITEMS = 800;
@@ -22,6 +23,9 @@ export function createStore(area) {
     saveUploads: (uploads, now = Date.now()) => saveMergedUploads(area, uploads, now),
     savePreferences: (changes) => saveMergedPreferences(area, changes),
     saveFeed: (items, now = Date.now()) => area.set({ feedItems: items.slice(0, MAX_FEED_ITEMS), feedSyncedAt: now }),
+    mergeFeed: (items, now = Date.now()) => saveMergedFeed(area, items, now),
+    claimFeedRefresh: (isDue, now = Date.now()) => claim(area, 'feedCheckedAt', isDue, now),
+    claimListSync: (isDue, now = Date.now()) => claim(area, 'listCheckedAt', isDue, now),
     channelTabStorage: createChannelTabStorage(area),
     loadRequestBudget: async () => (await area.get([REQUEST_BUDGET_KEY]))[REQUEST_BUDGET_KEY] ?? null,
     saveRequestBudget: (budget) => area.set({ [REQUEST_BUDGET_KEY]: budget }),
@@ -54,6 +58,8 @@ async function loadState(area) {
     preferences: data.preferences ?? {},
     feedItems: data.feedItems ?? [],
     feedSyncedAt: data.feedSyncedAt ?? null,
+    feedCheckedAt: data.feedCheckedAt ?? null,
+    listCheckedAt: data.listCheckedAt ?? null,
   };
 }
 
@@ -85,4 +91,22 @@ async function saveMergedUploads(area, incoming, now) {
 async function saveMergedPreferences(area, changes) {
   const { preferences } = await loadState(area);
   await area.set({ preferences: { ...preferences, ...changes } });
+}
+
+async function saveMergedFeed(area, items, now) {
+  // Merges onto what is stored right now, not onto a copy loaded earlier: another tab may have
+  // written in between.
+  const { feedItems } = await loadState(area);
+  await area.set({ feedItems: mergeFeedItems(feedItems, items, MAX_FEED_ITEMS), feedSyncedAt: now });
+}
+
+// Records the attempt before fetching, read right before writing: several open tabs then don't
+// all fetch in the same interval, and a failed fetch isn't retried on every tick. Storage has no
+// transactions, so two tabs claiming at the same instant may both win; one extra request is the
+// worst case.
+async function claim(area, key, isDue, now) {
+  const state = await loadState(area);
+  if (!isDue(state, now)) return false;
+  await area.set({ [key]: now });
+  return true;
 }

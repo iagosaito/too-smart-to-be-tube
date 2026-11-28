@@ -8,7 +8,10 @@ import { extractConfig, extractInitialData } from './pageData.js';
 export async function fetchFirstPage(fetchFn, url) {
   // The HTML also carries the session config (client version, active account), needed to request
   // the next pages.
-  const html = await (await fetchFn(url, { credentials: 'include' })).text();
+  const response = await fetchFn(url, { credentials: 'include' });
+  // The status matters: a 429 must pause every request, not read as "no data".
+  if (response.ok === false) throw new LocalizedError('error.http', { status: response.status });
+  const html = await response.text();
   return { config: extractConfig(html), data: extractInitialData(html) };
 }
 

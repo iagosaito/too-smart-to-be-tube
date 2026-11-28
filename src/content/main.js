@@ -5,7 +5,8 @@ import { sortCategoriesByName } from '../core/categories.js';
 import { createChannelTabCache } from '../feed/channelTabCache.js';
 import { createFeedSource } from '../feed/feedSource.js';
 import { localeTag } from '../i18n/i18n.js';
-import { createRequestQueue } from '../sync/requestQueue.js';
+import { createRequestQueue, QUEUE_DEFAULTS } from '../sync/requestQueue.js';
+import { feedRefreshDue, listSyncDue, listTriggerAllowed, unknownChannelIds } from '../sync/syncSchedule.js';
 import { clientVersionFromDocument } from '../youtube/pageData.js';
 import { waitFor } from '../dom/waitFor.js';
 import { createStore } from '../storage/store.js';
@@ -26,29 +27,79 @@ async function syncFromDom() {
   if (channels.length) await store.mergeChannels(channels);
 }
 
-async function syncAllSubscriptions() {
+async function syncList() {
   const channels = await fetchAllSubscriptions();
   await store.replaceChannels(channels);
-  await syncLatestUploads();
+  return channels;
+}
+
+// The Sync button: everything, to the end. Replacing the feed is what drops deleted or private
+// videos, which the automatic refresh can't notice.
+async function syncAllSubscriptions() {
+  const channels = await whilePacing(syncList);
+  await syncFeed((videos) => store.saveFeed(videos));
   return channels.length;
 }
 
 // One coordinator per tab, shared by every Categories page opened in it: repeated clicks don't
 // start syncs in parallel.
-const syncCoordinator = createSyncCoordinator(syncAllSubscriptions);
+const syncCoordinator = createSyncCoordinator(syncAllSubscriptions, { refresh: refreshAutomatically });
 
-async function syncLatestUploads() {
+// What the open page fetches on its own: the list when it is a day old, then the feed only as deep
+// as the stored videos, then the list again if the feed shows a new subscription.
+async function refreshAutomatically() {
+  if (await isPaused()) return;
+  if (await store.claimListSync(listSyncDue)) await whilePacing(syncList);
+  const videos = await refreshFeed();
+  const state = await store.load();
+  if (unknownChannelIds(videos, state.channels).length && (await store.claimListSync(listTriggerAllowed))) {
+    await whilePacing(syncList);
+  }
+}
+
+async function refreshFeed() {
+  if (!(await store.claimFeedRefresh(feedRefreshDue))) return [];
+  const { feedItems } = await store.load();
+  const knownIds = new Set(feedItems.map((video) => video.videoId));
+  return syncFeed((videos) => store.mergeFeed(videos), { knownIds });
+}
+
+async function syncFeed(save, options = {}) {
   // The subscriptions feed is an extra: if it fails, the subscriptions list (already saved) still
   // stands and the error must not bring the sync down.
   try {
-    const videos = await fetchSubscriptionFeed();
+    const videos = await whilePacing(() => fetchSubscriptionFeed(options));
     // The same videos feed each channel's latest upload date and the per-category feed (Videos
     // tab), with no extra requests.
     await store.saveUploads(latestByChannel(videos));
-    await store.saveFeed(videos);
+    await save(videos);
+    return videos;
   } catch (error) {
     console.warn('[Too Smart To Be Tube] Could not read the subscriptions feed:', error);
+    return [];
   }
+}
+
+// The logged-in fetches share the channel queue's pause: a 429 from any of them stops every request
+// in every tab, and a pause already running skips the automatic refresh.
+async function isPaused() {
+  const budget = await store.loadRequestBudget();
+  return Date.now() < (budget?.pausedUntil ?? 0);
+}
+
+async function whilePacing(task) {
+  try {
+    return await task();
+  } catch (error) {
+    if (error?.params?.status === 429) await recordPause();
+    throw error;
+  }
+}
+
+async function recordPause() {
+  const budget = (await store.loadRequestBudget()) ?? { starts: [] };
+  const pausedUntil = Math.max(budget.pausedUntil ?? 0, Date.now() + QUEUE_DEFAULTS.pauseOn429Ms);
+  await store.saveRequestBudget({ ...budget, pausedUntil });
 }
 
 // Per-category feed source, one per tab: a persisted cache and a queue that paces the public
