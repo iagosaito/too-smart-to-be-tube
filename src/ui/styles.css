@@ -501,6 +501,11 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   color: var(--tstb-muted);
 }
 
+.tstb-sort svg {
+  width: 20px;
+  height: 20px;
+}
+
 .tstb-sort-select {
   height: 36px;
   padding: 0 12px;
@@ -994,11 +999,20 @@ html.tstb-page-open ytd-page-manager > :not(.tstb-page) {
   margin: 0 0 4px;
 }
 
+/* The divider belongs to the whole bar, so the sort control sits on the same line as the tabs. */
+.tstb-tabbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  border-bottom: 1px solid var(--tstb-border);
+}
+
 /* Underline on the active tab, like the tabs on a channel page. */
 .tstb-tabs {
   display: flex;
   gap: 24px;
-  border-bottom: 1px solid var(--tstb-border);
 }
 
 .tstb-tab {

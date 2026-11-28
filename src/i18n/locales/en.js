@@ -34,7 +34,7 @@ export default {
   'heading.renameLabel': 'Rename category {name}',
   'heading.deleteHint': 'Delete category',
   'heading.deleteLabel': 'Delete category {name}',
-  'heading.sort': 'Sort:',
+  'heading.sort': 'Sort',
   'heading.sortName': 'A–Z',
   'heading.sortRecent': 'Latest video',
   'heading.selectionTip': 'Tip: tick several channels (✓) to move them at once.',

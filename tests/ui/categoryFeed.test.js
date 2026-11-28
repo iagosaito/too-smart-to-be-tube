@@ -87,6 +87,18 @@ describe('category tabs', () => {
     expect($('.tstb-sort-select')).not.toBeNull();
     expect($$('.tstb-card')).toHaveLength(2);
   });
+
+  it('puts the sort control in the tab bar, next to the tabs it applies to, with an icon instead of a text label', async () => {
+    await open({ initialFilter: 'prog' });
+    tab('Canais').click();
+    const select = $('.tstb-sort-select');
+    expect(select.closest('.tstb-tabbar')).not.toBeNull();
+    expect(select.closest('[role="tablist"]')).toBeNull();
+    expect($('.tstb-view-heading .tstb-sort-select')).toBeNull();
+    expect(select.getAttribute('aria-label')).toBe('Ordenar');
+    expect(select.closest('.tstb-sort').querySelector('svg')).not.toBeNull();
+    expect($('.tstb-sort').textContent).not.toContain('Ordenar:');
+  });
 });
 
 describe('Videos tab', () => {
