@@ -33,7 +33,7 @@ export default {
   'heading.renameLabel': 'Renombrar categoría {name}',
   'heading.deleteHint': 'Eliminar categoría',
   'heading.deleteLabel': 'Eliminar categoría {name}',
-  'heading.sort': 'Ordenar:',
+  'heading.sort': 'Ordenar',
   'heading.sortName': 'A–Z',
   'heading.sortRecent': 'Video más reciente',
   'heading.selectionTip': 'Consejo: marca varios canales (✓) para moverlos a la vez.',

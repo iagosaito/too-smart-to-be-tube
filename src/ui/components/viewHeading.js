@@ -13,17 +13,23 @@ export function renderViewHeading(state, view, actions, count) {
   const category = state.categories.find((item) => item.id === view.filter);
   // Tabs only inside a category: "All" and "No category" are organizing screens.
   const tabs = category && actions.hasFeed;
-  const onChannels = !tabs || view.tab === FEED_TAB.CHANNELS;
   const heading = el('div', { className: 'tstb-view-heading' }, [
     el('div', { className: 'tstb-title-group' }, [
       renderTitle(category, view, count, actions),
       category ? renderDeleteButton(category, actions) : null,
     ]),
-    // Sort and the selection hint only make sense in the channel list.
-    onChannels ? el('div', { className: 'tstb-heading-actions' }, [renderSortSelect(view.sort, actions), category ? null : renderSelectionHint()]) : null,
+    tabs ? null : el('div', { className: 'tstb-heading-actions' }, [renderSortSelect(view.sort, actions), category ? null : renderSelectionHint()]),
   ]);
   // The tabs stay outside .tstb-view-heading: renaming replaces only the title.
-  return tabs ? el('div', { className: 'tstb-view-header' }, [heading, renderCategoryTabs(view.tab, actions)]) : heading;
+  return tabs ? el('div', { className: 'tstb-view-header' }, [heading, renderTabBar(view, actions)]) : heading;
+}
+
+// Sort sits on the tab bar, where it lines up with the list it orders, instead of beside the
+// category's name, where it read as acting on the category. It only orders channels, so the feed
+// tabs don't show it.
+function renderTabBar(view, actions) {
+  const sort = view.tab === FEED_TAB.CHANNELS ? renderSortSelect(view.sort, actions) : null;
+  return el('div', { className: 'tstb-tabbar' }, [renderCategoryTabs(view.tab, actions), sort]);
 }
 
 function renderTitle(category, view, count, actions) {
@@ -69,16 +75,17 @@ function renderDeleteButton(category, actions) {
   );
 }
 
-// Lives in the view's title because it sorts the list being viewed, not the whole collection.
 function renderSortSelect(sort, actions) {
   const options = [
     el('option', { value: SORT_NAME }, t('heading.sortName')),
     el('option', { value: SORT_RECENT }, t('heading.sortRecent')),
   ];
   const onChange = (event) => actions.setSort(event.target.value);
-  const select = el('select', { className: 'tstb-sort-select', 'data-focus-key': 'sort', onChange }, options);
+  const label = t('heading.sort');
+  const select = el('select', { className: 'tstb-sort-select', 'aria-label': label, title: label, 'data-focus-key': 'sort', onChange }, options);
   select.value = sort;
-  return el('label', { className: 'tstb-sort' }, [t('heading.sort'), select]);
+  // The icon replaces a text label: the selected option already says what the order is.
+  return el('label', { className: 'tstb-sort' }, [svgIcon(ICONS.sort), select]);
 }
 
 function renderSelectionHint() {
