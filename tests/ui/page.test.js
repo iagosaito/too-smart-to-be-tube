@@ -593,6 +593,23 @@ describe('sync', () => {
     expect(refresh).not.toHaveBeenCalled();
   });
 
+  // Regression: the timer started before the first refresh recorded its check, so at the 5-minute
+  // tick the check was a moment short of 5 minutes old and wasn't due. The next refresh only came
+  // at 10 minutes.
+  it('refreshes about 5 minutes after the last check, even when the check came a moment after opening', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] });
+    const refresh = vi.fn(async () => {
+      await store.claimFeedRefresh(() => true, clock + 1_000);
+    });
+    await openWithRefresh(refresh);
+    await vi.advanceTimersByTimeAsync(0);
+    for (let step = 0; step < 12; step += 1) {
+      clock += 30_000;
+      await vi.advanceTimersByTimeAsync(30_000);
+    }
+    expect(refresh).toHaveBeenCalledTimes(2);
+  });
+
   it('closing the page removes the timer and the visibility listener', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
     setVisibility('hidden');

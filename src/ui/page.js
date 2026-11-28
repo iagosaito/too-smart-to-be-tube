@@ -19,7 +19,7 @@ import { describeError } from '../i18n/errors.js';
 import { plural, t } from '../i18n/i18n.js';
 import { routeFromUrl, urlForView } from './categoryRoute.js';
 import { FILTER_ALL, pruneSelection, resolveFilter, SORT_NAME, visibleChannels } from './view.js';
-import { FEED_REFRESH_MS, feedRefreshDue, listSyncDue } from '../sync/syncSchedule.js';
+import { feedRefreshDue, listSyncDue } from '../sync/syncSchedule.js';
 
 export const PAGE_ID = 'tstb-page';
 export const OPEN_CLASS = 'tstb-page-open';
@@ -46,11 +46,15 @@ export async function openCategoriesPage(options) {
 // is visible, at three moments (opening a category, every few minutes, coming back to the tab).
 // Storage decides whether a fetch is due, so other tabs' fetches count too.
 let stopAutoRefresh = () => {};
+// The timer only asks storage whether the feed is due, so it can tick often. Ticking every 5
+// minutes missed: the first check is recorded a moment after the timer starts, so at the tick it was
+// still short of 5 minutes old and the refresh slipped to the next tick, 10 minutes in.
+const REFRESH_CHECK_MS = 30_000;
 
 function startAutoRefresh(page, context) {
   if (!context.sync) return;
   const refresh = () => requestRefresh(page, context);
-  const timer = setInterval(refresh, FEED_REFRESH_MS);
+  const timer = setInterval(refresh, REFRESH_CHECK_MS);
   const onVisibility = () => !isHidden() && refresh();
   document.addEventListener('visibilitychange', onVisibility);
   stopAutoRefresh = () => {
